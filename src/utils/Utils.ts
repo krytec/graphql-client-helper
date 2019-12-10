@@ -1,10 +1,10 @@
-import { URL } from "url";
+import { URL } from 'url';
 
-export function isValidURL(value:string): boolean{
-    try{
+export function isValidURL(value: string): boolean {
+    try {
         const url = new URL(value);
         return true;
-    }catch(TypeError){
+    } catch (TypeError) {
         return false;
     }
 }

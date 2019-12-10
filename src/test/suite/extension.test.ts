@@ -7,10 +7,10 @@ import { expect } from 'chai';
 //import * as extension from '../../extension';
 
 describe('Extension Test', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+    vscode.window.showInformationMessage('Start all tests.');
 
-	it('Sample test', () => {
-		expect([1, 2, 3].indexOf(5)).to.equal(-1);
-		expect([1,2,3].indexOf(0)).to.equal(-1);
-	});
+    it('Sample test', () => {
+        expect([1, 2, 3].indexOf(5)).to.equal(-1);
+        expect([1, 2, 3].indexOf(0)).to.equal(-1);
+    });
 });

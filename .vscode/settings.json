@@ -7,5 +7,18 @@
         "out": true // set this to false to include "out" folder in search results
     },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-    "typescript.tsc.autoDetect": "off"
+    "typescript.tsc.autoDetect": "off",
+
+    "todohighlight.exclude": [
+        "**/node_modules/**",
+        "**/.vscode/**",
+        "**/.github/**",
+        "**/out/**"
+    ],
+    "prettier.singleQuote": true,
+    "prettier.disableLanguages": [
+        "Java"
+    ],
+    "editor.formatOnSave": true,
+    "prettier.tabWidth": 4
 }
