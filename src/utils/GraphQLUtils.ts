@@ -1,11 +1,21 @@
-import { ExecutionResult, IntrospectionQuery } from 'graphql';
+import {
+    ExecutionResult,
+    IntrospectionQuery,
+    GraphQLSchema,
+    GraphQLObjectType,
+    GraphQLScalarType,
+    GraphQLType
+} from 'graphql';
+import { TypeMap } from 'graphql/type/schema';
+import { type } from 'os';
+import { constructType } from './TypeScriptUtils';
+import { SchemaType } from '../model/SchemaTypes';
 
 const fetch = require('node-fetch');
 const {
     introspectionQuery,
     buildClientSchema,
-    printSchema,
-    GraphQLSchema
+    printSchema
 } = require('graphql');
 const { promises: fs } = require('fs');
 const path = require('path');
@@ -13,6 +23,7 @@ const path = require('path');
 // Utils to query on endpoint
 export default class GraphQLUtils {
     private folder: string = '';
+    private types: Array<SchemaType> = new Array<SchemaType>();
 
     //Default constructor
     constructor(folder: string) {
@@ -63,7 +74,7 @@ export default class GraphQLUtils {
         if (!body.data || !body.data.__schema) {
             fs.rmdir(this.folder);
             throw new Error(
-                'Schema fetching went wrong, submitted url is no graphql endpoint'
+                'Schema fetching went wrong, submitted url is not a graphql endpoint'
             );
         }
 
@@ -79,7 +90,9 @@ export default class GraphQLUtils {
 
         try {
             //Create schema from data
-            let schema = buildClientSchema(body.data as IntrospectionQuery);
+            let schema: GraphQLSchema = buildClientSchema(
+                body.data as IntrospectionQuery
+            );
             //Save schema as gql file
             await fs.writeFile(
                 path.join(this.folder, 'schema.gql'),
@@ -87,9 +100,28 @@ export default class GraphQLUtils {
                 'utf-8'
             );
             //Return schema object
+            this.createTypesFromSchema(schema);
             return schema;
         } catch (e) {
+            console.log(e);
             throw new Error("Couldn't create schema from response");
         }
+    }
+
+    /**
+     * * Function to create write typescript types to file
+     * @param schema GraphQLSchema from endpoint
+     */
+    public createTypesFromSchema(schema: GraphQLSchema) {
+        const typeMap = schema.getTypeMap();
+        const types = Object.values(typeMap)
+            .sort((type1, type2) => type1.name.localeCompare(type2.name))
+            .filter(type => !type.name.startsWith('__'));
+        types.forEach(element => {
+            if (element instanceof GraphQLObjectType) {
+                this.types.push(constructType(element));
+            }
+        });
+        this.types.forEach(ele => console.log(ele.toTypescriptType()));
     }
 }
