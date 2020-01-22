@@ -29,34 +29,35 @@ export class SchemaType {
         /**${this.description}*/
         export type ${this.name} = {
             __typename?: '${this.name}',
+            
         `;
         this.fields.forEach(field => {
             if (field.isScalar) {
                 if (field.nonNull) {
                     if (field.isList) {
-                        typeAsString += `${field.name}?: Array<Scalars[${field.ofType}]>,\n`;
+                        typeAsString += `   ${field.name}: Array<Scalars[${field.ofType}]>,\n`;
                     } else {
-                        typeAsString += `${field.name}?: Scalars[${field.ofType}],\n`;
+                        typeAsString += `   ${field.name}: Scalars[${field.ofType}],\n`;
                     }
                 } else {
                     if (field.isList) {
-                        typeAsString += `${field.name}: Array<Scalars[${field.ofType}]>,\n`;
+                        typeAsString += `   ${field.name}?: Array<Scalars[${field.ofType}]>,\n`;
                     } else {
-                        typeAsString += `${field.name}: Scalars[${field.ofType}],\n`;
+                        typeAsString += `   ${field.name}?: Scalars[${field.ofType}],\n`;
                     }
                 }
             } else {
                 if (field.nonNull) {
                     if (field.isList) {
-                        typeAsString += `${field.name}?: Maybe<Array<${field.ofType}>>,\n`;
+                        typeAsString += `   ${field.name}: Maybe<Array<${field.ofType}>>,\n`;
                     } else {
-                        typeAsString += `${field.name}?: Maybe<${field.ofType}>,\n`;
+                        typeAsString += `   ${field.name}: Maybe<${field.ofType}>,\n`;
                     }
                 } else {
                     if (field.isList) {
-                        typeAsString += `${field.name}: Array<${field.ofType}>,\n`;
+                        typeAsString += `   ${field.name}?: Array<${field.ofType}>,\n`;
                     } else {
-                        typeAsString += `${field.name}:${field.ofType},\n`;
+                        typeAsString += `   ${field.name}?:${field.ofType},\n`;
                     }
                 }
             }
