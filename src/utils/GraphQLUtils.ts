@@ -8,8 +8,10 @@ import {
 } from 'graphql';
 import { TypeMap } from 'graphql/type/schema';
 import { type } from 'os';
-import { constructType } from './TypeScriptUtils';
-import { SchemaType } from '../model/SchemaTypes';
+import { constructType, constructScalarField } from './TypeScriptUtils';
+import { SchemaType } from '../model/SchemaType';
+import { SchemaScalar } from '../model/SchemaScalar';
+import { dedent } from './Utils';
 
 const fetch = require('node-fetch');
 const {
@@ -24,6 +26,7 @@ const path = require('path');
 export default class GraphQLUtils {
     private folder: string = '';
     private types: Array<SchemaType> = new Array<SchemaType>();
+    private scalar: SchemaScalar = new SchemaScalar();
 
     //Default constructor
     constructor(folder: string) {
@@ -120,8 +123,11 @@ export default class GraphQLUtils {
         types.forEach(element => {
             if (element instanceof GraphQLObjectType) {
                 this.types.push(constructType(element));
+            } else if (element instanceof GraphQLScalarType) {
+                this.scalar.addField(constructScalarField(element));
             }
         });
-        this.types.forEach(ele => console.log(ele.toTypescriptType()));
+        console.log(this.scalar.toTypescriptType());
+        // this.types.forEach(ele => console.log(ele.toTypescriptType()));
     }
 }
