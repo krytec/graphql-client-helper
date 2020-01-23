@@ -4,7 +4,6 @@ import * as assert from 'assert';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import { isValidURL } from '../../Utils/Utils';
-import GraphQLUtils from '../../Utils/GraphQLUtils';
 import { expect } from 'chai';
 
 const fs = require('fs');
@@ -28,24 +27,6 @@ describe('Util tests', function() {
 
         it('should return false', () => {
             expect(isValidURL('google.com')).to.equal(false);
-        });
-    });
-
-    describe('GraphQLUtilTest to test if invalid endpoint throws error', () => {
-        let url: string = 'http://google.com';
-        let current_dir: string = path.join(__dirname, 'graphqlschema');
-        let util = new GraphQLUtils(__dirname);
-        it('should return true since the folder is created after creating instance of GraphQLUtils', () => {
-            expect(fs.existsSync(current_dir)).to.equal(true);
-        });
-        it('should throw an error, response does not contain a body', async () => {
-            this.timeout(0);
-            await util
-                .getSchemaFromEndpoint(url)
-                .catch(err => expect(err).to.be.instanceOf(Error));
-        });
-        it('should return false, since the folder gets deleted if error is thrown', () => {
-            expect(fs.existsSync(current_dir)).to.equal(false);
         });
     });
 });
