@@ -1,10 +1,12 @@
 import { commands, window, workspace, Uri } from 'vscode';
-import GraphQLUtils from '../utils/GraphQLUtils';
+import * as vscode from 'vscode';
+import GraphQLUtils from '../services/GraphQLService';
 import { isValidURL } from '../utils/Utils';
 import { join } from 'path';
+import GraphQLService from '../services/GraphQLService';
 
 // Runs an introspection query on given endpoint and creates a schema file
-async function showCreateSchemaInput() {
+export async function showCreateSchemaInput(service: GraphQLService) {
     let result = await window
         .showInputBox({
             placeHolder: 'For example https://graphql-pokemon.now.sh/',
@@ -18,8 +20,8 @@ async function showCreateSchemaInput() {
             if (value !== undefined) {
                 if (workspace.workspaceFolders !== undefined) {
                     let pathToFolder = workspace.workspaceFolders[0];
-                    let util = new GraphQLUtils(pathToFolder.uri.fsPath);
-                    let schema = util
+                    service.folder = pathToFolder.uri.fsPath;
+                    let schema = service
                         .getSchemaFromEndpoint(value)
                         .catch(error =>
                             window.showErrorMessage(
@@ -46,10 +48,3 @@ async function showCreateSchemaInput() {
             }
         });
 }
-
-export const createSchemaCommand = commands.registerCommand(
-    'extension.createSchema',
-    () => {
-        showCreateSchemaInput();
-    }
-);
