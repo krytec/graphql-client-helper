@@ -19,6 +19,9 @@ import { ScalarWrapper } from '../wrapper/GraphQLScalarWrapper';
 import { EnumWrapper } from '../Wrapper/GraphQLEnumWrapper';
 import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
 import { LoggingService } from './LoggingService';
+import { workspace, WorkspaceFoldersChangeEvent } from 'vscode';
+import { ENETDOWN } from 'constants';
+import { generatedFolder } from '../constants';
 
 const fetch = require('node-fetch');
 const {
@@ -163,10 +166,10 @@ export default class GraphQLService {
             }
         });
 
-        this.logger.logDebug(this.scalar.toTypescriptType() as string);
-        this.types.forEach(ele => this.logger.logDebug(ele.toTypescriptType()));
-        this.enums.forEach(ele => this.logger.logDebug(ele.toString()));
-        this.inputTypes.forEach(ele => this.logger.logDebug(ele.toTypescriptType()));
+        this.logger.logDebug(this._scalar.toTypescriptType() as string);
+        this.logger.logDebug(this._types.map(ele => ele.toTypescriptType()).join('\n'));
+        this.logger.logDebug(this._enums.map(ele => ele.toTypescriptType()).join('\n'));
+        this.logger.logDebug(this._inputtypes.map(ele => ele.toTypescriptType()).join('\n'));
     }
 
     /**
@@ -182,7 +185,7 @@ export default class GraphQLService {
     }
 
     set folder(folder: string) {
-        this._folder = path.join(folder, 'graphqlschema');
+        this._folder = path.join(folder, generatedFolder);
         try {
             let stats = fs.statSync(this._folder);
         } catch (e) {

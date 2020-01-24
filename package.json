@@ -10,7 +10,9 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.createSchema"
+		"onCommand:extension.showLog",
+		"onCommand:extension.createSchema",
+		"workspaceContains:**/schema.gql"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
