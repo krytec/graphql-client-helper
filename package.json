@@ -18,6 +18,10 @@
 			{
 				"command": "extension.createSchema",
 				"title": "Create Schema"
+			},
+			{
+				"command": "extension.showLog",
+				"title": "Show GraphQL Helper Log"
 			}
 		],
 		"keybindings": {

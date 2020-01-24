@@ -33,7 +33,7 @@ const path = require('path');
  * A GraphQL service class to retriev information about a GraphQL endpoint
  */
 export default class GraphQLService {
-    private _folder: string = '';
+    private _folder: string;
     private _types: Array<TypeWrapper> = new Array<TypeWrapper>();
     private _scalar: ScalarWrapper = new ScalarWrapper();
     private _enums: Array<EnumWrapper> = new Array<EnumWrapper>();
@@ -45,7 +45,9 @@ export default class GraphQLService {
      * Constructor for GraphQLUtils
      * @param folder the folder where the generated files should be saved
      */
-    constructor(private logger: LoggingService) {}
+    constructor(private logger: LoggingService) {
+        this._folder = ".";
+    }
 
     /**
      * * Async function to create a schema.gql file from a graphql endpoint
@@ -173,7 +175,11 @@ export default class GraphQLService {
      */
     writeTypesToFile() {}
 
+
     //#region getter and setter
+    get folder(): string {
+        return this._folder;
+    }
 
     set folder(folder: string) {
         this._folder = path.join(folder, 'graphqlschema');

@@ -1,21 +1,33 @@
-import * as vscode from 'vscode'
+import * as vscode from 'vscode';
 import { showCreateSchemaInput } from '../commands/SchemaInputCommand';
 import GraphQLService from './GraphQLService';
+import { LoggingService } from './LoggingService';
+import { showLogingWindowCommand } from '../commands/ShowLogCommand';
 
 export class CommandService{
 
-    constructor(private ctx: vscode.ExtensionContext){
-
-    }
+    constructor(
+        private ctx: vscode.ExtensionContext, 
+        private graphQLService: GraphQLService,
+        private logger: LoggingService
+        ){}
     
     registerCommands(){
-        const createSchemaCommand = vscode.commands.registerCommand(
-            'extension.createSchema',
+        const showLogCommand = vscode.commands.registerCommand(
+            'extension.showLog',
             () => {
-                showCreateSchemaInput(this.ctx.globalState.get("graphQLService") as GraphQLService);
+                showLogingWindowCommand(this.logger);
             }
         );
 
+        const createSchemaCommand = vscode.commands.registerCommand(
+            'extension.createSchema',
+            () => {
+                showCreateSchemaInput(this.graphQLService);
+            }
+        );
+
+        this.ctx.subscriptions.push(showLogCommand);
         this.ctx.subscriptions.push(createSchemaCommand);
     }
 }

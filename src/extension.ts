@@ -19,10 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
     const loggingService = new LoggingService();
     const graphQLService = new GraphQLService(loggingService);
 
-    context.globalState.update("logger", loggingService);
-    context.globalState.update("graphqlService", graphQLService);
-
-    const commandService = new CommandService(context);
+    const commandService = new CommandService(context,graphQLService,loggingService);
 
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with registerCommand

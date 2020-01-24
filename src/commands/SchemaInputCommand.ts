@@ -19,8 +19,8 @@ export async function showCreateSchemaInput(service: GraphQLService) {
         .then(value => {
             if (value !== undefined) {
                 if (workspace.workspaceFolders !== undefined) {
-                    let pathToFolder = workspace.workspaceFolders[0];
-                    service.folder = pathToFolder.uri.fsPath;
+                    let pathToFolder = workspace.workspaceFolders[0].uri.fsPath;
+                    service.folder = pathToFolder;
                     let schema = service
                         .getSchemaFromEndpoint(value)
                         .catch(error =>
@@ -31,7 +31,7 @@ export async function showCreateSchemaInput(service: GraphQLService) {
                         .then(() => {
                             var openPath = Uri.file(
                                 join(
-                                    pathToFolder.uri.fsPath,
+                                    pathToFolder,
                                     'graphqlschema',
                                     'schema.gql'
                                 )

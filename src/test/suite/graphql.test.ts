@@ -1,11 +1,12 @@
 import GraphQLUtils from '../../services/GraphQLService';
 import { expect } from 'chai';
 import { GraphQLObjectType } from 'graphql';
+import { LoggingService } from '../../services/LoggingService';
 const fs = require('fs');
 const path = require('path');
 
 describe('Test functions of GraphQLUtil class', function() {
-    let graphQLUtil = new GraphQLUtils();
+    let graphQLUtil = new GraphQLUtils(new LoggingService());
     graphQLUtil.folder = __dirname;
     describe('GraphQLUtilTest to test if invalid endpoint throws error', () => {
         let url: string = 'http://google.com';
