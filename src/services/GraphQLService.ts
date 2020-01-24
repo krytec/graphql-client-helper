@@ -18,6 +18,7 @@ import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
 import { ScalarWrapper } from '../wrapper/GraphQLScalarWrapper';
 import { EnumWrapper } from '../Wrapper/GraphQLEnumWrapper';
 import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
+import { LoggingService } from './LoggingService';
 
 const fetch = require('node-fetch');
 const {
@@ -44,7 +45,7 @@ export default class GraphQLService {
      * Constructor for GraphQLUtils
      * @param folder the folder where the generated files should be saved
      */
-    constructor() {}
+    constructor(private logger: LoggingService) {}
 
     /**
      * * Async function to create a schema.gql file from a graphql endpoint
@@ -80,6 +81,7 @@ export default class GraphQLService {
 
         //Check if body got errors
         if (body.errors && body.errors.length > 0) {
+            this.logger.logDebug(body.errors.join(','));
             fs.rmdir(this._folder);
             throw new Error(
                 'Schema fetching went wrong, could not execute introspection query'
@@ -110,7 +112,7 @@ export default class GraphQLService {
             //Return schema object
             return schema;
         } catch (e) {
-            console.log(e);
+            this.logger.logDebug(e);
             throw new Error("Couldn't create schema from response");
         }
     }
@@ -158,10 +160,11 @@ export default class GraphQLService {
                 this._inputtypes.push(constructInputType(element));
             }
         });
-        //console.log(this.scalar.toTypescriptType());
-        //this.types.forEach(ele => console.log(ele.toTypescriptType()));
-        //this.enums.forEach(ele => console.log(ele.toString()));
-        //this.inputTypes.forEach(ele => console.log(ele.toTypescriptType()));
+
+        this.logger.logDebug(this.scalar.toTypescriptType() as string);
+        this.types.forEach(ele => this.logger.logDebug(ele.toTypescriptType()));
+        this.enums.forEach(ele => this.logger.logDebug(ele.toString()));
+        this.inputTypes.forEach(ele => this.logger.logDebug(ele.toTypescriptType()));
     }
 
     /**

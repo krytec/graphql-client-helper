@@ -4,12 +4,6 @@ import { GraphQLWrapper } from './GraphQLWrapperInterface';
  * Representation of an GraphQL Field
  */
 export class FieldWrapper implements GraphQLWrapper {
-    private _name: String;
-    private _nonNull: boolean;
-    private _isScalar: boolean;
-    private _isList: boolean;
-    private _ofType: String;
-    private _description?: String;
 
     /**
      * Constructor of a graphql field
@@ -21,26 +15,19 @@ export class FieldWrapper implements GraphQLWrapper {
      * @param description description of the field if the field has any
      */
     constructor(
-        name: String,
-        nonNull: boolean,
-        isScalar: boolean,
-        isList: boolean,
-        ofType: String,
-        description?: String
-    ) {
-        this._name = name;
-        this._nonNull = nonNull;
-        this._isScalar = isScalar;
-        this._isList = isList;
-        this._ofType = ofType;
-        this._description = description;
-    }
+        private _name: string,
+        private _nonNull: boolean,
+        private _isScalar: boolean,
+        private _isList: boolean,
+        private _ofType: string,
+        private _description?: string,
+    ) {}
 
     /**
      * Function to create Typescript type code as a representation of the obj
      * @returns obj as Typescript type code as a String
      */
-    toTypescriptType(): String {
+    toTypescriptType(): string {
         if (this._isScalar) {
             if (this._nonNull) {
                 if (this._isList) {
@@ -100,12 +87,12 @@ export class FieldWrapper implements GraphQLWrapper {
      * Basic toString method
      * @returns String representation of the object
      */
-    toString(): String {
+    toString(): string {
         return `FieldWrapper(name:${this._name}, description:${this._description}, nonNull:${this._nonNull}, isScalar:${this._isScalar}, ofType:${this.ofType})`;
     }
 
     //#region getter and setter
-    get name(): String {
+    get name(): string {
         return this._name;
     }
 
@@ -121,11 +108,11 @@ export class FieldWrapper implements GraphQLWrapper {
         return this._isList;
     }
 
-    get ofType(): String {
+    get ofType(): string {
         return this._ofType;
     }
 
-    get description(): String | undefined {
+    get description(): string | undefined {
         return this._description;
     }
     //#endregion
