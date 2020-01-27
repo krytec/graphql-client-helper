@@ -128,7 +128,7 @@ export function constructScalarField(
 }
 
 /**
- * ! TODO: Implementation
+ * Creates a InputTypeWrapper from a GraphQLInputObjectType and returns it
  * @param inputType GraphQLInputObjectType
  */
 export function constructInputType(inputType: GraphQLInputObjectType) {

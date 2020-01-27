@@ -18,6 +18,10 @@ import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
 import { ScalarWrapper } from '../wrapper/GraphQLScalarWrapper';
 import { EnumWrapper } from '../Wrapper/GraphQLEnumWrapper';
 import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
+import { LoggingService } from './LoggingService';
+import { workspace, WorkspaceFoldersChangeEvent } from 'vscode';
+import { ENETDOWN } from 'constants';
+import { generatedFolder } from '../constants';
 
 const fetch = require('node-fetch');
 const {
@@ -32,7 +36,7 @@ const path = require('path');
  * A GraphQL service class to retriev information about a GraphQL endpoint
  */
 export default class GraphQLService {
-    private _folder: string = '';
+    private _folder: string;
     private _types: Array<TypeWrapper> = new Array<TypeWrapper>();
     private _scalar: ScalarWrapper = new ScalarWrapper();
     private _enums: Array<EnumWrapper> = new Array<EnumWrapper>();
@@ -44,7 +48,9 @@ export default class GraphQLService {
      * Constructor for GraphQLUtils
      * @param folder the folder where the generated files should be saved
      */
-    constructor() {}
+    constructor(private logger: LoggingService) {
+        this._folder = '.';
+    }
 
     /**
      * * Async function to create a schema.gql file from a graphql endpoint
@@ -80,6 +86,7 @@ export default class GraphQLService {
 
         //Check if body got errors
         if (body.errors && body.errors.length > 0) {
+            this.logger.logDebug(body.errors.join(','));
             fs.rmdir(this._folder);
             throw new Error(
                 'Schema fetching went wrong, could not execute introspection query'
@@ -110,7 +117,7 @@ export default class GraphQLService {
             //Return schema object
             return schema;
         } catch (e) {
-            console.log(e);
+            this.logger.logDebug(e);
             throw new Error("Couldn't create schema from response");
         }
     }
@@ -158,10 +165,17 @@ export default class GraphQLService {
                 this._inputtypes.push(constructInputType(element));
             }
         });
-        //console.log(this.scalar.toTypescriptType());
-        //this.types.forEach(ele => console.log(ele.toTypescriptType()));
-        //this.enums.forEach(ele => console.log(ele.toString()));
-        //this.inputTypes.forEach(ele => console.log(ele.toTypescriptType()));
+
+        this.logger.logDebug(this._scalar.toTypescriptType() as string);
+        this.logger.logDebug(
+            this._types.map(ele => ele.toTypescriptType()).join('\n')
+        );
+        this.logger.logDebug(
+            this._enums.map(ele => ele.toTypescriptType()).join('\n')
+        );
+        this.logger.logDebug(
+            this._inputtypes.map(ele => ele.toTypescriptType()).join('\n')
+        );
     }
 
     /**
@@ -171,9 +185,12 @@ export default class GraphQLService {
     writeTypesToFile() {}
 
     //#region getter and setter
+    get folder(): string {
+        return this._folder;
+    }
 
     set folder(folder: string) {
-        this._folder = path.join(folder, 'graphqlschema');
+        this._folder = path.join(folder, generatedFolder);
         try {
             let stats = fs.statSync(this._folder);
         } catch (e) {

@@ -5,26 +5,22 @@ import { dedent } from '../utils/Utils';
  * Wrapper class for a GraphQLEnumType
  */
 export class EnumWrapper implements GraphQLWrapper {
-    private _name: String;
-    private _values: Array<any>;
-    private _description?: String;
-
     /**
      * Constructor for a enum wrapper
      * @param _name the _name of the enum
      * @param _values the _values of the enum
      * @param _description _description of the enum
      */
-    constructor(_name: String, _values: Array<any>, _description?: String) {
-        this._name = _name;
-        this._values = _values;
-        this._description = _description;
-    }
+    constructor(
+        private _name: string,
+        private _values: Array<any>,
+        private _description?: string
+    ) {}
 
     /**
      * Method to represent a EnumWrapper as a String
      */
-    toString(): String {
+    toString(): string {
         return `EnumWrapper(_name:${this._name}, 
             _values:[${this._values.map(x => `${x._name}`).join(',')}]
             ${
@@ -35,7 +31,7 @@ export class EnumWrapper implements GraphQLWrapper {
     /**
      * Method to represent a EnumWrapper as a typescript enum
      */
-    toTypescriptType(): String {
+    toTypescriptType(): string {
         let enumvalues: String = this._values
             .map(x => dedent`\t${x._name},\n`)
             .join('');
@@ -47,11 +43,11 @@ export enum ${this._name} {
     }
 
     //#region getter and setter
-    get name(): String {
+    get name(): string {
         return this._name;
     }
 
-    get description(): String | undefined {
+    get description(): string | undefined {
         return this._description;
     }
 

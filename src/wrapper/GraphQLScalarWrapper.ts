@@ -22,14 +22,14 @@ export class ScalarWrapper implements GraphQLWrapper {
     /**
      * !TODO: Implementation
      */
-    toString(): String {
+    toString(): string {
         throw new Error('Not yet implemented');
     }
 
     /**
      * Method to create a Typescript type of the scalar as string
      */
-    toTypescriptType(): String {
+    toTypescriptType(): string {
         let scalarType = `
 export type Scalars = {
     ${this._scalars
@@ -46,9 +46,9 @@ export type Scalars = {
  * ScalarFieldWrapper class to represent Field in a ScalarWrapper
  */
 export class ScalarFieldWrapper implements GraphQLWrapper {
-    private _name: String;
-    private _description?: String;
-    private _type: String;
+    private _name: string;
+    private _description?: string;
+    private _type: string;
 
     /**
      * Constructor for a Scalar
@@ -56,7 +56,7 @@ export class ScalarFieldWrapper implements GraphQLWrapper {
      * @param type Type of the Scalar
      * @param description Description of the scalar
      */
-    constructor(name: String, type: String, description?: String) {
+    constructor(name: string, type: string, description?: string) {
         this._name = name;
         this._description = description;
         this._type = type;
@@ -65,14 +65,14 @@ export class ScalarFieldWrapper implements GraphQLWrapper {
     /**
      * Basic toString() method to represent a Scalar as String
      */
-    toString() {
+    toString(): string {
         return `ScalarWrapper(name:${this._name}, type:${this._type}, description:${this._description})`;
     }
 
     /**
      * Method to create a Typescript type as string
      */
-    toTypescriptType() {
+    toTypescriptType(): string {
         switch (this._type) {
             case 'any':
                 return this._description !== undefined
@@ -88,6 +88,9 @@ export class ScalarFieldWrapper implements GraphQLWrapper {
 
             case 'boolean':
                 return `${this._name}: boolean`;
+
+            default:
+                return '';
         }
     }
 

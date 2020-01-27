@@ -3,8 +3,6 @@ import { FieldWrapper } from './GraphQLFieldWrapper';
 import { dedent } from '../utils/Utils';
 
 export class InputTypeWrapper implements GraphQLWrapper {
-    private _name: string;
-    private _description?: string;
     private _fields: Array<FieldWrapper>;
 
     /**
@@ -12,9 +10,7 @@ export class InputTypeWrapper implements GraphQLWrapper {
      * @param name name of the InputType
      * @param description description of the InputType
      */
-    constructor(name: string, description?: string) {
-        this._name = name;
-        this._description = description;
+    constructor(private _name: string, private _description?: string) {
         this._fields = new Array<FieldWrapper>();
     }
 
@@ -36,7 +32,7 @@ export class InputTypeWrapper implements GraphQLWrapper {
     /**
      * ! TODO: Implementation
      */
-    toString(): String {
+    toString(): string {
         throw new Error('Method not implemented.');
     }
 
@@ -44,13 +40,13 @@ export class InputTypeWrapper implements GraphQLWrapper {
      * Function to create Typescript type code as a representation of the obj
      * @returns obj as Typescript type code as a String
      */
-    toTypescriptType(): String {
-        let fieldsAsString: String = this._fields
+    toTypescriptType(): string {
+        let fieldsAsString: string = this._fields
             .map(x => dedent`\n${x.toTypescriptType()},\n`)
             .map(x => x.replace(/\n/g, '\n    '))
             .join('');
         //? FIXME: Find a way to make this code look cleaner
-        let typeAsString: String = `
+        let typeAsString: string = `
 /**${this._description}*/
 export type ${this.name} = {
     __typename?: '${this.name}',

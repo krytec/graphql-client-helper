@@ -10,7 +10,9 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.createSchema"
+		"onCommand:extension.showLog",
+		"onCommand:extension.createSchema",
+		"workspaceContains:**/schema.gql"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -18,6 +20,10 @@
 			{
 				"command": "extension.createSchema",
 				"title": "Create Schema"
+			},
+			{
+				"command": "extension.showLog",
+				"title": "Show GraphQL Helper Log"
 			}
 		],
 		"keybindings": {
