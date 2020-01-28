@@ -44,7 +44,8 @@
             "schema-explorer": [
                 {
                     "id": "schemaExplorer",
-                    "name": "Schema Explorer"
+                    "name": "Schema Explorer",
+                    "when": "schemaLoaded"
                 }
             ]
         }

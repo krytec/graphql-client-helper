@@ -1,10 +1,43 @@
 import { GraphQLWrapper } from './GraphQLWrapperInterface';
+import { RequestWrapper } from './GraphQLRequestWrapper';
+import { FieldWrapper } from './GraphQLFieldWrapper';
+import { dedent } from '../utils/Utils';
 
-export class MutationWrapper implements GraphQLWrapper {
-    toString(): string {
-        throw new Error('Method not implemented.');
+/**
+ * Wrapper class for a GraphQL mutation, extends the @RequestWrapper class
+ */
+export class MutationWrapper extends RequestWrapper implements GraphQLWrapper {
+    constructor(
+        _name: string,
+        _type: string,
+        _returnsList: boolean,
+        _description?: string
+    ) {
+        super(_name, _type, _returnsList, false, true, _description);
     }
+
+    toString(): string {
+        return '';
+    }
+
+    /**
+     * Function to create Typescript type code as a representation of the obj
+     * @returns obj as Typescript type code as a String
+     */
     toTypescriptType(): string {
-        throw new Error('Method not implemented.');
+        let fieldsAsString: string = this.Args.map(
+            x => dedent`\n${x.toTypescriptType()},\n`
+        )
+            .map(x => x.replace(/\n/g, '\n    '))
+            .join('');
+        //? FIXME: Find a way to make this code look cleaner
+        let typeAsString: string = `
+/**${this.Description}*/
+query ${this.Name}Query{
+    ${fieldsAsString}
+};
+        `;
+
+        return typeAsString;
     }
 }

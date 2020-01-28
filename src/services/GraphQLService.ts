@@ -13,7 +13,8 @@ import {
     constructScalarField,
     constructEnumType,
     constructInputType,
-    constructQuery
+    constructQuery,
+    constructMutation
 } from '../utils/WrapperUtils';
 import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
 import { ScalarWrapper } from '../wrapper/GraphQLScalarWrapper';
@@ -114,7 +115,7 @@ export default class GraphQLService {
             );
 
             this.createTypesFromSchema(schema);
-            this.getQueriesFromSchema(schema);
+            this.getRequestsFromSchema(schema);
             //Return schema object
             return schema;
         } catch (e) {
@@ -183,7 +184,11 @@ export default class GraphQLService {
      */
     writeTypesToFile() {}
 
-    getQueriesFromSchema(schema: GraphQLSchema) {
+    /**
+     * Gets all queries and mutations from the graphql schema
+     * @param schema GraphQLSchema object
+     */
+    getRequestsFromSchema(schema: GraphQLSchema) {
         let schemaQueries = schema.getQueryType();
         if (schemaQueries !== undefined && schemaQueries !== null) {
             const queryMap = schemaQueries.getFields();
@@ -191,9 +196,22 @@ export default class GraphQLService {
                 .sort((type1, type2) => type1.name.localeCompare(type2.name))
                 .filter(type => !type.name.toLowerCase().startsWith('query'));
             query.forEach(query => {
-                this._state.queries.push(constructQuery(query));
+                this._state.requests.push(constructQuery(query));
             });
         }
+        let schemaMutations = schema.getMutationType();
+        if (schemaMutations !== undefined && schemaMutations !== null) {
+            const mutationMap = schemaMutations.getFields();
+            const mutation = Object.values(mutationMap)
+                .sort((type1, type2) => type1.name.localeCompare(type2.name))
+                .filter(
+                    type => !type.name.toLowerCase().startsWith('mutation')
+                );
+            mutation.forEach(mutation => {
+                this._state.requests.push(constructMutation(mutation));
+            });
+        }
+        vscode.commands.executeCommand('setContext', 'schemaLoaded', true);
     }
 
     //#region getter and setter

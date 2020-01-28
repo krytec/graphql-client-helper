@@ -60,6 +60,10 @@ export class StateService implements vscode.Memento {
         return this.get('inputtypes') as Array<InputTypeWrapper>;
     }
 
+    get requests(): Array<RequestWrapper> {
+        return this.get('requests') as Array<RequestWrapper>;
+    }
+
     get queries(): Array<QueryWrapper> {
         return this.get('queries') as Array<QueryWrapper>;
     }

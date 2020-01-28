@@ -4,7 +4,8 @@ import GraphQLService from './GraphQLService';
 import { LoggingService } from './LoggingService';
 import { showLogingWindowCommand } from '../commands/ShowLogCommand';
 import { StateService } from './StateService';
-
+import { generatedFolder } from '../constants';
+const path = require('path');
 /**
  * Service class to create vscode commands and register them to vscode
  */
@@ -23,6 +24,28 @@ export class CommandService {
     ) {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
+
+        //! TODO: Changed workspace folder should check if schema is provided
+
+        this.workspaceFolderChanged();
+        vscode.workspace.onDidChangeWorkspaceFolders(
+            () => this.workspaceFolderChanged
+        );
+    }
+
+    private workspaceFolderChanged() {
+        if (vscode.workspace.workspaceFolders !== undefined) {
+            const schemaFile = path.join(
+                vscode.workspace.workspaceFolders[0].uri.fsPath,
+                generatedFolder + '/schema.gql'
+            );
+            this._graphQLService
+                .getSchemaFromFile(schemaFile)
+                .then(schema =>
+                    this._graphQLService.getRequestsFromSchema(schema)
+                )
+                .catch(err => vscode.window.showErrorMessage(err));
+        }
     }
     /**
      * registers all commands to vscode

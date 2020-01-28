@@ -3,6 +3,7 @@ import { StateService } from './StateService';
 import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
 import { FieldWrapper } from '../wrapper/GraphQLFieldWrapper';
 import { MutationWrapper } from '../wrapper/GraphQLMutationWrapper';
+import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
 
 /**
  * RequestProvider for TreeView, fills the TreeView with data
@@ -28,11 +29,11 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
     getChildren(
         element?: Request | undefined
     ): vscode.ProviderResult<Request[]> {
-        const queries = this.stateService.queries;
-        const mutations = this.stateService.mutations;
-        if (queries.length > 0 && mutations.length > 0) {
+        if (this.stateService.requests.length > 0) {
             if (element) {
+                //! TODO: Add child elements based on query / mutation
             } else {
+                return Promise.resolve(this.getRequests());
             }
         } else {
             vscode.window.showInformationMessage(
@@ -41,8 +42,28 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
             return Promise.resolve([]);
         }
     }
+    /**
+     * Method to get all Mutations and Queries at the first layer of the tree
+     */
+    private getRequests(): Request[] {
+        const requests = this.stateService.requests.map(
+            request =>
+                new Request(
+                    request.Name,
+                    request.Type,
+                    false,
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    request.Description
+                )
+        );
+        return requests;
+    }
 
-    private getFields(field: FieldWrapper) {}
+    /**
+     * Method to get possible child nodes of the tree element
+     * @param request Parent node element of the tree
+     */
+    private getFields(request: Request) {}
 }
 
 /**
@@ -51,24 +72,27 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
 class Request extends vscode.TreeItem {
     constructor(
         public readonly label: string,
-        private _description: string,
-        private _queryField: QueryWrapper | FieldWrapper | MutationWrapper,
+        private _type: string,
+        private _isSelected,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        private _description?: string,
         public readonly command?: vscode.Command
     ) {
         super(label, collapsibleState);
-        _queryField instanceof FieldWrapper
-            ? (this.contextValue = 'field')
-            : _queryField instanceof FieldWrapper
-            ? (this.contextValue = 'query')
-            : (this.contextValue = 'mutation');
+    }
+
+    get isSelected(): boolean {
+        return this._isSelected;
     }
 
     get tooltip(): string {
-        return this._description;
+        return '${this.label}';
     }
 
     get description(): string {
-        return this._description;
+        if (this._description !== undefined) {
+            return this._description;
+        }
+        return '';
     }
 }

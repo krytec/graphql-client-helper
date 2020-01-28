@@ -13,6 +13,7 @@ import { ScalarFieldWrapper } from '../wrapper/GraphQLScalarWrapper';
 import { EnumWrapper } from '../wrapper/GraphQLEnumWrapper';
 import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
 import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
+import { MutationWrapper } from '../wrapper/GraphQLMutationWrapper';
 
 /**
  * Method to construct a TypeWrapper from a GraphQLObjectType
@@ -168,9 +169,24 @@ export function constructQuery(query: any): QueryWrapper {
     var queryAsField = constructField(query);
     const queryWrapper = new QueryWrapper(
         queryAsField.name,
-        queryAsField.description,
         queryAsField.ofType,
-        queryAsField.isList
+        queryAsField.isList,
+        queryAsField.description
+    );
+    return queryWrapper;
+}
+
+/**
+ * Method to construct a MutationWrapper from a mutation object
+ * @param mutation mutation
+ */
+export function constructMutation(mutation: any): MutationWrapper {
+    var mutationAsField = constructField(mutation);
+    const queryWrapper = new MutationWrapper(
+        mutationAsField.name,
+        mutationAsField.ofType,
+        mutationAsField.isList,
+        mutationAsField.description
     );
     return queryWrapper;
 }
