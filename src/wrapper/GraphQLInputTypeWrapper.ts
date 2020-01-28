@@ -48,8 +48,8 @@ export class InputTypeWrapper implements GraphQLWrapper {
         //? FIXME: Find a way to make this code look cleaner
         let typeAsString: string = `
 /**${this._description}*/
-export type ${this.name} = {
-    __typename?: '${this.name}',
+export type ${this._name} = {
+    __typename?: '${this._name}',
     ${fieldsAsString}
 };
         `;

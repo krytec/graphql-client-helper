@@ -1,58 +1,76 @@
 {
-	"name": "graphql-client-helper",
-	"displayName": "graphql-client-helper",
-	"description": "Creates a schema and typescript types from an graphql endpoint, helps to generate queries and mutations and autogenerates services for a graphql client ",
-	"version": "0.0.1",
-	"engines": {
-		"vscode": "^1.40.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onCommand:extension.showLog",
-		"onCommand:extension.createSchema",
-		"workspaceContains:**/schema.gql"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "extension.createSchema",
-				"title": "Create Schema"
-			},
-			{
-				"command": "extension.showLog",
-				"title": "Show GraphQL Helper Log"
-			}
-		],
-		"keybindings": {
-			"command": "extension.createSchema",
-			"key": "ctrl+alt+s"
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"pretest": "npm run compile",
-		"test": "node ./out/test/runTest.js"
-	},
-	"devDependencies": {
-		"@types/chai": "^4.2.6",
-		"@types/glob": "^7.1.1",
-		"@types/mocha": "^5.2.7",
-		"@types/node": "^12.11.7",
-		"@types/vscode": "^1.40.0",
-		"chai": "^4.2.0",
-		"glob": "^7.1.5",
-		"mocha": "^6.2.2",
-		"tslint": "^5.20.0",
-		"typescript": "^3.6.4",
-		"vscode-test": "^1.2.2"
-	},
-	"dependencies": {
-		"graphql": "^14.5.8",
-		"node-fetch": "^2.6.0"
-	}
+    "name": "graphql-client-helper",
+    "displayName": "graphql-client-helper",
+    "description": "Creates a schema and typescript types from an graphql endpoint, helps to generate queries and mutations and autogenerates services for a graphql client ",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.40.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:extension.showLog",
+        "onCommand:extension.createSchema",
+        "workspaceContains:**/schema.gql",
+        "onView:schemaExplorer"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.createSchema",
+                "title": "Create Schema"
+            },
+            {
+                "command": "extension.showLog",
+                "title": "Show GraphQL Helper Log"
+            }
+        ],
+        "keybindings": {
+            "command": "extension.createSchema",
+            "key": "ctrl+alt+s"
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "schema-explorer",
+                    "title": "Schema Explorer",
+                    "icon": "resources/GraphQL_Logo.png"
+                }
+            ]
+        },
+        "views": {
+            "schema-explorer": [
+                {
+                    "id": "schemaExplorer",
+                    "name": "Schema Explorer"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.2.6",
+        "@types/glob": "^7.1.1",
+        "@types/mocha": "^5.2.7",
+        "@types/node": "^12.11.7",
+        "@types/vscode": "^1.40.0",
+        "chai": "^4.2.0",
+        "glob": "^7.1.5",
+        "mocha": "^6.2.2",
+        "tslint": "^5.20.0",
+        "typescript": "^3.6.4",
+        "vscode-test": "^1.2.2"
+    },
+    "dependencies": {
+        "graphql": "^14.5.8",
+        "node-fetch": "^2.6.0"
+    }
 }

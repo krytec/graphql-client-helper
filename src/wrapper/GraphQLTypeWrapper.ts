@@ -40,6 +40,13 @@ export class TypeWrapper implements GraphQLWrapper {
     }
 
     /**
+     * Returns all fields
+     */
+    getFields() {
+        return this._fields;
+    }
+
+    /**
      * Function to create Typescript type code as a representation of the obj
      * @returns obj as Typescript type code as a String
      */

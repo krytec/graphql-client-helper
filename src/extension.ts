@@ -7,6 +7,8 @@ import GraphQLService from './services/GraphQLService';
 import { CommandService } from './services/CommandService';
 import { LoggingService } from './services/LoggingService';
 import { generatedFolder } from './constants';
+import { StateService } from './services/StateService';
+import { RequestNodeProvider } from './services/RequestNodeService';
 const path = require('path');
 // this method is called when your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -18,17 +20,12 @@ export function activate(context: vscode.ExtensionContext) {
 
     //create instance of services
     const loggingService = new LoggingService();
-    const graphQLService = new GraphQLService(loggingService);
-    const commandService = new CommandService(
-        context,
-        graphQLService,
-        loggingService
-    );
-
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with registerCommand
-    // The commandId parameter must match the command field in package.json
-
+    const stateService = new StateService(loggingService, context);
+    const graphQLService = new GraphQLService(stateService);
+    const commandService = new CommandService(stateService, graphQLService);
+    const requestProvider = new RequestNodeProvider(stateService);
+    //Register treeview here -> Provider in /services
+    vscode.window.registerTreeDataProvider('schemaExplorer', requestProvider);
     // Register commands here -> commands can be found in the /commands directory
     commandService.registerCommands();
 }

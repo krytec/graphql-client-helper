@@ -4,13 +4,15 @@ import {
     GraphQLInputObjectType,
     GraphQLNonNull,
     GraphQLEnumType,
-    GraphQLList
+    GraphQLList,
+    GraphQLFieldMap
 } from 'graphql';
 import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
 import { FieldWrapper } from '../wrapper/GraphQLFieldWrapper';
 import { ScalarFieldWrapper } from '../wrapper/GraphQLScalarWrapper';
 import { EnumWrapper } from '../wrapper/GraphQLEnumWrapper';
 import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
+import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
 
 /**
  * Method to construct a TypeWrapper from a GraphQLObjectType
@@ -22,11 +24,12 @@ export function constructType(type: GraphQLObjectType): TypeWrapper {
         type.description ? type.description : undefined
     );
     let fields = Object.values(type.getFields());
-    let interfaces = Object.values(type.getInterfaces());
     fields.forEach(element => {
         let field: FieldWrapper = constructField(element);
         constructedType.addField(field);
     });
+    //! TODO: implement interfaces
+    let interfaces = Object.values(type.getInterfaces());
     return constructedType;
 }
 
@@ -155,4 +158,19 @@ export function constructEnumType(enumType: GraphQLEnumType) {
         enumType.getValues(),
         enumType.description ? enumType.description : undefined
     );
+}
+
+/**
+ * Method to construct a QueryWrapper from a query object
+ * @param query Query
+ */
+export function constructQuery(query: any): QueryWrapper {
+    var queryAsField = constructField(query);
+    const queryWrapper = new QueryWrapper(
+        queryAsField.name,
+        queryAsField.description,
+        queryAsField.ofType,
+        queryAsField.isList
+    );
+    return queryWrapper;
 }

@@ -2,12 +2,16 @@ import GraphQLUtils from '../../services/GraphQLService';
 import { expect } from 'chai';
 import { GraphQLObjectType } from 'graphql';
 import { LoggingService } from '../../services/LoggingService';
+import { StateService } from '../../services/StateService';
+import { EnumWrapper } from '../../wrapper/GraphQLEnumWrapper';
+import { TypeWrapper } from '../../wrapper/GraphQLTypeWrapper';
 
 const fs = require('fs');
 const path = require('path');
 
 describe('Test functions of GraphQLUtil class', function() {
-    let graphQLUtil = new GraphQLUtils(new LoggingService());
+    let state = new StateService(new LoggingService());
+    let graphQLUtil = new GraphQLUtils(state);
     graphQLUtil.folder = __dirname;
     describe('GraphQLUtilTest to test if invalid endpoint throws error', () => {
         let url: string = 'http://google.com';
@@ -42,8 +46,8 @@ describe('Test functions of GraphQLUtil class', function() {
         });
         it('should create type wrappers from GraphQLSchema', () => {
             graphQLUtil.createTypesFromSchema(schema);
-            expect(graphQLUtil.enums.length).is.equals(1);
-            expect(graphQLUtil.types.length).is.equals(6);
+            expect(state.enums.length).is.equals(1);
+            expect(state.types.length).is.equals(6);
         });
     });
 });
