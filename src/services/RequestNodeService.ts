@@ -52,8 +52,8 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
                 new Request(
                     request.Name,
                     request.Type,
-                    false,
                     vscode.TreeItemCollapsibleState.Collapsed,
+                    request instanceof QueryWrapper,
                     request.Description
                 )
         );
@@ -66,22 +66,26 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
      */
     private getFields(request: Request): Request[] {
         const type = this.stateService.types.find(
-            type => type.name === type.name
+            type => request.type === type.name
         );
+
         if (type !== undefined) {
             const requests = type
-                ?.getFields()
+                .getFields()
                 .map(
                     field =>
                         new Request(
                             field.name,
                             field.ofType,
-                            false,
                             this.stateService.scalar.fields
                                 .map(scalar => scalar.name === field.ofType)
+                                .includes(true) ||
+                            this.stateService.enums
+                                .map(enumType => enumType.name === field.ofType)
                                 .includes(true)
                                 ? vscode.TreeItemCollapsibleState.None
                                 : vscode.TreeItemCollapsibleState.Collapsed,
+                            undefined,
                             field.description
                         )
                 );
@@ -100,20 +104,16 @@ class Request extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         private _type: string,
-        private _isSelected,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        private _isQuery?: boolean,
         private _description?: string,
         public readonly command?: vscode.Command
     ) {
         super(label, collapsibleState);
     }
 
-    get isSelected(): boolean {
-        return this._isSelected;
-    }
-
     get tooltip(): string {
-        return '${this.label}';
+        return `Type : ${this.type}`;
     }
 
     get type(): string {

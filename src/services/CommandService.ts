@@ -38,9 +38,10 @@ export class CommandService {
             );
             this._graphQLService
                 .getSchemaFromFile(schemaFile)
-                .then(schema =>
-                    this._graphQLService.getRequestsFromSchema(schema)
-                )
+                .then(schema => {
+                    this._graphQLService.createTypesFromSchema(schema);
+                    this._graphQLService.getRequestsFromSchema(schema);
+                })
                 .catch(err => vscode.window.showErrorMessage(err));
         }
     }
