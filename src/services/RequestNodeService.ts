@@ -110,6 +110,9 @@ class Request extends vscode.TreeItem {
         public readonly command?: vscode.Command
     ) {
         super(label, collapsibleState);
+        if (_isQuery !== undefined) {
+            this.label = _isQuery ? 'Query ' + label : 'Mutation ' + label;
+        }
     }
 
     get tooltip(): string {
