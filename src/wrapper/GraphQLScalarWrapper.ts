@@ -19,6 +19,10 @@ export class ScalarWrapper implements GraphQLWrapper {
         this._scalars.push(field);
     }
 
+    get fields(): Array<ScalarFieldWrapper> {
+        return this._scalars;
+    }
+
     /**
      * !TODO: Implementation
      */

@@ -32,6 +32,7 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
         if (this.stateService.requests.length > 0) {
             if (element) {
                 //! TODO: Add child elements based on query / mutation
+                return Promise.resolve(this.getFields(element));
             } else {
                 return Promise.resolve(this.getRequests());
             }
@@ -63,7 +64,33 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
      * Method to get possible child nodes of the tree element
      * @param request Parent node element of the tree
      */
-    private getFields(request: Request) {}
+    private getFields(request: Request): Request[] {
+        const type = this.stateService.types.find(
+            type => type.name === type.name
+        );
+        if (type !== undefined) {
+            const requests = type
+                ?.getFields()
+                .map(
+                    field =>
+                        new Request(
+                            field.name,
+                            field.ofType,
+                            false,
+                            this.stateService.scalar.fields
+                                .map(scalar => scalar.name === field.ofType)
+                                .includes(true)
+                                ? vscode.TreeItemCollapsibleState.None
+                                : vscode.TreeItemCollapsibleState.Collapsed,
+                            field.description
+                        )
+                );
+
+            return requests;
+        } else {
+            return [];
+        }
+    }
 }
 
 /**
@@ -87,6 +114,10 @@ class Request extends vscode.TreeItem {
 
     get tooltip(): string {
         return '${this.label}';
+    }
+
+    get type(): string {
+        return this._type;
     }
 
     get description(): string {

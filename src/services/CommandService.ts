@@ -24,9 +24,6 @@ export class CommandService {
     ) {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
-
-        //! TODO: Changed workspace folder should check if schema is provided
-
         this.workspaceFolderChanged();
         vscode.workspace.onDidChangeWorkspaceFolders(
             () => this.workspaceFolderChanged
