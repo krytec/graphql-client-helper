@@ -2,6 +2,7 @@ import { window } from 'vscode';
 import { projectId } from '../constants';
 
 type LOG_LEVEL = 'WARN' | 'INFO' | 'DEBUG';
+
 /**
  * LoggingService for the extension
  */

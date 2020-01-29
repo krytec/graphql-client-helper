@@ -1,7 +1,7 @@
 import { Schema } from 'inspector';
 import { type } from 'os';
 import { dedent } from '../utils/Utils';
-import { FieldWrapper } from './GraphQLFieldWrapper';
+import { FieldWrapper } from './FieldWrapper';
 import { GraphQLWrapper } from './GraphQLWrapperInterface';
 
 /**

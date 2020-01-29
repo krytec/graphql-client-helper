@@ -1,7 +1,7 @@
 import { GraphQLWrapper } from './GraphQLWrapperInterface';
-import { TypeWrapper } from './GraphQLTypeWrapper';
-import { FieldWrapper } from './GraphQLFieldWrapper';
-import { RequestWrapper } from './GraphQLRequestWrapper';
+import { TypeWrapper } from './TypeWrapper';
+import { FieldWrapper } from './FieldWrapper';
+import { RequestWrapper } from './RequestWrapper';
 import { dedent } from '../utils/Utils';
 
 /**

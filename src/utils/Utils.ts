@@ -1,4 +1,5 @@
 import { URL } from 'url';
+import { print, parse } from 'graphql';
 /**
  * * Function to validate a given url as string
  * @param value
@@ -11,6 +12,15 @@ export function isValidURL(value: string): boolean {
         return false;
     }
 }
+
+/**
+ * * Function to parse a string to graphql and return it as string
+ * @param request Input string to pars
+ */
+export function stringToGraphQLFormat(request: string): string {
+    return print(parse(request));
+}
+
 /**
  * !Function to dedent multiline strings from https://gist.github.com/zenparsing/5dffde82d9acef19e43c
  */

@@ -4,6 +4,9 @@ import { runInThisContext } from 'vm';
 import { LoggingService } from './LoggingService';
 import { StateService } from './StateService';
 
+/**
+ * Service to create a treeview of the available requests
+ */
 export class RequestService {
     private _treeView: vscode.TreeView<Request>;
     private _requestProvider: RequestNodeProvider;
@@ -25,12 +28,22 @@ export class RequestService {
         );
     }
 
+    /**
+     * Callback method to change the values of the collapsible state programmatically,
+     * since it doesnt work otherwise
+     * @param element Element which should be collapsed
+     */
     private collapsedCallback(element: Request) {
         element.fields.filter(field => field.selected === true).length > 0
             ? (element.collapsibleState = 2)
             : (element.collapsibleState = 1);
     }
 
+    /**
+     * Callback method to change the values of the collapsible state programmatically,
+     * since it doesnt work otherwise
+     * @param element Element which should be expanded
+     */
     private expandCallback(element: Request) {
         element.collapsibleState = 2;
     }

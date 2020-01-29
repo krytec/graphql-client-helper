@@ -17,17 +17,10 @@ import {
     constructInputType,
     constructQuery,
     constructMutation
-} from '../utils/WrapperUtils';
-import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
-import { ScalarWrapper } from '../wrapper/GraphQLScalarWrapper';
-import { EnumWrapper } from '../Wrapper/GraphQLEnumWrapper';
-import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
+} from '../utils/MappingUtils';
 import { LoggingService } from './LoggingService';
 import * as vscode from 'vscode';
-import gql from 'graphql-tag';
 import { generatedFolder } from '../constants';
-import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
-import { MutationWrapper } from '../wrapper/GraphQLMutationWrapper';
 import { StateService } from './StateService';
 import { Request } from './RequestNodeProvider';
 
@@ -57,7 +50,7 @@ export default class GraphQLService {
     }
 
     /**
-     * * Async function to create a schema.gql file from a graphql endpoint
+     * * Async method to create a schema.gql file from a graphql endpoint
      * * Fetches an introspection query from the endpoint and builds a GraphQLSchema object
      * * The schema object is then saved as file and returned
      * @param endpoint graphql endpoint url as string
@@ -128,7 +121,7 @@ export default class GraphQLService {
     }
 
     /**
-     * * Async function to create a GraphQLSchema object from a file and return it a promise
+     * * Async method to create a GraphQLSchema object from a file and return it a promise
      */
     async getSchemaFromFile(file: string): Promise<GraphQLSchema> {
         let schema: string = '';
@@ -150,7 +143,7 @@ export default class GraphQLService {
     }
 
     /**
-     * * Function to create and write typescript types to file
+     * * Method to create and write typescript types to file
      * @param schema GraphQLSchema from endpoint
      */
     createTypesFromSchema(schema: GraphQLSchema) {
@@ -182,12 +175,12 @@ export default class GraphQLService {
     }
 
     /**
-     * * Function to write all types of the schema as typescript types to a file
+     * * Method to write all types of the schema as typescript types to a file
      */
     writeTypesToFile() {}
 
     /**
-     * * Function to write the saved requests to a file
+     * * Method to write the saved requests to a file
      * ! TODO: Add functionality to save request to a file
      */
     writeRequestToFile(element: Request) {
@@ -199,7 +192,7 @@ export default class GraphQLService {
     }
 
     /**
-     * Gets all queries and mutations from the graphql schema
+     * Method to get all queries and mutations from the graphql schema
      * @param schema GraphQLSchema object
      */
     getRequestsFromSchema(schema: GraphQLSchema) {

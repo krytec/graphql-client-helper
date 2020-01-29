@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
 import { LoggingService } from './LoggingService';
-import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
-import { ScalarWrapper } from '../wrapper/GraphQLScalarWrapper';
-import { EnumWrapper } from '../wrapper/GraphQLEnumWrapper';
-import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
-import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
-import { MutationWrapper } from '../wrapper/GraphQLMutationWrapper';
-import { RequestWrapper } from '../wrapper/GraphQLRequestWrapper';
+import { TypeWrapper } from '../graphqlwrapper/TypeWrapper';
+import { ScalarWrapper } from '../graphqlwrapper/ScalarWrapper';
+import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
+import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
+import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
 import { Request } from './RequestNodeProvider';
 /**
  * Service for a global extension state,
@@ -74,6 +72,9 @@ export class StateService implements vscode.Memento {
     }
     //#endregion
 
+    /**
+     * Method to initialize the state of the extension
+     */
     private initState() {
         this.update('context', this._context).then(undefined, x => {
             this._logger.logDebug('No context set!');

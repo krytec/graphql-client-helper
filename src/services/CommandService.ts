@@ -32,6 +32,9 @@ export class CommandService {
         );
     }
 
+    /**
+     * Callback method that listens to the workspacefolderschangedevent
+     */
     private workspaceFolderChanged() {
         if (vscode.workspace.workspaceFolders !== undefined) {
             const schemaFile = path.join(
@@ -48,7 +51,7 @@ export class CommandService {
         }
     }
     /**
-     * registers all commands to vscode
+     * Method to register all commands in the extension
      */
     registerCommands() {
         const showLogCommand = vscode.commands.registerCommand(

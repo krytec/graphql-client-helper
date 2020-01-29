@@ -3,8 +3,6 @@ import { expect } from 'chai';
 import { GraphQLObjectType } from 'graphql';
 import { LoggingService } from '../../services/LoggingService';
 import { StateService } from '../../services/StateService';
-import { EnumWrapper } from '../../wrapper/GraphQLEnumWrapper';
-import { TypeWrapper } from '../../wrapper/GraphQLTypeWrapper';
 
 const fs = require('fs');
 const path = require('path');

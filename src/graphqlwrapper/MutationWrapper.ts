@@ -1,6 +1,6 @@
 import { GraphQLWrapper } from './GraphQLWrapperInterface';
-import { RequestWrapper } from './GraphQLRequestWrapper';
-import { FieldWrapper } from './GraphQLFieldWrapper';
+import { RequestWrapper } from './RequestWrapper';
+import { FieldWrapper } from './FieldWrapper';
 import { dedent } from '../utils/Utils';
 
 /**

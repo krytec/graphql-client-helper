@@ -7,13 +7,13 @@ import {
     GraphQLList,
     GraphQLFieldMap
 } from 'graphql';
-import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
-import { FieldWrapper } from '../wrapper/GraphQLFieldWrapper';
-import { ScalarFieldWrapper } from '../wrapper/GraphQLScalarWrapper';
-import { EnumWrapper } from '../wrapper/GraphQLEnumWrapper';
-import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
-import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
-import { MutationWrapper } from '../wrapper/GraphQLMutationWrapper';
+import { TypeWrapper } from '../graphqlwrapper/TypeWrapper';
+import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
+import { ScalarFieldWrapper } from '../graphqlwrapper/ScalarWrapper';
+import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
+import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
+import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
+import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 
 /**
  * Method to construct a TypeWrapper from a GraphQLObjectType

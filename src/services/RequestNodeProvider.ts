@@ -1,9 +1,6 @@
 import * as vscode from 'vscode';
 import { StateService } from './StateService';
-import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
-import { FieldWrapper } from '../wrapper/GraphQLFieldWrapper';
-import { MutationWrapper } from '../wrapper/GraphQLMutationWrapper';
-import { TypeWrapper } from '../wrapper/GraphQLTypeWrapper';
+import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { maxQueryDepth } from '../constants';
 import { dedent } from '../utils/Utils';
 
@@ -81,8 +78,10 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
     }
 
     /**
-     * Method to get possible child nodes of the tree element
+     * Method to get all possible child nodes of the tree element,
+     * until the maxQueryDepth is reached
      * @param request Parent node element of the tree
+     * @param depth Current depth of the request
      */
     private getFields(request: Request, depth: number): Request[] {
         if (depth <= maxQueryDepth) {
@@ -133,6 +132,16 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
 export class Request extends vscode.TreeItem {
     private _fields: Array<Request>;
 
+    /**
+     * Constructor for a request
+     * @param label Label of the item
+     * @param _type Type that is returned by the field
+     * @param collapsibleState Shows if item is collapsed
+     * @param _isQuery Identifies if the item is a query root
+     * @param _description Optional description of an item
+     * @param command Optional command of an item
+     * @param _isSelected Checks if the current item is selected
+     */
     constructor(
         public readonly label: string,
         private _type: string,
@@ -140,6 +149,7 @@ export class Request extends vscode.TreeItem {
         private _isQuery?: boolean,
         private _description?: string,
         public readonly command?: vscode.Command,
+        private _deprecated: boolean = false,
         private _isSelected: boolean = false
     ) {
         super(label, collapsibleState);
@@ -148,7 +158,6 @@ export class Request extends vscode.TreeItem {
         }
         if (_isQuery !== undefined) {
             this.contextValue = _isQuery ? 'query' : 'mutation';
-            //this.label = _isQuery ? 'query ' + label : 'mutation ' + label;
         }
         this._fields = new Array<Request>();
     }
@@ -161,14 +170,12 @@ export class Request extends vscode.TreeItem {
             this._fields.filter(field => field.selected === true).length > 0
                 ? `{
             ${this._fields
-                .map(field =>
-                    field.selected ? dedent`\t ${field.toString()}` : ''
-                )
+                .map(field => (field.selected ? `\t ${field.toString()}` : ''))
                 .join('\n')}
             }`
                 : ``;
 
-        return dedent`${this.label} ${fields}`;
+        return `${this.label} ${fields}`;
     }
 
     //#region getter & setter
@@ -185,7 +192,7 @@ export class Request extends vscode.TreeItem {
     }
 
     get tooltip(): string {
-        return `Type : ${this.type}`;
+        return `Type : ${this._type}`;
     }
 
     get type(): string {
@@ -201,6 +208,10 @@ export class Request extends vscode.TreeItem {
 
     get fields(): Array<Request> {
         return this._fields;
+    }
+
+    get deprecated(): boolean {
+        return this._deprecated;
     }
 
     set fields(fields: Array<Request>) {

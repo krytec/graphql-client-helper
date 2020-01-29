@@ -1,5 +1,5 @@
 import { GraphQLWrapper } from './GraphQLWrapperInterface';
-import { FieldWrapper } from './GraphQLFieldWrapper';
+import { FieldWrapper } from './FieldWrapper';
 import { dedent } from '../utils/Utils';
 
 export class InputTypeWrapper implements GraphQLWrapper {
