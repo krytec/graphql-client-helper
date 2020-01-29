@@ -6,7 +6,9 @@ import {
     GraphQLScalarType,
     GraphQLEnumType,
     buildSchema,
-    GraphQLInputObjectType
+    GraphQLInputObjectType,
+    parse,
+    print
 } from 'graphql';
 import {
     constructType,
@@ -22,11 +24,12 @@ import { EnumWrapper } from '../Wrapper/GraphQLEnumWrapper';
 import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
 import { LoggingService } from './LoggingService';
 import * as vscode from 'vscode';
-
+import gql from 'graphql-tag';
 import { generatedFolder } from '../constants';
 import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
 import { MutationWrapper } from '../wrapper/GraphQLMutationWrapper';
 import { StateService } from './StateService';
+import { Request } from './RequestNodeProvider';
 
 const fetch = require('node-fetch');
 const {
@@ -179,10 +182,21 @@ export default class GraphQLService {
     }
 
     /**
-     * * Function to generate all types of the current selected file
-     * * and write them to a file
+     * * Function to write all types of the schema as typescript types to a file
      */
     writeTypesToFile() {}
+
+    /**
+     * * Function to write the saved requests to a file
+     * ! TODO: Add functionality to save request to a file
+     */
+    writeRequestToFile(element: Request) {
+        if (element.contextValue === 'query') {
+            const root = element.toString();
+            this._logger.logDebug(print(parse(`query { ${root} }`)));
+        } else if (element.contextValue === 'mutation') {
+        }
+    }
 
     /**
      * Gets all queries and mutations from the graphql schema

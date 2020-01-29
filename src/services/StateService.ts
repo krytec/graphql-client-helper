@@ -7,6 +7,7 @@ import { InputTypeWrapper } from '../wrapper/GraphQLInputTypeWrapper';
 import { QueryWrapper } from '../wrapper/GraphQLQueryWrapper';
 import { MutationWrapper } from '../wrapper/GraphQLMutationWrapper';
 import { RequestWrapper } from '../wrapper/GraphQLRequestWrapper';
+import { Request } from './RequestNodeProvider';
 /**
  * Service for a global extension state,
  * implements the vscode.Memento interface
@@ -64,12 +65,12 @@ export class StateService implements vscode.Memento {
         return this.get('requests') as Array<RequestWrapper>;
     }
 
-    get queries(): Array<QueryWrapper> {
-        return this.get('queries') as Array<QueryWrapper>;
+    get queries(): Array<Request> {
+        return this.get('queries') as Array<Request>;
     }
 
-    get mutations(): Array<MutationWrapper> {
-        return this.get('mutation') as Array<MutationWrapper>;
+    get mutations(): Array<Request> {
+        return this.get('mutation') as Array<Request>;
     }
     //#endregion
 
@@ -82,8 +83,8 @@ export class StateService implements vscode.Memento {
         this.update('scalar', new ScalarWrapper());
         this.update('enums', new Array<EnumWrapper>());
         this.update('inputtypes', new Array<InputTypeWrapper>());
-        this.update('queries', new Array<QueryWrapper>());
-        this.update('mutations', new Array<MutationWrapper>());
+        this.update('queries', new Array<Request>());
+        this.update('mutations', new Array<Request>());
         this.update('requests', new Array<RequestWrapper>());
     }
 }

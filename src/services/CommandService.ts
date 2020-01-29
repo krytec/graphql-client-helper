@@ -5,6 +5,8 @@ import { LoggingService } from './LoggingService';
 import { showLogingWindowCommand } from '../commands/ShowLogCommand';
 import { StateService } from './StateService';
 import { generatedFolder } from '../constants';
+import { showSaveRequestCommand } from '../commands/SaveRequestCommand';
+import { Request, RequestNodeProvider } from './RequestNodeProvider';
 const path = require('path');
 /**
  * Service class to create vscode commands and register them to vscode
@@ -63,7 +65,21 @@ export class CommandService {
             }
         );
 
+        const saveRequestCommand = vscode.commands.registerCommand(
+            'schema.saveRequest',
+            (element: Request) => {
+                showSaveRequestCommand(element, this._graphQLService);
+            }
+        );
+
+        const selectFieldCommand = vscode.commands.registerCommand(
+            'schema.selectField',
+            (element: Request) => (element.selected = true)
+        );
+
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
+        this._ctx.subscriptions.push(selectFieldCommand);
+        this._ctx.subscriptions.push(saveRequestCommand);
     }
 }

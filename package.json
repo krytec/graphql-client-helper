@@ -25,6 +25,22 @@
             {
                 "command": "extension.showLog",
                 "title": "Show GraphQL Helper Log"
+            },
+            {
+                "command": "schema.refresh",
+                "title": "Refresh"
+            },
+            {
+                "command": "schema.runRequest",
+                "title": "Run"
+            },
+            {
+                "command": "schema.saveRequest",
+                "title": "Save"
+            },
+            {
+                "command": "schema.selectField",
+                "title": "Select"
             }
         ],
         "keybindings": {
@@ -46,6 +62,32 @@
                     "id": "schemaExplorer",
                     "name": "Schema Explorer",
                     "when": "schemaLoaded"
+                }
+            ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "schema.refresh",
+                    "when": "view == schemaExplorer",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "schema.runRequest",
+                    "when": "view == schemaExplorer && viewItem == query || viewItem == mutation",
+                    "group": "inline"
+                },
+                {
+                    "command": "schema.saveRequest",
+                    "when": "view == schemaExplorer && viewItem == query || viewItem == mutation",
+                    "group": "inline"
+                },
+                {
+                    "command": "schema.selectField",
+                    "when": "view == schemaExplorer && viewItem != field",
+                    "group": "inline"
                 }
             ]
         }
