@@ -29,6 +29,8 @@ export async function showCreateSchemaInput(service: GraphQLService) {
                             )
                         )
                         .then(() => {
+                            var config = workspace.getConfiguration('graphix');
+                            config.update('schema.endpoint', value, true);
                             var openPath = Uri.file(
                                 join(
                                     pathToFolder,

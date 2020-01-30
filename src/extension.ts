@@ -26,7 +26,6 @@ export function activate(context: vscode.ExtensionContext) {
     const commandService = new CommandService(stateService, graphQLService);
     // Adds a new TreeView to vscode
     const requestService = new RequestService(stateService, loggingService);
-
     // Register commands here -> commands can be found in the /commands directory
     commandService.registerCommands();
 }

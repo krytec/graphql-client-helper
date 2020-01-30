@@ -7,7 +7,16 @@
         "vscode": "^1.40.0"
     },
     "categories": [
-        "Other"
+        "Other",
+        "Programming Languages"
+    ],
+    "keywords": [
+        "GraphQL",
+        "Client",
+        "Generator",
+        "Helper",
+        "GQL",
+        "Schema"
     ],
     "activationEvents": [
         "onCommand:extension.showLog",
@@ -17,6 +26,28 @@
     ],
     "main": "./out/extension.js",
     "contributes": {
+        "configuration": [
+            {
+                "title": "GraphiX",
+                "properties": {
+                    "graphix.typescript": {
+                        "type": "boolean",
+                        "default": "true",
+                        "description": "Specifies whether the extension should create typescript types from the endpoint"
+                    },
+                    "graphix.schema.folder": {
+                        "type": "string",
+                        "default": "graphqlschema",
+                        "description": "Specificies the name of the folder, where generated files will be saved"
+                    },
+                    "graphix.schema.endpoint": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Specifies the graphql endpoint that should be used to fetch the schema and run requests on"
+                    }
+                }
+            }
+        ],
         "commands": [
             {
                 "command": "extension.createSchema",
@@ -27,20 +58,24 @@
                 "title": "Show GraphQL Helper Log"
             },
             {
-                "command": "schema.refresh",
+                "command": "tree.refresh",
                 "title": "Refresh"
             },
             {
-                "command": "schema.runRequest",
+                "command": "tree.runRequest",
                 "title": "Run"
             },
             {
-                "command": "schema.saveRequest",
+                "command": "tree.saveRequest",
                 "title": "Save"
             },
             {
-                "command": "schema.selectField",
+                "command": "tree.selectField",
                 "title": "Select"
+            },
+            {
+                "command": "tree.deselectField",
+                "title": "Deselect"
             }
         ],
         "keybindings": {
@@ -68,24 +103,24 @@
         "menus": {
             "view/title": [
                 {
-                    "command": "schema.refresh",
+                    "command": "tree.refresh",
                     "when": "view == schemaExplorer",
                     "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
-                    "command": "schema.runRequest",
+                    "command": "tree.runRequest",
                     "when": "view == schemaExplorer && viewItem == query || viewItem == mutation",
                     "group": "inline"
                 },
                 {
-                    "command": "schema.saveRequest",
+                    "command": "tree.saveRequest",
                     "when": "view == schemaExplorer && viewItem == query || viewItem == mutation",
                     "group": "inline"
                 },
                 {
-                    "command": "schema.selectField",
+                    "command": "tree.selectField",
                     "when": "view == schemaExplorer && viewItem != field",
                     "group": "inline"
                 }
