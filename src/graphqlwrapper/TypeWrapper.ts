@@ -47,7 +47,7 @@ export class TypeWrapper implements GraphQLWrapper {
     }
 
     /**
-     * Function to create Typescript type code as a representation of the obj
+     * Method to create Typescript type code as a representation of the obj
      * @returns obj as Typescript type code as a String
      */
     toTypescriptType(): string {

@@ -69,14 +69,14 @@ export class CommandService {
         );
 
         const saveRequestCommand = vscode.commands.registerCommand(
-            'schema.saveRequest',
+            'tree.saveRequest',
             (element: Request) => {
                 showSaveRequestCommand(element, this._graphQLService);
             }
         );
 
         const selectFieldCommand = vscode.commands.registerCommand(
-            'schema.selectField',
+            'tree.selectField',
             (element: Request) => (element.selected = true)
         );
 

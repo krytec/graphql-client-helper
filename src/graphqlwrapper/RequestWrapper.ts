@@ -16,14 +16,6 @@ export abstract class RequestWrapper {
         this._args = new Array<FieldWrapper>();
     }
 
-    /**
-     * Adds an argument to the query
-     * @param argument Argument as FieldWrapper
-     */
-    addArgument(argument: FieldWrapper) {
-        this._args.push(argument);
-    }
-
     //#region getter & setter
     get Name(): string {
         return this._name;
@@ -37,8 +29,12 @@ export abstract class RequestWrapper {
         return this._description;
     }
 
-    get Args(): Array<FieldWrapper> {
+    get args(): Array<FieldWrapper> {
         return this._args;
+    }
+
+    set args(args: Array<FieldWrapper>) {
+        this._args = args;
     }
 
     get isQuery(): boolean {

@@ -26,15 +26,13 @@ export class QueryWrapper extends RequestWrapper implements GraphQLWrapper {
      * @returns obj as Typescript type code as a String
      */
     toTypescriptType(): string {
-        let fieldsAsString: string = this.Args.map(
-            x => dedent`\n${x.toTypescriptType()},\n`
-        )
+        let fieldsAsString: string = this.args
+            .map(x => dedent`\n${x.toTypescriptType()},\n`)
             .map(x => x.replace(/\n/g, '\n    '))
             .join('');
         //? FIXME: Find a way to make this code look cleaner
         let typeAsString: string = `
-/**${this.Description}*/
-query ${this.Name}Query{
+query ${this.Name}Query(){
     ${fieldsAsString}
 };
         `;

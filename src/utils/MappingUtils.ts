@@ -45,6 +45,7 @@ function constructField(field: any): FieldWrapper {
     let ofType = '';
     let isList = false;
     let description = field.description;
+    let args = field.args;
     if (field.type instanceof GraphQLNonNull) {
         nonNull = true;
         if (
@@ -93,7 +94,7 @@ function constructField(field: any): FieldWrapper {
     ) {
         ofType = field.type.name;
     }
-    return new FieldWrapper(
+    const fieldWrapper = new FieldWrapper(
         name,
         nonNull,
         isScalar,
@@ -101,6 +102,14 @@ function constructField(field: any): FieldWrapper {
         ofType,
         description
     );
+
+    if (args !== undefined && args.length > 0) {
+        args.forEach(argument => {
+            fieldWrapper.args.push(constructField(argument));
+        });
+    }
+
+    return fieldWrapper;
 }
 
 /**
@@ -173,6 +182,7 @@ export function constructQuery(query: any): QueryWrapper {
         queryAsField.isList,
         queryAsField.description
     );
+    queryWrapper.args = queryAsField.args;
     return queryWrapper;
 }
 
@@ -182,11 +192,12 @@ export function constructQuery(query: any): QueryWrapper {
  */
 export function constructMutation(mutation: any): MutationWrapper {
     var mutationAsField = constructField(mutation);
-    const queryWrapper = new MutationWrapper(
+    const mutationWrapper = new MutationWrapper(
         mutationAsField.name,
         mutationAsField.ofType,
         mutationAsField.isList,
         mutationAsField.description
     );
-    return queryWrapper;
+    mutationWrapper.args = mutationAsField.args;
+    return mutationWrapper;
 }

@@ -3,6 +3,7 @@ import { StateService } from './StateService';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { maxQueryDepth } from '../constants';
 import { dedent } from '../utils/Utils';
+import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 
 /**
  * RequestProvider for TreeView, fills the TreeView with data
@@ -61,16 +62,17 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
      * Method to get all Mutations and Queries at the first layer of the tree
      */
     private getRequests(): Request[] {
-        const requests = this.stateService.requests.map(
-            request =>
-                new Request(
-                    request.Name,
-                    request.Type,
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    request instanceof QueryWrapper,
-                    request.Description
-                )
-        );
+        const requests = this.stateService.requests.map(request => {
+            let node = new Request(
+                request.Name,
+                request.Type,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                request instanceof QueryWrapper,
+                request.Description
+            );
+            request.args.forEach(arg => node.addArgument(arg));
+            return node;
+        });
         requests.forEach(
             request => (request.fields = this.getFields(request, 1))
         );
@@ -131,6 +133,7 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
  */
 export class Request extends vscode.TreeItem {
     private _fields: Array<Request>;
+    private _args: Array<FieldWrapper> = new Array<FieldWrapper>();
 
     /**
      * Constructor for a request
@@ -159,6 +162,9 @@ export class Request extends vscode.TreeItem {
         if (_isQuery !== undefined) {
             this.contextValue = _isQuery ? 'query' : 'mutation';
         }
+        if (this.command) {
+            this.command.arguments = [this];
+        }
         this._fields = new Array<Request>();
     }
 
@@ -174,8 +180,18 @@ export class Request extends vscode.TreeItem {
                 .join('\n')}
             }`
                 : ``;
+        const args = this._args.map(ele => ele.toArgs()).join(' ');
+        return `${this.label} ${
+            this._args.length > 0 ? `(${args})` : ``
+        } ${fields}`;
+    }
 
-        return `${this.label} ${fields}`;
+    /**
+     * Adds an argument to a request
+     * @param argument Argument of a request
+     */
+    addArgument(argument: FieldWrapper) {
+        this._args.push(argument);
     }
 
     //#region getter & setter
@@ -191,6 +207,9 @@ export class Request extends vscode.TreeItem {
         this._isSelected = selected;
     }
 
+    get args(): Array<FieldWrapper> {
+        return this._args;
+    }
     get tooltip(): string {
         return `Type : ${this._type}`;
     }

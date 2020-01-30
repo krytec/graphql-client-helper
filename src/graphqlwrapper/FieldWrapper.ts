@@ -4,6 +4,8 @@ import { GraphQLWrapper } from './GraphQLWrapperInterface';
  * Representation of an GraphQL Field
  */
 export class FieldWrapper implements GraphQLWrapper {
+    private _args: Array<FieldWrapper>;
+
     /**
      * Constructor of a graphql field
      * @param name Name of the field
@@ -20,7 +22,9 @@ export class FieldWrapper implements GraphQLWrapper {
         private _isList: boolean,
         private _ofType: string,
         private _description?: string
-    ) {}
+    ) {
+        this._args = new Array<FieldWrapper>();
+    }
 
     /**
      * Function to create Typescript type code as a representation of the obj
@@ -90,6 +94,13 @@ export class FieldWrapper implements GraphQLWrapper {
         return `FieldWrapper(name:${this._name}, description:${this._description}, nonNull:${this._nonNull}, isScalar:${this._isScalar}, ofType:${this.ofType})`;
     }
 
+    /**
+     * Method to represent the field as an GraphQL argument
+     */
+    toArgs(): string {
+        return `${this._name}:${this._ofType}`;
+    }
+
     //#region getter and setter
     get name(): string {
         return this._name;
@@ -113,6 +124,10 @@ export class FieldWrapper implements GraphQLWrapper {
 
     get description(): string | undefined {
         return this._description;
+    }
+
+    get args(): Array<FieldWrapper> {
+        return this._args;
     }
     //#endregion
 }

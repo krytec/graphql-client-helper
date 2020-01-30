@@ -23,6 +23,8 @@ import * as vscode from 'vscode';
 import { generatedFolder } from '../constants';
 import { StateService } from './StateService';
 import { Request } from './RequestNodeProvider';
+import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
+import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 
 const fetch = require('node-fetch');
 const {
@@ -176,6 +178,7 @@ export default class GraphQLService {
 
     /**
      * * Method to write all types of the schema as typescript types to a file
+     * ! TODO: Implementation
      */
     writeTypesToFile() {}
 
