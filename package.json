@@ -98,6 +98,13 @@
                     "name": "Schema Explorer",
                     "when": "schemaLoaded"
                 }
+            ],
+            "request-view": [
+                {
+                    "id": "requestView",
+                    "name": "My Requests",
+                    "when": "schemaLoaded"
+                }
             ]
         },
         "menus": {
@@ -111,17 +118,22 @@
             "view/item/context": [
                 {
                     "command": "tree.runRequest",
-                    "when": "view == schemaExplorer && viewItem == query || viewItem == mutation",
+                    "when": "view == schemaExplorer && viewItem =~ /(query)/ || viewItem =~ /(mutation)/",
                     "group": "inline"
                 },
                 {
                     "command": "tree.saveRequest",
-                    "when": "view == schemaExplorer && viewItem == query || viewItem == mutation",
+                    "when": "view == schemaExplorer && viewItem =~ /(query)/ || viewItem =~ /(mutation)/",
                     "group": "inline"
                 },
                 {
                     "command": "tree.selectField",
-                    "when": "view == schemaExplorer && viewItem != field",
+                    "when": "view == schemaExplorer && viewItem =~ /(Deselected)/",
+                    "group": "inline"
+                },
+                {
+                    "command": "tree.deselectField",
+                    "when": "view == schemaExplorer && viewItem =~ /(Selected)/",
                     "group": "inline"
                 }
             ]

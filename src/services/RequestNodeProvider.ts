@@ -44,7 +44,13 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
     getChildren(
         element?: Request | undefined
     ): vscode.ProviderResult<Request[]> {
-        if (this.stateService.requests.length > 0) {
+        if (this.stateService.currentTree.length > 0) {
+            if (element) {
+                return Promise.resolve(element.fields);
+            } else {
+                return Promise.resolve(this.stateService.currentTree);
+            }
+        } else if (this.stateService.requests.length > 0) {
             if (element) {
                 return Promise.resolve(element.fields);
             } else {
@@ -76,6 +82,7 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
         requests.forEach(
             request => (request.fields = this.getFields(request, 1))
         );
+        this.stateService.currentTree = requests;
         return requests;
     }
 
@@ -145,6 +152,7 @@ export class Request extends vscode.TreeItem {
      * @param command Optional command of an item
      * @param _isSelected Checks if the current item is selected
      */
+
     constructor(
         public readonly label: string,
         private _type: string,
@@ -156,11 +164,15 @@ export class Request extends vscode.TreeItem {
         private _isSelected: boolean = false
     ) {
         super(label, collapsibleState);
-        if (collapsibleState !== 0) {
+        if (collapsibleState !== 1) {
+            this.contextValue = 'Deselected';
+        } else {
             this.contextValue = 'field';
         }
         if (_isQuery !== undefined) {
-            this.contextValue = _isQuery ? 'query' : 'mutation';
+            this.contextValue = _isQuery
+                ? 'queryDeselected'
+                : 'mutationDeselected';
         }
         if (this.command) {
             this.command.arguments = [this];
@@ -206,7 +218,22 @@ export class Request extends vscode.TreeItem {
     }
 
     set selected(selected: boolean) {
+        if (selected) {
+            this.contextValue = this.contextValue?.replace(
+                'Deselected',
+                'Selected'
+            );
+        } else {
+            this.contextValue = this.contextValue?.replace(
+                'Selected',
+                'Deselected'
+            );
+        }
         this._isSelected = selected;
+    }
+
+    get selectedRequest(): Request {
+        return this;
     }
 
     get args(): Array<FieldWrapper> {

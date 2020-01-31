@@ -1,4 +1,5 @@
 import { FieldWrapper } from './FieldWrapper';
+import { Request } from '../services/RequestNodeProvider';
 
 /**
  * Abstract RequestWrapper class for a graphql request (query, mutation, subscription)

@@ -30,10 +30,15 @@ export function activate(context: vscode.ExtensionContext) {
     const loggingService = new LoggingService();
     const stateService = new StateService(loggingService, context);
     const graphQLService = new GraphQLService(stateService);
-    const commandService = new CommandService(stateService, graphQLService);
-    // Adds a new TreeView to vscode
-    const requestService = new RequestService(stateService, loggingService);
+    // Create a node provider and adds a new TreeView to vscode
+    const requestNodeProvider = new RequestNodeProvider(stateService);
+    const requestService = new RequestService(requestNodeProvider);
     // Register commands here -> commands can be found in the /commands directory
+    const commandService = new CommandService(
+        stateService,
+        graphQLService,
+        requestNodeProvider
+    );
     commandService.registerCommands();
 }
 

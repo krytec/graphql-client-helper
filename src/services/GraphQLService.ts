@@ -211,13 +211,13 @@ export default class GraphQLService {
      * ! TODO: Add functionality to save request
      */
     saveRequest(name: string, element: Request) {
-        if (element.contextValue === 'query') {
+        if (element.contextValue?.match(/query/)) {
             const root = element.toString();
             const args = element.args.map(ele => ele.toArgs()).join(' ');
             this._logger.logDebug(
                 stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`)
             );
-        } else if (element.contextValue === 'mutation') {
+        } else if (element.contextValue?.match(/mutation/)) {
             const root = element.toString();
             const args = element.args.map(ele => ele.toArgs()).join(' ');
             this._logger.logDebug(

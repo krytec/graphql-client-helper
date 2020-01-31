@@ -39,6 +39,10 @@ export class StateService implements vscode.Memento {
         this.initState();
         this._logger.logDebug('State has been resetted');
     }
+
+    saveRequest(name: string, request: string) {
+        this.myRequests.set(name, request);
+    }
     //#region getter and setter
     get context(): vscode.ExtensionContext | undefined {
         return this._context;
@@ -67,13 +71,18 @@ export class StateService implements vscode.Memento {
         return this.get('requests') as Array<RequestWrapper>;
     }
 
-    get queries(): Array<Request> {
-        return this.get('queries') as Array<Request>;
+    get currentTree(): Array<Request> {
+        return this.get('currentTree') as Array<Request>;
     }
 
-    get mutations(): Array<Request> {
-        return this.get('mutation') as Array<Request>;
+    set currentTree(tree: Array<Request>) {
+        this.update('currentTree', tree);
     }
+
+    get myRequests(): Map<string, string> {
+        return this.get('myRequests') as Map<string, string>;
+    }
+
     //#endregion
 
     /**
@@ -88,8 +97,8 @@ export class StateService implements vscode.Memento {
         this.update('scalar', new ScalarWrapper());
         this.update('enums', new Array<EnumWrapper>());
         this.update('inputtypes', new Array<InputTypeWrapper>());
-        this.update('queries', new Array<Request>());
-        this.update('mutations', new Array<Request>());
+        this.update('currentTree', new Array<Request>());
         this.update('requests', new Array<RequestWrapper>());
+        this.update('myRequests', new Map<string, string>());
     }
 }

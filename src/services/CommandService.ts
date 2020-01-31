@@ -22,7 +22,8 @@ export class CommandService {
      */
     constructor(
         private _stateService: StateService,
-        private _graphQLService: GraphQLService
+        private _graphQLService: GraphQLService,
+        private _requestNodeProvider: RequestNodeProvider
     ) {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
@@ -75,14 +76,34 @@ export class CommandService {
             }
         );
 
+        const refreshCommand = vscode.commands.registerCommand(
+            'tree.refresh',
+            () => {
+                this._requestNodeProvider.refresh();
+            }
+        );
+
         const selectFieldCommand = vscode.commands.registerCommand(
             'tree.selectField',
-            (element: Request) => (element.selected = true)
+            (element: Request) => {
+                element.selected = true;
+                this._requestNodeProvider.refresh();
+            }
+        );
+
+        const deselectFieldCommand = vscode.commands.registerCommand(
+            'tree.deselectField',
+            (element: Request) => {
+                element.selected = false;
+                this._requestNodeProvider.refresh();
+            }
         );
 
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(selectFieldCommand);
         this._ctx.subscriptions.push(saveRequestCommand);
+        this._ctx.subscriptions.push(deselectFieldCommand);
+        this._ctx.subscriptions.push(refreshCommand);
     }
 }

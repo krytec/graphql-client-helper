@@ -9,13 +9,8 @@ import { StateService } from './StateService';
  */
 export class RequestService {
     private _treeView: vscode.TreeView<Request>;
-    private _requestProvider: RequestNodeProvider;
 
-    constructor(
-        private stateService: StateService,
-        private _logger: LoggingService
-    ) {
-        this._requestProvider = new RequestNodeProvider(stateService);
+    constructor(private _requestProvider: RequestNodeProvider) {
         this._treeView = vscode.window.createTreeView('schemaExplorer', {
             treeDataProvider: this._requestProvider
         });
