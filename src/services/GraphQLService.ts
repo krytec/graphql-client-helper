@@ -26,6 +26,7 @@ import { Request } from './RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 import { stringToGraphQLFormat } from '../utils/Utils';
+import { CustomRequest } from './SavedRequestNodeProvider';
 
 const fetch = require('node-fetch');
 const {
@@ -208,20 +209,31 @@ export default class GraphQLService {
 
     /**
      * * Method to save a request to the state
-     * ! TODO: Add functionality to save request
      */
     saveRequest(name: string, element: Request) {
         if (element.contextValue?.match(/query/)) {
             const root = element.toString();
             const args = element.args.map(ele => ele.toArgs()).join(' ');
-            this._logger.logDebug(
-                stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`)
+            this._state.saveRequest(
+                new CustomRequest(
+                    name,
+                    'query',
+                    stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`),
+                    element.args
+                )
             );
         } else if (element.contextValue?.match(/mutation/)) {
             const root = element.toString();
             const args = element.args.map(ele => ele.toArgs()).join(' ');
-            this._logger.logDebug(
-                stringToGraphQLFormat(`mutation ${name}(${args}){ ${root} }`)
+            this._state.saveRequest(
+                new CustomRequest(
+                    name,
+                    'mutation',
+                    stringToGraphQLFormat(
+                        `mutation ${name}(${args}){ ${root} }`
+                    ),
+                    element.args
+                )
             );
         }
     }

@@ -6,6 +6,7 @@ import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
 import { Request } from './RequestNodeProvider';
+import { CustomRequest } from './SavedRequestNodeProvider';
 /**
  * Service for a global extension state,
  * implements the vscode.Memento interface
@@ -40,9 +41,11 @@ export class StateService implements vscode.Memento {
         this._logger.logDebug('State has been resetted');
     }
 
-    saveRequest(name: string, request: string) {
-        this.myRequests.set(name, request);
+    saveRequest(customRequest: CustomRequest) {
+        this.myRequests.push(customRequest);
+        vscode.commands.executeCommand('setContext', 'hasRequests', true);
     }
+
     //#region getter and setter
     get context(): vscode.ExtensionContext | undefined {
         return this._context;
@@ -79,8 +82,8 @@ export class StateService implements vscode.Memento {
         this.update('currentTree', tree);
     }
 
-    get myRequests(): Map<string, string> {
-        return this.get('myRequests') as Map<string, string>;
+    get myRequests(): Array<CustomRequest> {
+        return this.get('myRequests') as Array<CustomRequest>;
     }
 
     //#endregion
@@ -89,6 +92,8 @@ export class StateService implements vscode.Memento {
      * Method to initialize the state of the extension
      */
     private initState() {
+        vscode.commands.executeCommand('setContext', 'hasRequests', false);
+        vscode.commands.executeCommand('setContext', 'schemaLoaded', false);
         this.update('context', this._context).then(undefined, x => {
             this._logger.logDebug('No context set!');
         });
@@ -99,6 +104,6 @@ export class StateService implements vscode.Memento {
         this.update('inputtypes', new Array<InputTypeWrapper>());
         this.update('currentTree', new Array<Request>());
         this.update('requests', new Array<RequestWrapper>());
-        this.update('myRequests', new Map<string, string>());
+        this.update('myRequests', new Array<CustomRequest>());
     }
 }

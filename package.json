@@ -62,10 +62,6 @@
                 "title": "Refresh"
             },
             {
-                "command": "tree.runRequest",
-                "title": "Run"
-            },
-            {
                 "command": "tree.saveRequest",
                 "title": "Save"
             },
@@ -75,6 +71,22 @@
             },
             {
                 "command": "tree.deselectField",
+                "title": "Deselect"
+            },
+            {
+                "command": "list.refresh",
+                "title": "Refresh"
+            },
+            {
+                "command": "list.runRequest",
+                "title": "Run"
+            },
+            {
+                "command": "list.selectRequest",
+                "title": "Select"
+            },
+            {
+                "command": "list.deselectRequest",
                 "title": "Deselect"
             }
         ],
@@ -97,13 +109,11 @@
                     "id": "schemaExplorer",
                     "name": "Schema Explorer",
                     "when": "schemaLoaded"
-                }
-            ],
-            "request-view": [
+                },
                 {
                     "id": "requestView",
                     "name": "My Requests",
-                    "when": "schemaLoaded"
+                    "when": "hasRequests"
                 }
             ]
         },
@@ -113,14 +123,14 @@
                     "command": "tree.refresh",
                     "when": "view == schemaExplorer",
                     "group": "navigation"
+                },
+                {
+                    "command": "list.refresh",
+                    "when": "view == requestView",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
-                {
-                    "command": "tree.runRequest",
-                    "when": "view == schemaExplorer && viewItem =~ /(query)/ || viewItem =~ /(mutation)/",
-                    "group": "inline"
-                },
                 {
                     "command": "tree.saveRequest",
                     "when": "view == schemaExplorer && viewItem =~ /(query)/ || viewItem =~ /(mutation)/",
@@ -134,6 +144,21 @@
                 {
                     "command": "tree.deselectField",
                     "when": "view == schemaExplorer && viewItem =~ /(Selected)/",
+                    "group": "inline"
+                },
+                {
+                    "command": "list.runRequest",
+                    "when": "view == requestView",
+                    "group": "inline"
+                },
+                {
+                    "command": "list.selectRequest",
+                    "when": "view == requestView && viewItem =~ /(Deselected)/",
+                    "group": "inline"
+                },
+                {
+                    "command": "list.deselectRequest",
+                    "when": "view == requestView && viewItem =~ /(Selected)/",
                     "group": "inline"
                 }
             ]

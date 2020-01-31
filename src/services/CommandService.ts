@@ -7,6 +7,10 @@ import { StateService } from './StateService';
 import { generatedFolder } from '../constants';
 import { showSaveRequestCommand } from '../commands/SaveRequestCommand';
 import { Request, RequestNodeProvider } from './RequestNodeProvider';
+import {
+    CustomRequest,
+    SavedRequestNodeProvider
+} from './SavedRequestNodeProvider';
 const path = require('path');
 /**
  * Service class to create vscode commands and register them to vscode
@@ -23,7 +27,8 @@ export class CommandService {
     constructor(
         private _stateService: StateService,
         private _graphQLService: GraphQLService,
-        private _requestNodeProvider: RequestNodeProvider
+        private _requestNodeProvider: RequestNodeProvider,
+        private _savedRequestNodeProvider: SavedRequestNodeProvider
     ) {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
@@ -99,11 +104,35 @@ export class CommandService {
             }
         );
 
+        const refreshListCommand = vscode.commands.registerCommand(
+            'list.refresh',
+            () => this._savedRequestNodeProvider.refresh()
+        );
+
+        const selectRequestCommand = vscode.commands.registerCommand(
+            'list.selectRequest',
+            (element: CustomRequest) => {
+                element.selected = true;
+                this._savedRequestNodeProvider.refresh();
+            }
+        );
+
+        const deselectRequestCommand = vscode.commands.registerCommand(
+            'list.deselectRequest',
+            (element: CustomRequest) => {
+                element.selected = false;
+                this._savedRequestNodeProvider.refresh();
+            }
+        );
+
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(selectFieldCommand);
         this._ctx.subscriptions.push(saveRequestCommand);
         this._ctx.subscriptions.push(deselectFieldCommand);
         this._ctx.subscriptions.push(refreshCommand);
+        this._ctx.subscriptions.push(refreshListCommand);
+        this._ctx.subscriptions.push(selectRequestCommand);
+        this._ctx.subscriptions.push(deselectRequestCommand);
     }
 }
