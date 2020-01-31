@@ -5,8 +5,8 @@ import { ScalarWrapper } from '../graphqlwrapper/ScalarWrapper';
 import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
-import { Request } from './RequestNodeProvider';
-import { CustomRequest } from './SavedRequestNodeProvider';
+import { Request } from '../provider/RequestNodeProvider';
+import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 /**
  * Service for a global extension state,
  * implements the vscode.Memento interface

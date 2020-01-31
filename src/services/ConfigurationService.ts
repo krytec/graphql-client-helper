@@ -9,6 +9,17 @@ export class ConfigurationService {
     private _headers?: Array<String>;
     private _typescript?: boolean;
 
+    // ! TODO: Implement config change events and actually use it.
+    private _onDidChangeEndpoint: vscode.EventEmitter<
+        string
+    > = new vscode.EventEmitter<string>();
+    public readonly onDidChangeEndpoint: vscode.Event<string> = this
+        ._onDidChangeEndpoint.event;
+
+    /**
+     * Constructor for ConfigurationService,
+     * get values from extension config
+     */
     constructor() {
         this._endpoint = vscode.workspace
             .getConfiguration('graphix')

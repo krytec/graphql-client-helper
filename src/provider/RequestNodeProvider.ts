@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { StateService } from './StateService';
+import { StateService } from '../services/StateService';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { maxQueryDepth } from '../constants';
 import { dedent } from '../utils/Utils';

@@ -3,11 +3,20 @@ import { request, GraphQLClient } from 'graphql-request';
 import { ConfigurationService } from './ConfigurationService';
 import * as vscode from 'vscode';
 import { join } from 'path';
+import { performance } from 'perf_hooks';
+
 /**
  * Service class which handles the internal graphql client
  */
 export class ClientService {
     private _graphQLClient: GraphQLClient;
+
+    private _onDidExecuteRequest: vscode.EventEmitter<
+        number
+    > = new vscode.EventEmitter<number>();
+    public readonly onDidExecuteRequest: vscode.Event<number> = this
+        ._onDidExecuteRequest.event;
+
     constructor(
         private _state: StateService,
         private _config: ConfigurationService
@@ -15,13 +24,22 @@ export class ClientService {
         this._graphQLClient = new GraphQLClient(this._config.endpoint);
     }
 
+    /**
+     * Reload the graphqlclient with a new endpoint
+     */
     reload() {
         this._graphQLClient = new GraphQLClient(this._config.endpoint);
     }
 
+    /**
+     * Method to execute a given request and shows output in an unsaved file
+     * @param request Request as string
+     * @param args Arguments as json object
+     */
     async executeRequest(request: string, args) {
+        var start = performance.now();
         const data = await this._graphQLClient.request(request, args);
-        console.log(JSON.stringify(data, undefined, 2));
+        var end = performance.now();
         var curWorkspace =
             vscode.workspace.workspaceFolders !== undefined
                 ? vscode.workspace.workspaceFolders[0].uri.fsPath
@@ -44,5 +62,6 @@ export class ClientService {
                 }
             });
         });
+        this._onDidExecuteRequest.fire(end - start);
     }
 }

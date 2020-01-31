@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
-import { StateService } from './StateService';
+import { StateService } from '../services/StateService';
 
 /**
  * SavedRequestNodeProvider which provides treedate of savedqueries

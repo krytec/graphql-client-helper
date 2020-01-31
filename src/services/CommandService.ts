@@ -5,11 +5,11 @@ import { LoggingService } from './LoggingService';
 import { showLogingWindowCommand } from '../commands/ShowLogCommand';
 import { StateService } from './StateService';
 import { showSaveRequestCommand } from '../commands/SaveRequestCommand';
-import { Request, RequestNodeProvider } from './RequestNodeProvider';
+import { Request, RequestNodeProvider } from '../provider/RequestNodeProvider';
 import {
     CustomRequest,
     SavedRequestNodeProvider
-} from './SavedRequestNodeProvider';
+} from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService } from './ConfigurationService';
 import { ClientService } from './ClientService';
 import { executeRequestCommand } from '../commands/ExecuteRequestCommand';
@@ -39,6 +39,11 @@ export class CommandService {
         this.workspaceFolderChanged();
         vscode.workspace.onDidChangeWorkspaceFolders(
             () => this.workspaceFolderChanged
+        );
+        _client.onDidExecuteRequest(ms =>
+            vscode.window.showInformationMessage(
+                'Request finished after ' + ms + 'ms.'
+            )
         );
     }
 
@@ -80,10 +85,11 @@ export class CommandService {
 
         const saveRequestCommand = vscode.commands.registerCommand(
             'tree.saveRequest',
-            (element: Request) => {
-                showSaveRequestCommand(element, this._graphQLService);
-                this._savedRequestNodeProvider.refresh();
+            async (element: Request) => {
+                await showSaveRequestCommand(element, this._graphQLService);
                 element.deselect();
+                this._requestNodeProvider.refresh();
+                this._savedRequestNodeProvider.refresh();
             }
         );
 

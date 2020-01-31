@@ -21,11 +21,11 @@ import {
 import { LoggingService } from './LoggingService';
 import * as vscode from 'vscode';
 import { StateService } from './StateService';
-import { Request } from './RequestNodeProvider';
+import { Request } from '../provider/RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 import { stringToGraphQLFormat } from '../utils/Utils';
-import { CustomRequest } from './SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService } from './ConfigurationService';
 
 const fetch = require('node-fetch');

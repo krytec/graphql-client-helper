@@ -1,8 +1,14 @@
-import { CustomRequest } from '../services/SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ClientService } from '../services/ClientService';
 import * as vscode from 'vscode';
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 
+/**
+ * Executes a request with the internal graphqlclient,
+ * provides user the option to insert a value for an argument
+ * @param node The request that should be executed
+ * @param client GraphQLClient
+ */
 export async function executeRequestCommand(
     node: CustomRequest,
     client: ClientService
@@ -15,7 +21,7 @@ export async function executeRequestCommand(
             vars += ',';
         }
         let arg = node.args[count];
-        const value = await vscode.window.showInputBox({
+        let value = await vscode.window.showInputBox({
             prompt: arg.nonNull
                 ? 'Input for ' + arg.name + ' is required!'
                 : 'Input for ' + arg.name + ' can be null',
@@ -26,10 +32,10 @@ export async function executeRequestCommand(
             }
         });
 
-        if (value !== undefined) {
-            vars = vars += argToString(arg, value);
+        if (value === undefined || value === '') {
+            value = 'null';
         }
-
+        vars = vars += argToString(arg, value);
         count++;
     }
     vars = vars += '}';
@@ -43,9 +49,11 @@ export async function executeRequestCommand(
  */
 function validateType(arg: FieldWrapper, value: string): boolean {
     if (value === undefined || value === '') {
+        if (arg.nonNull === false) {
+            return true;
+        }
         return false;
     }
-
     if (arg.ofType === 'Boolean') {
         if (value.match(/^true|false/)) {
             return true;
@@ -65,9 +73,17 @@ function validateType(arg: FieldWrapper, value: string): boolean {
             return false;
         }
     }
+    if (arg.nonNull) {
+        return false;
+    }
     return true;
 }
 
+/**
+ * Wraps an argument with its input as string
+ * @param arg Argument
+ * @param value Inputvalue
+ */
 function argToString(arg: FieldWrapper, value: string): string {
     if (value === 'null') {
         return `"${arg.name}": null`;

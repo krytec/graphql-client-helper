@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { RequestNodeProvider, Request } from './RequestNodeProvider';
+import { RequestNodeProvider, Request } from '../provider/RequestNodeProvider';
 import { runInThisContext } from 'vm';
 import { LoggingService } from './LoggingService';
 import { StateService } from './StateService';

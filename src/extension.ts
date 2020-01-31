@@ -7,13 +7,13 @@ import GraphQLService from './services/GraphQLService';
 import { CommandService } from './services/CommandService';
 import { LoggingService } from './services/LoggingService';
 import { StateService } from './services/StateService';
-import { RequestNodeProvider } from './services/RequestNodeProvider';
+import { RequestNodeProvider } from './provider/RequestNodeProvider';
 import { RequestService } from './services/RequestService';
 import { stringToGraphQLFormat } from './utils/Utils';
 import {
     SavedRequestNodeProvider,
     CustomRequest
-} from './services/SavedRequestNodeProvider';
+} from './provider/SavedRequestNodeProvider';
 import { ConfigurationService } from './services/ConfigurationService';
 import { ClientService } from './services/ClientService';
 const path = require('path');

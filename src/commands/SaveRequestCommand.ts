@@ -1,12 +1,12 @@
-import { Request, RequestNodeProvider } from '../services/RequestNodeProvider';
+import { Request, RequestNodeProvider } from '../provider/RequestNodeProvider';
 import GraphQLService from '../services/GraphQLService';
 import * as vscode from 'vscode';
 
-export function showSaveRequestCommand(
+export async function showSaveRequestCommand(
     element: Request,
     graphQLService: GraphQLService
 ) {
-    vscode.window
+    await vscode.window
         .showInputBox({
             placeHolder: 'Enter a name for your request',
             validateInput: text => {
