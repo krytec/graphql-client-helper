@@ -35,6 +35,10 @@ export class StateService implements vscode.Memento {
         });
     }
 
+    clearState() {
+        this.initState();
+        this._logger.logDebug('State has been resetted');
+    }
     //#region getter and setter
     get context(): vscode.ExtensionContext | undefined {
         return this._context;

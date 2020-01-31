@@ -10,6 +10,7 @@ import { generatedFolder } from './constants';
 import { StateService } from './services/StateService';
 import { RequestNodeProvider } from './services/RequestNodeProvider';
 import { RequestService } from './services/RequestService';
+import { stringToGraphQLFormat } from './utils/Utils';
 const path = require('path');
 // this method is called when your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -17,6 +18,12 @@ export function activate(context: vscode.ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log(
         'Congratulations, your extension "graphql-client-helper" is now active!'
+    );
+
+    console.log(
+        stringToGraphQLFormat(
+            `query myQuery($name:String!){ pokemon(name:$name){id}}`
+        )
     );
 
     //create instance of services

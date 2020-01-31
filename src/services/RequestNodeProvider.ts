@@ -180,7 +180,9 @@ export class Request extends vscode.TreeItem {
                 .join('\n')}
             }`
                 : ``;
-        const args = this._args.map(ele => ele.toArgs()).join(' ');
+        const args = this._args
+            .map(ele => `${ele.name}:$${ele.name}`)
+            .join(' ');
         return `${this.label} ${
             this._args.length > 0 ? `(${args})` : ``
         } ${fields}`;

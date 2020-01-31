@@ -25,6 +25,7 @@ import { StateService } from './StateService';
 import { Request } from './RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
+import { stringToGraphQLFormat } from '../utils/Utils';
 
 const fetch = require('node-fetch');
 const {
@@ -114,6 +115,13 @@ export default class GraphQLService {
 
             this.createTypesFromSchema(schema);
             this.getRequestsFromSchema(schema);
+
+            var isTypescript = vscode.workspace
+                .getConfiguration('graphix')
+                .get('typescript');
+            if (isTypescript) {
+                this.writeTypesToFile();
+            }
             //Return schema object
             return schema;
         } catch (e) {
@@ -149,6 +157,7 @@ export default class GraphQLService {
      * @param schema GraphQLSchema from endpoint
      */
     createTypesFromSchema(schema: GraphQLSchema) {
+        this._state.clearState();
         const typeMap = schema.getTypeMap();
         const types = Object.values(typeMap)
             .sort((type1, type2) => type1.name.localeCompare(type2.name))
@@ -164,33 +173,56 @@ export default class GraphQLService {
                 this._state.inputTypes.push(constructInputType(element));
             }
         });
-        this._logger.logDebug(this._state.scalar.toTypescriptType() as string);
-        this._logger.logDebug(
-            this._state.types.map(ele => ele.toTypescriptType()).join('\n')
-        );
-        this._logger.logDebug(
-            this._state.enums.map(ele => ele.toTypescriptType()).join('\n')
-        );
-        this._logger.logDebug(
-            this._state.inputTypes.map(ele => ele.toTypescriptType()).join('\n')
-        );
     }
 
     /**
      * * Method to write all types of the schema as typescript types to a file
-     * ! TODO: Implementation
      */
-    writeTypesToFile() {}
+    async writeTypesToFile() {
+        let maybe = 'export type Maybe<T> = T | null \n';
+        let types = maybe
+            .concat(this._state.scalar.toTypescriptType())
+            .concat(
+                this._state.types.map(ele => ele.toTypescriptType()).join('\n')
+            )
+            .concat(
+                this._state.enums.map(ele => ele.toTypescriptType()).join('\n')
+            )
+            .concat(
+                this._state.inputTypes
+                    .map(ele => ele.toTypescriptType())
+                    .join('\n')
+            );
+        try {
+            console.log(types);
+            await fs.writeFile(
+                path.join(this._folder, 'schemaTypes.ts'),
+                types,
+                'utf-8'
+            );
+        } catch (e) {
+            this._logger.logDebug(e);
+            vscode.window.showErrorMessage('Could not create file!');
+        }
+    }
 
     /**
-     * * Method to write the saved requests to a file
-     * ! TODO: Add functionality to save request to a file
+     * * Method to save a request to the state
+     * ! TODO: Add functionality to save request
      */
-    writeRequestToFile(element: Request) {
+    saveRequest(name: string, element: Request) {
         if (element.contextValue === 'query') {
             const root = element.toString();
-            this._logger.logDebug(print(parse(`query { ${root} }`)));
+            const args = element.args.map(ele => ele.toArgs()).join(' ');
+            this._logger.logDebug(
+                stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`)
+            );
         } else if (element.contextValue === 'mutation') {
+            const root = element.toString();
+            const args = element.args.map(ele => ele.toArgs()).join(' ');
+            this._logger.logDebug(
+                stringToGraphQLFormat(`mutation ${name}(${args}){ ${root} }`)
+            );
         }
     }
 

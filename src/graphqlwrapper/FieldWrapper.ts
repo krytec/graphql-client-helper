@@ -36,25 +36,25 @@ export class FieldWrapper implements GraphQLWrapper {
                 if (this._isList) {
                     return this._description !== null
                         ? `/**${this._description}*/
-                        ${this._name}: Array<Scalars[${this.ofType}]>`
-                        : `${this._name}: Array<Scalars[${this.ofType}]>`;
+                        ${this._name}: Array<Scalars['${this.ofType}']>`
+                        : `${this._name}: Array<Scalars['${this.ofType}']>`;
                 } else {
                     return this._description !== null
                         ? `/**${this._description}*/
-                        ${this._name}: Scalars[${this.ofType}]`
-                        : `${this._name}: Scalars[${this.ofType}]`;
+                        ${this._name}: Scalars['${this.ofType}']`
+                        : `${this._name}: Scalars['${this.ofType}']`;
                 }
             } else {
                 if (this._isList) {
                     return this._description !== null
                         ? `/**${this._description}*/
-                        ${this._name}?: Maybe<Array<Scalars[${this.ofType}]>>`
-                        : `${this._name}?: Maybe<Array<Scalars[${this.ofType}]>>`;
+                        ${this._name}?: Maybe<Array<Scalars['${this.ofType}']>>`
+                        : `${this._name}?: Maybe<Array<Scalars['${this.ofType}']>>`;
                 } else {
                     return this._description !== null
                         ? `/**${this._description}*/
-                        ${this._name}?: Maybe<Scalars[${this.ofType}]>`
-                        : `${this._name}?: Maybe<Scalars[${this.ofType}]>`;
+                        ${this._name}?: Maybe<Scalars['${this.ofType}']>`
+                        : `${this._name}?: Maybe<Scalars['${this.ofType}']>`;
                 }
             }
         } else {
@@ -98,7 +98,7 @@ export class FieldWrapper implements GraphQLWrapper {
      * Method to represent the field as an GraphQL argument
      */
     toArgs(): string {
-        return `${this._name}:${this._ofType}`;
+        return `$${this._name}:${this._ofType}${this._nonNull ? `!` : ``}`;
     }
 
     //#region getter and setter
