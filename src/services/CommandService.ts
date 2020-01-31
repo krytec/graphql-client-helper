@@ -4,13 +4,15 @@ import GraphQLService from './GraphQLService';
 import { LoggingService } from './LoggingService';
 import { showLogingWindowCommand } from '../commands/ShowLogCommand';
 import { StateService } from './StateService';
-import { generatedFolder } from '../constants';
 import { showSaveRequestCommand } from '../commands/SaveRequestCommand';
 import { Request, RequestNodeProvider } from './RequestNodeProvider';
 import {
     CustomRequest,
     SavedRequestNodeProvider
 } from './SavedRequestNodeProvider';
+import { ConfigurationService } from './ConfigurationService';
+import { ClientService } from './ClientService';
+import { executeRequestCommand } from '../commands/ExecuteRequestCommand';
 const path = require('path');
 /**
  * Service class to create vscode commands and register them to vscode
@@ -26,7 +28,9 @@ export class CommandService {
      */
     constructor(
         private _stateService: StateService,
+        private _config: ConfigurationService,
         private _graphQLService: GraphQLService,
+        private _client: ClientService,
         private _requestNodeProvider: RequestNodeProvider,
         private _savedRequestNodeProvider: SavedRequestNodeProvider
     ) {
@@ -45,7 +49,7 @@ export class CommandService {
         if (vscode.workspace.workspaceFolders !== undefined) {
             const schemaFile = path.join(
                 vscode.workspace.workspaceFolders[0].uri.fsPath,
-                generatedFolder + '/schema.gql'
+                this._config.generatedFolder + '/schema.gql'
             );
             this._graphQLService
                 .getSchemaFromFile(schemaFile)
@@ -70,7 +74,7 @@ export class CommandService {
         const createSchemaCommand = vscode.commands.registerCommand(
             'extension.createSchema',
             () => {
-                showCreateSchemaInput(this._graphQLService);
+                showCreateSchemaInput(this._graphQLService, this._config);
             }
         );
 
@@ -78,6 +82,8 @@ export class CommandService {
             'tree.saveRequest',
             (element: Request) => {
                 showSaveRequestCommand(element, this._graphQLService);
+                this._savedRequestNodeProvider.refresh();
+                element.deselect();
             }
         );
 
@@ -125,6 +131,12 @@ export class CommandService {
             }
         );
 
+        const runRequestCommand = vscode.commands.registerCommand(
+            'list.runRequest',
+            (element: CustomRequest) =>
+                executeRequestCommand(element, this._client)
+        );
+
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(selectFieldCommand);
@@ -134,5 +146,6 @@ export class CommandService {
         this._ctx.subscriptions.push(refreshListCommand);
         this._ctx.subscriptions.push(selectRequestCommand);
         this._ctx.subscriptions.push(deselectRequestCommand);
+        this._ctx.subscriptions.push(runRequestCommand);
     }
 }

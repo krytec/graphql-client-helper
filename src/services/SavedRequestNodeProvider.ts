@@ -74,4 +74,16 @@ export class CustomRequest extends vscode.TreeItem {
         }
         this._isSelected = value;
     }
+
+    get request(): string {
+        return this._request;
+    }
+
+    get tooltip(): string {
+        return this._type;
+    }
+
+    get args(): Array<FieldWrapper> {
+        return this._args;
+    }
 }

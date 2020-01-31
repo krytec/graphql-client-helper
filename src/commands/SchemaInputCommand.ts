@@ -4,9 +4,13 @@ import GraphQLUtils from '../services/GraphQLService';
 import { isValidURL } from '../utils/Utils';
 import { join } from 'path';
 import GraphQLService from '../services/GraphQLService';
+import { ConfigurationService } from '../services/ConfigurationService';
 
 // Runs an introspection query on given endpoint and creates a schema file
-export async function showCreateSchemaInput(service: GraphQLService) {
+export async function showCreateSchemaInput(
+    service: GraphQLService,
+    config: ConfigurationService
+) {
     let result = await window
         .showInputBox({
             placeHolder: 'For example https://graphql-pokemon.now.sh/',
@@ -29,9 +33,7 @@ export async function showCreateSchemaInput(service: GraphQLService) {
                             )
                         )
                         .then(() => {
-                            workspace
-                                .getConfiguration('graphix')
-                                .update('schema.endpoint', value, true);
+                            config.endpoint = value;
                             var openPath = Uri.file(
                                 join(
                                     pathToFolder,

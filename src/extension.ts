@@ -6,12 +6,16 @@ import GraphQLUtils from './services/GraphQLService';
 import GraphQLService from './services/GraphQLService';
 import { CommandService } from './services/CommandService';
 import { LoggingService } from './services/LoggingService';
-import { generatedFolder } from './constants';
 import { StateService } from './services/StateService';
 import { RequestNodeProvider } from './services/RequestNodeProvider';
 import { RequestService } from './services/RequestService';
 import { stringToGraphQLFormat } from './utils/Utils';
-import { SavedRequestNodeProvider } from './services/SavedRequestNodeProvider';
+import {
+    SavedRequestNodeProvider,
+    CustomRequest
+} from './services/SavedRequestNodeProvider';
+import { ConfigurationService } from './services/ConfigurationService';
+import { ClientService } from './services/ClientService';
 const path = require('path');
 // this method is called when your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -21,16 +25,22 @@ export function activate(context: vscode.ExtensionContext) {
         'Congratulations, your extension "graphql-client-helper" is now active!'
     );
 
-    console.log(
-        stringToGraphQLFormat(
-            `query myQuery($name:String!){ pokemon(name:$name){id}}`
-        )
-    );
+    // const query = stringToGraphQLFormat(
+    //     `query myQuery($first:Int!){ pokemons(first:$first){id, name}}`
+    // );
+
+    // const vars = JSON.parse(`{"first": 10}`);
 
     //create instance of services
     const loggingService = new LoggingService();
+    const configurationService = new ConfigurationService();
     const stateService = new StateService(loggingService, context);
-    const graphQLService = new GraphQLService(stateService);
+    const graphQLService = new GraphQLService(
+        stateService,
+        configurationService
+    );
+    const clientService = new ClientService(stateService, configurationService);
+    //clientService.executeRequest(query, vars);
     // Create a node provider and adds a new TreeView to vscode
     const requestNodeProvider = new RequestNodeProvider(stateService);
     const savedRequestNodeProvider = new SavedRequestNodeProvider(stateService);
@@ -42,7 +52,9 @@ export function activate(context: vscode.ExtensionContext) {
     // Register commands here -> commands can be found in the /commands directory
     const commandService = new CommandService(
         stateService,
+        configurationService,
         graphQLService,
+        clientService,
         requestNodeProvider,
         savedRequestNodeProvider
     );

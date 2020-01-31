@@ -20,13 +20,13 @@ import {
 } from '../utils/MappingUtils';
 import { LoggingService } from './LoggingService';
 import * as vscode from 'vscode';
-import { generatedFolder } from '../constants';
 import { StateService } from './StateService';
 import { Request } from './RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 import { stringToGraphQLFormat } from '../utils/Utils';
 import { CustomRequest } from './SavedRequestNodeProvider';
+import { ConfigurationService } from './ConfigurationService';
 
 const fetch = require('node-fetch');
 const {
@@ -48,7 +48,10 @@ export default class GraphQLService {
      * Constructor for GraphQLUtils
      * @param folder the folder where the generated files should be saved
      */
-    constructor(private _state: StateService) {
+    constructor(
+        private _state: StateService,
+        private _config: ConfigurationService
+    ) {
         this._folder = '.';
         this._logger = this._state.logger;
     }
@@ -117,10 +120,7 @@ export default class GraphQLService {
             this.createTypesFromSchema(schema);
             this.getRequestsFromSchema(schema);
 
-            var isTypescript = vscode.workspace
-                .getConfiguration('graphix')
-                .get('typescript');
-            if (isTypescript) {
+            if (this._config.typescript) {
                 this.writeTypesToFile();
             }
             //Return schema object
@@ -274,7 +274,7 @@ export default class GraphQLService {
     }
 
     set folder(folder: string) {
-        this._folder = path.join(folder, generatedFolder);
+        this._folder = path.join(folder, this._config.generatedFolder);
         try {
             let stats = fs.statSync(this._folder);
         } catch (e) {

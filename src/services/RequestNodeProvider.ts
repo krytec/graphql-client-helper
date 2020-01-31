@@ -200,6 +200,13 @@ export class Request extends vscode.TreeItem {
         } ${fields}`;
     }
 
+    deselect() {
+        this.selected = false;
+        this._fields.forEach(element => {
+            element.deselect();
+        });
+    }
+
     /**
      * Adds an argument to a request
      * @param argument Argument of a request
