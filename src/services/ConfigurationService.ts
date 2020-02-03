@@ -9,6 +9,9 @@ export class ConfigurationService {
     private _headers?: Array<String>;
     private _typescript?: boolean;
 
+    // ! this boolean value is set for only trigger events when it is edited in the settings page, not by userinput
+    private shouldTriggerEvent: boolean = true;
+
     //#region Events
     private _onDidChangeEndpoint: vscode.EventEmitter<
         string
@@ -52,26 +55,30 @@ export class ConfigurationService {
     private configurationChangedCallback(
         event: vscode.ConfigurationChangeEvent
     ) {
-        if (event.affectsConfiguration('graphix.schema.endpoint')) {
-            this._endpoint = vscode.workspace
-                .getConfiguration('graphix')
-                .get('schema.endpoint') as string;
-            this._onDidChangeEndpoint.fire(this.endpoint);
-        } else if (event.affectsConfiguration('graphix.schema.folder')) {
-            this._generatedFolder = vscode.workspace
-                .getConfiguration('graphix')
-                .get('schema.folder') as string;
-            this._onDidChangeFolder.fire(this.generatedFolder);
-        } else if (event.affectsConfiguration('graphix.typescript')) {
-            this._typescript = vscode.workspace
-                .getConfiguration('graphix')
-                .get('typescript');
-            this._onDidChangeTypescript.fire(this.typescript);
+        if (this.shouldTriggerEvent) {
+            if (event.affectsConfiguration('graphix.schema.endpoint')) {
+                this._endpoint = vscode.workspace
+                    .getConfiguration('graphix')
+                    .get('schema.endpoint') as string;
+                this._onDidChangeEndpoint.fire(this.endpoint);
+            } else if (event.affectsConfiguration('graphix.schema.folder')) {
+                this._generatedFolder = vscode.workspace
+                    .getConfiguration('graphix')
+                    .get('schema.folder') as string;
+                this._onDidChangeFolder.fire(this.generatedFolder);
+            } else if (event.affectsConfiguration('graphix.typescript')) {
+                this._typescript = vscode.workspace
+                    .getConfiguration('graphix')
+                    .get('typescript');
+                this._onDidChangeTypescript.fire(this.typescript);
+            }
+            this.shouldTriggerEvent = true;
         }
     }
 
     //#region getter & setter
     set endpoint(value: string) {
+        this.shouldTriggerEvent = false;
         vscode.workspace
             .getConfiguration('graphix')
             .update('schema.endpoint', value, true);
@@ -79,6 +86,7 @@ export class ConfigurationService {
     }
 
     set generatedFolder(value: string) {
+        this.shouldTriggerEvent = false;
         vscode.workspace
             .getConfiguration('graphix')
             .update('schema.folder', value, true);
@@ -86,6 +94,7 @@ export class ConfigurationService {
     }
 
     set typescript(value: boolean) {
+        this.shouldTriggerEvent = false;
         vscode.workspace
             .getConfiguration('graphix')
             .update('schema.typescript', value, true);

@@ -41,6 +41,7 @@ export class CommandService {
         vscode.workspace.onDidChangeWorkspaceFolders(
             () => this.workspaceFolderChanged
         );
+
         _client.onDidExecuteRequest(ms =>
             vscode.window.showInformationMessage(
                 'Request finished after ' + ms + 'ms.'
@@ -48,12 +49,18 @@ export class CommandService {
         );
 
         _config.onDidChangeEndpoint(e => {
-            vscode.window.showInformationMessage(
-                dedent`Endpoint changed to ${e},
+            vscode.window
+                .showInformationMessage(
+                    dedent`Endpoint changed to ${e},
                 Would you like to reload the schema?`,
-                'Yes',
-                'No'
-            );
+                    'Yes',
+                    'No'
+                )
+                .then(button => {
+                    if (button === 'Yes') {
+                        this._graphQLService.getSchemaFromEndpoint(e);
+                    }
+                });
         });
     }
 
@@ -62,6 +69,8 @@ export class CommandService {
      */
     private workspaceFolderChanged() {
         if (vscode.workspace.workspaceFolders !== undefined) {
+            this._graphQLService.folder =
+                vscode.workspace.workspaceFolders[0].uri.fsPath;
             const schemaFile = path.join(
                 vscode.workspace.workspaceFolders[0].uri.fsPath,
                 this._config.generatedFolder + '/schema.gql'
