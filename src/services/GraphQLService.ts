@@ -261,6 +261,8 @@ export default class GraphQLService {
         );
     }
 
+    async writeServiceToFile(serviceName: string, request: CustomRequest[]) {}
+
     /**
      * * Method to save a request to the state
      */
