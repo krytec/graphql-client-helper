@@ -22,12 +22,13 @@ export class ClientService {
         private _config: ConfigurationService
     ) {
         this._graphQLClient = new GraphQLClient(this._config.endpoint);
+        this._config.onDidChangeEndpoint(e => this.reload());
     }
 
     /**
-     * Reload the graphqlclient with a new endpoint
+     * Method to reload the graphqlclient with a new endpoint
      */
-    reload() {
+    private reload() {
         this._graphQLClient = new GraphQLClient(this._config.endpoint);
     }
 

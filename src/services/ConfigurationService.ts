@@ -5,16 +5,30 @@ import * as vscode from 'vscode';
  */
 export class ConfigurationService {
     private _endpoint?: string;
-    private _generatedPath?: string;
+    private _generatedFolder?: string;
     private _headers?: Array<String>;
     private _typescript?: boolean;
 
-    // ! TODO: Implement config change events and actually use it.
+    //#region Events
     private _onDidChangeEndpoint: vscode.EventEmitter<
         string
     > = new vscode.EventEmitter<string>();
     public readonly onDidChangeEndpoint: vscode.Event<string> = this
         ._onDidChangeEndpoint.event;
+
+    private _onDidChangeFolder: vscode.EventEmitter<
+        string
+    > = new vscode.EventEmitter<string>();
+    public readonly onDidChangeFolder: vscode.Event<string> = this
+        ._onDidChangeFolder.event;
+
+    private _onDidChangeTypescript: vscode.EventEmitter<
+        boolean
+    > = new vscode.EventEmitter<boolean>();
+
+    public readonly onDidChangeTypescript: vscode.Event<boolean> = this
+        ._onDidChangeTypescript.event;
+    //#endregion
 
     /**
      * Constructor for ConfigurationService,
@@ -24,13 +38,36 @@ export class ConfigurationService {
         this._endpoint = vscode.workspace
             .getConfiguration('graphix')
             .get('schema.endpoint') as string;
-        this._generatedPath = vscode.workspace
+        this._generatedFolder = vscode.workspace
             .getConfiguration('graphix')
             .get('schema.folder') as string;
-
         this._typescript = vscode.workspace
             .getConfiguration('graphix')
             .get('typescript');
+        vscode.workspace.onDidChangeConfiguration(e =>
+            this.configurationChangedCallback(e)
+        );
+    }
+
+    private configurationChangedCallback(
+        event: vscode.ConfigurationChangeEvent
+    ) {
+        if (event.affectsConfiguration('graphix.schema.endpoint')) {
+            this._endpoint = vscode.workspace
+                .getConfiguration('graphix')
+                .get('schema.endpoint') as string;
+            this._onDidChangeEndpoint.fire(this.endpoint);
+        } else if (event.affectsConfiguration('graphix.schema.folder')) {
+            this._generatedFolder = vscode.workspace
+                .getConfiguration('graphix')
+                .get('schema.folder') as string;
+            this._onDidChangeFolder.fire(this.generatedFolder);
+        } else if (event.affectsConfiguration('graphix.typescript')) {
+            this._typescript = vscode.workspace
+                .getConfiguration('graphix')
+                .get('typescript');
+            this._onDidChangeTypescript.fire(this.typescript);
+        }
     }
 
     //#region getter & setter
@@ -45,7 +82,7 @@ export class ConfigurationService {
         vscode.workspace
             .getConfiguration('graphix')
             .update('schema.folder', value, true);
-        this._generatedPath = value;
+        this._generatedFolder = value;
     }
 
     set typescript(value: boolean) {
@@ -75,8 +112,8 @@ export class ConfigurationService {
     }
 
     get generatedFolder(): string {
-        if (this._generatedPath !== undefined) {
-            return this._generatedPath;
+        if (this._generatedFolder !== undefined) {
+            return this._generatedFolder;
         } else {
             vscode.window.showErrorMessage(
                 'Error: No generatedPath in config!'

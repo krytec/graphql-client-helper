@@ -13,6 +13,7 @@ import {
 import { ConfigurationService } from './ConfigurationService';
 import { ClientService } from './ClientService';
 import { executeRequestCommand } from '../commands/ExecuteRequestCommand';
+import { dedent } from '../utils/Utils';
 const path = require('path');
 /**
  * Service class to create vscode commands and register them to vscode
@@ -45,6 +46,15 @@ export class CommandService {
                 'Request finished after ' + ms + 'ms.'
             )
         );
+
+        _config.onDidChangeEndpoint(e => {
+            vscode.window.showInformationMessage(
+                dedent`Endpoint changed to ${e},
+                Would you like to reload the schema?`,
+                'Yes',
+                'No'
+            );
+        });
     }
 
     /**

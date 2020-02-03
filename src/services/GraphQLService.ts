@@ -54,6 +54,12 @@ export default class GraphQLService {
     ) {
         this._folder = '.';
         this._logger = this._state.logger;
+        this._config.onDidChangeFolder(e => {
+            var curWorkspace = vscode.workspace.workspaceFolders;
+            if (curWorkspace !== undefined) {
+                this.folder = curWorkspace[0].uri.fsPath;
+            }
+        });
     }
 
     /**
