@@ -27,6 +27,7 @@ import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 import { stringToGraphQLFormat } from '../utils/Utils';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService } from './ConfigurationService';
+import { resolve } from 'dns';
 
 const fetch = require('node-fetch');
 const {
@@ -222,15 +223,26 @@ export default class GraphQLService {
      * Method to create a graphql service with a given name
      * @param serviceName Name of the created service
      */
-    async createService(serviceName: string, requests: CustomRequest[]) {
-        await this.writeRequestsToFile(serviceName, requests);
+    async createService(
+        serviceName: string,
+        requests: CustomRequest[]
+    ): Promise<string[]> {
+        let files: string[] = new Array<string>();
+        await this.writeRequestsToFile(serviceName, requests).then(file => {
+            files.push(file);
+        });
+        // ! TODO: Next -> select framwork and create a simple service which returns incoming values
+        return Promise.resolve(files);
     }
 
     /**
      * Method to write the selected requests to a file
      * @param serviceName Name of the service
      */
-    async writeRequestsToFile(serviceName: string, requests: CustomRequest[]) {
+    async writeRequestsToFile(
+        serviceName: string,
+        requests: CustomRequest[]
+    ): Promise<string> {
         let content = `import gql from 'graphql-tag';\n`;
         var gqlrequests = requests
             .map(
@@ -243,6 +255,9 @@ export default class GraphQLService {
             path.join(this._folder, `${serviceName}Requests.ts`),
             content,
             'utf-8'
+        );
+        return Promise.resolve(
+            path.join(this._folder, `${serviceName}Requests.ts`)
         );
     }
 

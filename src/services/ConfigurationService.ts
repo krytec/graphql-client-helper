@@ -9,7 +9,7 @@ export class ConfigurationService {
     private _headers?: Array<String>;
     private _typescript?: boolean;
 
-    // ! this boolean value is set for only trigger events when it is edited in the settings page, not by userinput
+    // ! This boolean value is set for only trigger events when it is edited in the settings page, not by userinput
     private shouldTriggerEvent: boolean = true;
 
     //#region Events

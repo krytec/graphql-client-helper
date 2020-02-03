@@ -23,8 +23,11 @@ export async function executeRequestCommand(
         let arg = node.args[count];
         let value = await vscode.window.showInputBox({
             prompt: arg.nonNull
-                ? 'Input for ' + arg.name + ' is required!'
-                : 'Input for ' + arg.name + ' can be null',
+                ? 'Please provide a value for the required argument' +
+                  arg.name +
+                  '!'
+                : 'Please provide a value for the optional argument ' +
+                  arg.name,
             validateInput: text => {
                 return validateType(arg, text)
                     ? null
