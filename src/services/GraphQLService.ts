@@ -258,7 +258,8 @@ export default class GraphQLService {
                     name,
                     'query',
                     stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`),
-                    element.args
+                    element.args,
+                    { command: 'list.selectRequest', title: 'Select' }
                 )
             );
         } else if (element.contextValue?.match(/mutation/)) {
@@ -271,7 +272,8 @@ export default class GraphQLService {
                     stringToGraphQLFormat(
                         `mutation ${name}(${args}){ ${root} }`
                     ),
-                    element.args
+                    element.args,
+                    { command: 'list.selectRequest', title: 'Select' }
                 )
             );
         }

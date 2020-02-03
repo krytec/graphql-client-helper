@@ -151,15 +151,7 @@ export class CommandService {
         const selectFieldCommand = vscode.commands.registerCommand(
             'tree.selectField',
             (element: Request) => {
-                element.selected = true;
-                this._requestNodeProvider.refresh();
-            }
-        );
-
-        const deselectFieldCommand = vscode.commands.registerCommand(
-            'tree.deselectField',
-            (element: Request) => {
-                element.selected = false;
+                element.selected = !element.selected;
                 this._requestNodeProvider.refresh();
             }
         );
@@ -172,15 +164,7 @@ export class CommandService {
         const selectRequestCommand = vscode.commands.registerCommand(
             'list.selectRequest',
             (element: CustomRequest) => {
-                element.selected = true;
-                this._savedRequestNodeProvider.refresh();
-            }
-        );
-
-        const deselectRequestCommand = vscode.commands.registerCommand(
-            'list.deselectRequest',
-            (element: CustomRequest) => {
-                element.selected = false;
+                element.selected = !element.selected;
                 this._savedRequestNodeProvider.refresh();
             }
         );
@@ -209,11 +193,9 @@ export class CommandService {
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(selectFieldCommand);
         this._ctx.subscriptions.push(saveRequestCommand);
-        this._ctx.subscriptions.push(deselectFieldCommand);
         this._ctx.subscriptions.push(refreshCommand);
         this._ctx.subscriptions.push(refreshListCommand);
         this._ctx.subscriptions.push(selectRequestCommand);
-        this._ctx.subscriptions.push(deselectRequestCommand);
         this._ctx.subscriptions.push(runRequestCommand);
         this._ctx.subscriptions.push(createServiceCommand);
     }

@@ -70,10 +70,6 @@
                 "title": "Select"
             },
             {
-                "command": "tree.deselectField",
-                "title": "Deselect"
-            },
-            {
                 "command": "list.refresh",
                 "title": "Refresh"
             },
@@ -84,10 +80,6 @@
             {
                 "command": "list.selectRequest",
                 "title": "Select"
-            },
-            {
-                "command": "list.deselectRequest",
-                "title": "Deselect"
             },
             {
                 "command": "list.save",
@@ -146,28 +138,8 @@
                     "group": "inline"
                 },
                 {
-                    "command": "tree.selectField",
-                    "when": "view == schemaExplorer && viewItem =~ /(Deselected)/",
-                    "group": "inline"
-                },
-                {
-                    "command": "tree.deselectField",
-                    "when": "view == schemaExplorer && viewItem =~ /(Selected)/",
-                    "group": "inline"
-                },
-                {
                     "command": "list.runRequest",
                     "when": "view == requestView",
-                    "group": "inline"
-                },
-                {
-                    "command": "list.selectRequest",
-                    "when": "view == requestView && viewItem =~ /(Deselected)/",
-                    "group": "inline"
-                },
-                {
-                    "command": "list.deselectRequest",
-                    "when": "view == requestView && viewItem =~ /(Selected)/",
                     "group": "inline"
                 }
             ]

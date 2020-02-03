@@ -4,6 +4,7 @@ import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { maxQueryDepth } from '../constants';
 import { dedent } from '../utils/Utils';
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
+import { join } from 'path';
 
 /**
  * RequestProvider for TreeView, fills the TreeView with data
@@ -99,28 +100,27 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
             );
 
             if (type !== undefined) {
-                const requests = type
-                    .getFields()
-                    .map(
-                        field =>
-                            new Request(
-                                field.name,
-                                field.ofType,
-                                this.stateService.scalar.fields
-                                    .map(scalar => scalar.name === field.ofType)
-                                    .includes(true) ||
-                                this.stateService.enums
-                                    .map(
-                                        enumType =>
-                                            enumType.name === field.ofType
-                                    )
-                                    .includes(true)
-                                    ? vscode.TreeItemCollapsibleState.None
-                                    : vscode.TreeItemCollapsibleState.Collapsed,
-                                undefined,
-                                field.description
-                            )
+                const requests = type.getFields().map(field => {
+                    var collapsibleState =
+                        this.stateService.scalar.fields
+                            .map(scalar => scalar.name === field.ofType)
+                            .includes(true) ||
+                        this.stateService.enums
+                            .map(enumType => enumType.name === field.ofType)
+                            .includes(true)
+                            ? vscode.TreeItemCollapsibleState.None
+                            : vscode.TreeItemCollapsibleState.Collapsed;
+                    return new Request(
+                        field.name,
+                        field.ofType,
+                        collapsibleState,
+                        undefined,
+                        field.description,
+                        collapsibleState === 0
+                            ? { command: 'tree.selectField', title: 'Select' }
+                            : undefined
                     );
+                });
                 requests.forEach(
                     request =>
                         (request.fields = this.getFields(request, depth + 1))
@@ -164,15 +164,11 @@ export class Request extends vscode.TreeItem {
         private _isSelected: boolean = false
     ) {
         super(label, collapsibleState);
-        if (collapsibleState !== 1) {
-            this.contextValue = 'Deselected';
-        } else {
+        if (collapsibleState === 0) {
             this.contextValue = 'field';
         }
         if (_isQuery !== undefined) {
-            this.contextValue = _isQuery
-                ? 'queryDeselected'
-                : 'mutationDeselected';
+            this.contextValue = _isQuery ? 'query' : 'mutation';
         }
         if (this.command) {
             this.command.arguments = [this];
@@ -217,7 +213,7 @@ export class Request extends vscode.TreeItem {
 
     //#region getter & setter
     get selected(): boolean {
-        if (this.contextValue !== 'field') {
+        if (this.contextValue === 'field') {
             return this._isSelected;
         } else {
             return this.collapsibleState === 2;
@@ -226,15 +222,16 @@ export class Request extends vscode.TreeItem {
 
     set selected(selected: boolean) {
         if (selected) {
-            this.contextValue = this.contextValue?.replace(
-                'Deselected',
-                'Selected'
+            this.iconPath = join(
+                __filename,
+                '..',
+                '..',
+                '..',
+                'resources',
+                'tick.svg'
             );
         } else {
-            this.contextValue = this.contextValue?.replace(
-                'Selected',
-                'Deselected'
-            );
+            this.iconPath = '';
         }
         this._isSelected = selected;
     }

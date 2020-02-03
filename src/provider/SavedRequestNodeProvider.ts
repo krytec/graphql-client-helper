@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import { StateService } from '../services/StateService';
+import { join } from 'path';
 
 /**
  * SavedRequestNodeProvider which provides treedate of savedqueries
@@ -48,12 +49,14 @@ export class CustomRequest extends vscode.TreeItem {
         private _type: string,
         private _request: string,
         private _args: Array<FieldWrapper>,
-        public collapsibleState: vscode.TreeItemCollapsibleState = 0,
         public readonly command?: vscode.Command,
+        public collapsibleState: vscode.TreeItemCollapsibleState = 0,
         private _isSelected: boolean = false
     ) {
         super(label, collapsibleState);
-        this.contextValue = 'Deselected';
+        if (this.command) {
+            this.command.arguments = [this];
+        }
     }
 
     get selected(): boolean {
@@ -62,15 +65,16 @@ export class CustomRequest extends vscode.TreeItem {
 
     set selected(value: boolean) {
         if (value) {
-            this.contextValue = this.contextValue?.replace(
-                'Deselected',
-                'Selected'
+            this.iconPath = join(
+                __filename,
+                '..',
+                '..',
+                '..',
+                'resources',
+                'tick.svg'
             );
         } else {
-            this.contextValue = this.contextValue?.replace(
-                'Selected',
-                'Deselected'
-            );
+            this.iconPath = '';
         }
         this._isSelected = value;
     }
