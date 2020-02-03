@@ -63,7 +63,7 @@
             },
             {
                 "command": "tree.saveRequest",
-                "title": "Save"
+                "title": "Create"
             },
             {
                 "command": "tree.selectField",
@@ -88,6 +88,10 @@
             {
                 "command": "list.deselectRequest",
                 "title": "Deselect"
+            },
+            {
+                "command": "list.save",
+                "title": "Save"
             }
         ],
         "keybindings": {
@@ -126,6 +130,11 @@
                 },
                 {
                     "command": "list.refresh",
+                    "when": "view == requestView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "list.save",
                     "when": "view == requestView",
                     "group": "navigation"
                 }

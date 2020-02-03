@@ -219,6 +219,34 @@ export default class GraphQLService {
     }
 
     /**
+     * Method to create a graphql service with a given name
+     * @param serviceName Name of the created service
+     */
+    async createService(serviceName: string, requests: CustomRequest[]) {
+        await this.writeRequestsToFile(serviceName, requests);
+    }
+
+    /**
+     * Method to write the selected requests to a file
+     * @param serviceName Name of the service
+     */
+    async writeRequestsToFile(serviceName: string, requests: CustomRequest[]) {
+        let content = `import gql from 'graphql-tag';\n`;
+        var gqlrequests = requests
+            .map(
+                request =>
+                    `export const ${request.label} = gql\`${request.request}\`;`
+            )
+            .join('\n');
+        content = content.concat(gqlrequests);
+        await fs.writeFile(
+            path.join(this._folder, `${serviceName}Requests.ts`),
+            content,
+            'utf-8'
+        );
+    }
+
+    /**
      * * Method to save a request to the state
      */
     saveRequest(name: string, element: Request) {

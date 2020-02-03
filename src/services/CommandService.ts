@@ -13,6 +13,7 @@ import {
 import { ConfigurationService } from './ConfigurationService';
 import { ClientService } from './ClientService';
 import { executeRequestCommand } from '../commands/ExecuteRequestCommand';
+import { showCreateServiceCommand } from '../commands/CreateServiceCommand';
 import { dedent } from '../utils/Utils';
 const path = require('path');
 /**
@@ -190,6 +191,20 @@ export class CommandService {
                 executeRequestCommand(element, this._client)
         );
 
+        const createServiceCommand = vscode.commands.registerCommand(
+            'list.save',
+            () => {
+                const myRequests = this._stateService.myRequests.filter(
+                    request => request.selected === true
+                );
+                this._stateService.myRequests.forEach(
+                    request => (request.selected = false)
+                );
+                this._savedRequestNodeProvider.refresh();
+                showCreateServiceCommand(this._graphQLService, myRequests);
+            }
+        );
+
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(selectFieldCommand);
@@ -200,5 +215,6 @@ export class CommandService {
         this._ctx.subscriptions.push(selectRequestCommand);
         this._ctx.subscriptions.push(deselectRequestCommand);
         this._ctx.subscriptions.push(runRequestCommand);
+        this._ctx.subscriptions.push(createServiceCommand);
     }
 }
