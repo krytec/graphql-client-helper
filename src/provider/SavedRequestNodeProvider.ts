@@ -57,6 +57,26 @@ export class CustomRequest extends vscode.TreeItem {
         if (this.command) {
             this.command.arguments = [this];
         }
+        this.iconPath = {
+            light: join(
+                __filename,
+                '..',
+                '..',
+                '..',
+                'resources',
+                'light',
+                'checkbox_unfilled.png'
+            ),
+            dark: join(
+                __filename,
+                '..',
+                '..',
+                '..',
+                'resources',
+                'dark',
+                'checkbox_unfilled.png'
+            )
+        };
     }
 
     get selected(): boolean {
@@ -65,16 +85,47 @@ export class CustomRequest extends vscode.TreeItem {
 
     set selected(value: boolean) {
         if (value) {
-            this.iconPath = join(
-                __filename,
-                '..',
-                '..',
-                '..',
-                'resources',
-                'tick.svg'
-            );
+            this.iconPath = {
+                light: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'light',
+                    'checkbox_filled.png'
+                ),
+                dark: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'dark',
+                    'checkbox_filled.png'
+                )
+            };
         } else {
-            this.iconPath = '';
+            this.iconPath = {
+                light: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'light',
+                    'checkbox_unfilled.png'
+                ),
+                dark: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'dark',
+                    'checkbox_unfilled.png'
+                )
+            };
         }
         this._isSelected = value;
     }

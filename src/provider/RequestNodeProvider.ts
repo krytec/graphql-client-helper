@@ -166,6 +166,26 @@ export class Request extends vscode.TreeItem {
         super(label, collapsibleState);
         if (collapsibleState === 0) {
             this.contextValue = 'field';
+            this.iconPath = {
+                light: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'light',
+                    'checkbox_unfilled.png'
+                ),
+                dark: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'dark',
+                    'checkbox_unfilled.png'
+                )
+            };
         }
         if (_isQuery !== undefined) {
             this.contextValue = _isQuery ? 'query' : 'mutation';
@@ -221,17 +241,50 @@ export class Request extends vscode.TreeItem {
     }
 
     set selected(selected: boolean) {
-        if (selected) {
-            this.iconPath = join(
-                __filename,
-                '..',
-                '..',
-                '..',
-                'resources',
-                'tick.svg'
-            );
-        } else {
-            this.iconPath = '';
+        if (this.collapsibleState === 0) {
+            if (selected) {
+                this.iconPath = {
+                    light: join(
+                        __filename,
+                        '..',
+                        '..',
+                        '..',
+                        'resources',
+                        'light',
+                        'checkbox_filled.png'
+                    ),
+                    dark: join(
+                        __filename,
+                        '..',
+                        '..',
+                        '..',
+                        'resources',
+                        'dark',
+                        'checkbox_filled.png'
+                    )
+                };
+            } else {
+                this.iconPath = {
+                    light: join(
+                        __filename,
+                        '..',
+                        '..',
+                        '..',
+                        'resources',
+                        'light',
+                        'checkbox_unfilled.png'
+                    ),
+                    dark: join(
+                        __filename,
+                        '..',
+                        '..',
+                        '..',
+                        'resources',
+                        'dark',
+                        'checkbox_unfilled.png'
+                    )
+                };
+            }
         }
         this._isSelected = selected;
     }
