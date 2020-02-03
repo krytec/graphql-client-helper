@@ -25,12 +25,6 @@ export function activate(context: vscode.ExtensionContext) {
         'Congratulations, your extension "graphql-client-helper" is now active!'
     );
 
-    // const query = stringToGraphQLFormat(
-    //     `query myQuery($first:Int!){ pokemons(first:$first){id, name}}`
-    // );
-
-    // const vars = JSON.parse(`{"first": 10}`);
-
     //create instance of services
     const loggingService = new LoggingService();
     const configurationService = new ConfigurationService();

@@ -48,19 +48,45 @@ export class CommandService {
             )
         );
 
-        _config.onDidChangeEndpoint(e => {
+        _config.onDidChangeFolder(e => {
             vscode.window
                 .showInformationMessage(
-                    dedent`Endpoint changed to ${e},
-                Would you like to reload the schema?`,
+                    dedent`Generated folder changed to: ${e},
+                    Would you like to reload the extension?
+                    Warning! All unsaved requests will be lost!`,
                     'Yes',
                     'No'
                 )
                 .then(button => {
                     if (button === 'Yes') {
-                        this._graphQLService.getSchemaFromEndpoint(e);
+                        this.workspaceFolderChanged();
                     }
                 });
+        });
+
+        /**
+         * * Event callback that emmits an informationmessage
+         * * when the endpoint was changed in the settings
+         */
+        _config.onDidChangeEndpoint(e => {
+            if (e !== 'User') {
+                vscode.window
+                    .showInformationMessage(
+                        dedent`Endpoint changed to ${e},
+                    Would you like to reload the schema?`,
+                        'Yes',
+                        'No'
+                    )
+                    .then(button => {
+                        if (button === 'Yes') {
+                            this._graphQLService
+                                .getSchemaFromEndpoint(e)
+                                .catch(e => {
+                                    vscode.window.showErrorMessage(e);
+                                });
+                        }
+                    });
+            }
         });
     }
 
@@ -68,6 +94,7 @@ export class CommandService {
      * Callback method that listens to the workspacefolderschangedevent
      */
     private workspaceFolderChanged() {
+        vscode.commands.executeCommand('setContext', 'schemaLoaded', false);
         if (vscode.workspace.workspaceFolders !== undefined) {
             this._graphQLService.folder =
                 vscode.workspace.workspaceFolders[0].uri.fsPath;
@@ -80,6 +107,7 @@ export class CommandService {
                 .then(schema => {
                     this._graphQLService.createTypesFromSchema(schema);
                     this._graphQLService.getRequestsFromSchema(schema);
+                    this._requestNodeProvider.refresh();
                 })
                 .catch(err => vscode.window.showErrorMessage(err));
         }

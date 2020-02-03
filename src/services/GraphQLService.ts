@@ -78,10 +78,15 @@ export default class GraphQLService {
 
         //Check if response is available
         if (!response) {
-            fs.rmdir(this._folder);
             throw new Error(
                 'Schema fetching went wrong, could not execute introspection query'
             );
+        } else {
+            try {
+                let stats = fs.statSync(this._folder);
+            } catch (e) {
+                fs.mkdir(this._folder);
+            }
         }
         var body: ExecutionResult;
 
@@ -281,11 +286,6 @@ export default class GraphQLService {
 
     set folder(folder: string) {
         this._folder = path.join(folder, this._config.generatedFolder);
-        try {
-            let stats = fs.statSync(this._folder);
-        } catch (e) {
-            fs.mkdir(this._folder);
-        }
     }
     //#endregion
 }

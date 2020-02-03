@@ -72,7 +72,13 @@ export class ConfigurationService {
                     .get('typescript');
                 this._onDidChangeTypescript.fire(this.typescript);
             }
-            this.shouldTriggerEvent = true;
+        } else {
+            if (event.affectsConfiguration('graphix.schema.endpoint')) {
+                this._endpoint = vscode.workspace
+                    .getConfiguration('graphix')
+                    .get('schema.endpoint') as string;
+                this._onDidChangeEndpoint.fire('User');
+            }
         }
     }
 
