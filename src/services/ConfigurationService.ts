@@ -1,4 +1,11 @@
 import * as vscode from 'vscode';
+import { toFramework } from '../utils/Utils';
+
+export const enum Framework {
+    ANGULAR = 0,
+    REACT = 1,
+    VUE = 2
+}
 
 /**
  * Configuration service class which manages the global extension configurations
@@ -6,7 +13,9 @@ import * as vscode from 'vscode';
 export class ConfigurationService {
     private _endpoint?: string;
     private _generatedFolder?: string;
+    //! TODO: Implementation of header support for graphqlclient
     private _headers?: Array<String>;
+    private _framework?: Framework;
     private _typescript?: boolean;
 
     // ! This boolean value is set for only trigger events when it is edited in the settings page, not by userinput
@@ -47,11 +56,15 @@ export class ConfigurationService {
         this._typescript = vscode.workspace
             .getConfiguration('graphix')
             .get('typescript');
+        this._framework = toFramework(
+            vscode.workspace
+                .getConfiguration('graphix')
+                .get('service.framework') as string
+        );
         vscode.workspace.onDidChangeConfiguration(e =>
             this.configurationChangedCallback(e)
         );
     }
-
     private configurationChangedCallback(
         event: vscode.ConfigurationChangeEvent
     ) {
@@ -143,6 +156,14 @@ export class ConfigurationService {
             );
         }
         return '';
+    }
+
+    get framework(): Framework {
+        if (this._framework !== undefined) {
+            return this._framework;
+        }
+        //Default
+        return Framework.ANGULAR;
     }
 
     //#endregion

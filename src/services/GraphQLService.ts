@@ -26,8 +26,9 @@ import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 import { stringToGraphQLFormat } from '../utils/Utils';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
-import { ConfigurationService } from './ConfigurationService';
+import { ConfigurationService, Framework } from './ConfigurationService';
 import { resolve } from 'dns';
+import { angularService } from '../constants';
 
 const fetch = require('node-fetch');
 const {
@@ -148,19 +149,18 @@ export default class GraphQLService {
      */
     async getSchemaFromFile(file: string): Promise<GraphQLSchema> {
         let schema: string = '';
-        await fs
-            .readFile(file, 'utf8')
-            .then(data => {
-                schema = data;
-            })
-            .catch(err => {
-                console.log(err);
-                throw new Error('Could not read file');
-            });
         try {
-            return buildSchema(schema);
+            await fs
+                .readFile(file, 'utf8')
+                .then(data => {
+                    schema = data;
+                })
+                .catch(err => {
+                    console.log(err);
+                    throw new Error('Could not read file');
+                });
+            return Promise.resolve(buildSchema(schema));
         } catch (e) {
-            console.log(e);
             throw new Error('Could not create schema object from given schema');
         }
     }
@@ -219,67 +219,33 @@ export default class GraphQLService {
     }
 
     /**
-     * Method to create a graphql service with a given name
-     * @param serviceName Name of the created service
+     * * Method to get all queries and mutations from the graphql schema
+     * @param schema GraphQLSchema object
      */
-    async createService(
-        serviceName: string,
-        requests: CustomRequest[]
-    ): Promise<string[]> {
-        let files: string[] = new Array<string>();
-        await this.writeRequestsToFile(serviceName, requests).then(file => {
-            files.push(file);
-        });
-        this.writeServiceToFile(serviceName, requests);
-        // ! TODO: Next -> select framwork and create a simple service which returns incoming values
-        return Promise.resolve(files);
-    }
-
-    /**
-     * Method to write the selected requests to a file
-     * @param serviceName Name of the service
-     */
-    async writeRequestsToFile(
-        serviceName: string,
-        requests: CustomRequest[]
-    ): Promise<string> {
-        let content = `import gql from 'graphql-tag';\n`;
-        var gqlrequests = requests
-            .map(
-                request =>
-                    `export const ${request.label} = gql\`${request.request}\`;`
-            )
-            .join('\n');
-        content = content.concat(gqlrequests);
-        await fs.writeFile(
-            path.join(this._folder, `${serviceName}Requests.ts`),
-            content,
-            'utf-8'
-        );
-        return Promise.resolve(
-            path.join(this._folder, `${serviceName}Requests.ts`)
-        );
-    }
-
-    async writeServiceToFile(serviceName: string, request: CustomRequest[]) {
-        var functions = request
-            .map(request => {
-                return `export async function ${request.label}Service(client, ...args): Promise<any>{
-                let result = client.query<${request.label}>({
-                    query: ${request.label},
-                    variables: args,
-                }).map(data => data.data);
-                return Promise.resolve(result);
-            }`;
-            })
-            .join('\n');
-
-        var content = `import * from './${serviceName}Requests.ts';
-         import { query } from 'apollo-graphql';
-         
-         ${functions}
-         `;
-        console.log(content);
+    getRequestsFromSchema(schema: GraphQLSchema) {
+        let schemaQueries = schema.getQueryType();
+        if (schemaQueries !== undefined && schemaQueries !== null) {
+            const queryMap = schemaQueries.getFields();
+            const query = Object.values(queryMap)
+                .sort((type1, type2) => type1.name.localeCompare(type2.name))
+                .filter(type => !type.name.toLowerCase().startsWith('query'));
+            query.forEach(query => {
+                this._state.requests.push(constructQuery(query));
+            });
+        }
+        let schemaMutations = schema.getMutationType();
+        if (schemaMutations !== undefined && schemaMutations !== null) {
+            const mutationMap = schemaMutations.getFields();
+            const mutation = Object.values(mutationMap)
+                .sort((type1, type2) => type1.name.localeCompare(type2.name))
+                .filter(
+                    type => !type.name.toLowerCase().startsWith('mutation')
+                );
+            mutation.forEach(mutation => {
+                this._state.requests.push(constructMutation(mutation));
+            });
+        }
+        vscode.commands.executeCommand('setContext', 'schemaLoaded', true);
     }
 
     /**
@@ -316,34 +282,133 @@ export default class GraphQLService {
     }
 
     /**
-     * Method to get all queries and mutations from the graphql schema
-     * @param schema GraphQLSchema object
+     * * Method to create a graphql service with a given name
+     * @param serviceName Name of the created service
      */
-    getRequestsFromSchema(schema: GraphQLSchema) {
-        let schemaQueries = schema.getQueryType();
-        if (schemaQueries !== undefined && schemaQueries !== null) {
-            const queryMap = schemaQueries.getFields();
-            const query = Object.values(queryMap)
-                .sort((type1, type2) => type1.name.localeCompare(type2.name))
-                .filter(type => !type.name.toLowerCase().startsWith('query'));
-            query.forEach(query => {
-                this._state.requests.push(constructQuery(query));
-            });
+    async createService(
+        serviceName: string,
+        requests: CustomRequest[]
+    ): Promise<string[]> {
+        let files: string[] = new Array<string>();
+        // ! TODO: Next -> select framwork and create a simple service which returns incoming values
+        switch (+this._config.framework) {
+            case Framework.ANGULAR:
+                try {
+                    fs.mkdir(
+                        path.join(
+                            this.folder,
+                            '..',
+                            'app',
+                            `${serviceName}-component`
+                        )
+                    );
+                    await this.writeAngularRequestsToFile(
+                        serviceName,
+                        requests
+                    ).then(file => {
+                        files.push(file);
+                    });
+                    this.createAngularService(serviceName, requests);
+                } catch (e) {
+                    vscode.window.showErrorMessage(
+                        'Could not create Angular Component ' + serviceName
+                    );
+                }
+                break;
         }
-        let schemaMutations = schema.getMutationType();
-        if (schemaMutations !== undefined && schemaMutations !== null) {
-            const mutationMap = schemaMutations.getFields();
-            const mutation = Object.values(mutationMap)
-                .sort((type1, type2) => type1.name.localeCompare(type2.name))
-                .filter(
-                    type => !type.name.toLowerCase().startsWith('mutation')
-                );
-            mutation.forEach(mutation => {
-                this._state.requests.push(constructMutation(mutation));
-            });
-        }
-        vscode.commands.executeCommand('setContext', 'schemaLoaded', true);
+        return Promise.resolve(files);
     }
+
+    /**
+     * * Method to write the selected requests to a file
+     * @param serviceName Name of the service
+     */
+    private async writeAngularRequestsToFile(
+        serviceName: string,
+        requests: CustomRequest[]
+    ): Promise<string> {
+        let content = `import gql from 'graphql-tag';\n`;
+        var gqlrequests = requests
+            .map(
+                request =>
+                    `export const ${request.label} = gql\`${request.request}\`;`
+            )
+            .join('\n');
+        content = content.concat(gqlrequests);
+        await fs.writeFile(
+            path.join(
+                this._folder,
+                '..',
+                'app',
+                `${serviceName}-component`,
+                `${serviceName}Requests.ts`
+            ),
+            content,
+            'utf-8'
+        );
+        return Promise.resolve(
+            path.join(
+                this._folder,
+                '..',
+                'app',
+                `${serviceName}-component`,
+                `${serviceName}Requests.ts`
+            )
+        );
+    }
+
+    /**
+     * * Method to create a angular service for the given requests
+     * @param serviceName Name of the service
+     * @param requests
+     */
+    async createAngularService(serviceName: string, requests: CustomRequest[]) {
+        let content: string = angularService;
+        let imports = `import { ${requests
+            .map(request => request.label)
+            .join(', ')} } from './${serviceName}Requests'`;
+        let functions = '';
+        requests.forEach(request => {
+            functions = functions.concat(
+                `${request.label}(args){
+    return this.apollo.${
+        request.tooltip === 'query'
+            ? 'query<schemaTypes.Query>'
+            : 'mutation<schemaTypes.Mutation>'
+    }({
+        ${request.tooltip === 'query' ? 'query' : 'mutation'}: ${request.label},
+        variables: args,
+    });
+}
+`
+            );
+        });
+        content = content
+            .replace('$myImports', imports)
+            .replace('$serviceName', serviceName + 'Service')
+            .replace('$myFunctions', functions);
+        await fs.writeFile(
+            path.join(
+                this._folder,
+                '..',
+                'app',
+                `${serviceName}-component`,
+                `${serviceName}.service.ts`
+            ),
+            content,
+            'utf-8'
+        );
+    }
+
+    /**
+     * * Method to create a angular component for the given requests
+     * @param componentName Name of the component
+     * @param requests
+     */
+    async createAngularComponent(
+        componentName: string,
+        requests: CustomRequest[]
+    ) {}
 
     //#region getter and setter
     get folder(): string {
@@ -351,7 +416,20 @@ export default class GraphQLService {
     }
 
     set folder(folder: string) {
-        this._folder = path.join(folder, this._config.generatedFolder);
+        switch (this._config.framework) {
+            case Framework.ANGULAR:
+                this._folder = path.join(
+                    folder,
+                    'src',
+                    this._config.generatedFolder
+                );
+            default:
+                this._folder = path.join(
+                    folder,
+                    'src',
+                    this._config.generatedFolder
+                );
+        }
     }
     //#endregion
 }

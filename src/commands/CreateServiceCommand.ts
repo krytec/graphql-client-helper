@@ -27,9 +27,9 @@ export function showCreateServiceCommand(
                 // ! TODO: Provide way to show created files and correctly implementation
                 // ? need to think about that...
                 service.createService(value, requests).then(files => {
-                    vscode.workspace
-                        .openTextDocument(vscode.Uri.file(files[0]))
-                        .then(doc => vscode.window.showTextDocument(doc));
+                    // vscode.workspace
+                    //     .openTextDocument(vscode.Uri.file(files[0]))
+                    //     .then(doc => vscode.window.showTextDocument(doc));
                 });
             }
         });

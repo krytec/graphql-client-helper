@@ -47,11 +47,11 @@
                     },
                     "graphix.service.framework": {
                         "type": "string",
-                        "default": "angular",
+                        "default": "ANGULAR",
                         "enum": [
-                            "angular",
-                            "react",
-                            "vue"
+                            "ANGULAR",
+                            "REACT",
+                            "VUE"
                         ],
                         "enumDescriptions": [
                             "Creates a graphql service for angular framework",

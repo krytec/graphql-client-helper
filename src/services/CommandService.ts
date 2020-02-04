@@ -10,12 +10,13 @@ import {
     CustomRequest,
     SavedRequestNodeProvider
 } from '../provider/SavedRequestNodeProvider';
-import { ConfigurationService } from './ConfigurationService';
+import { ConfigurationService, Framework } from './ConfigurationService';
 import { ClientService } from './ClientService';
 import { executeRequestCommand } from '../commands/ExecuteRequestCommand';
 import { showCreateServiceCommand } from '../commands/CreateServiceCommand';
 import { dedent } from '../utils/Utils';
 import * as fs from 'fs';
+import { join } from 'path';
 
 const path = require('path');
 /**
@@ -41,11 +42,22 @@ export class CommandService {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
         this.workspaceFolderChanged();
-        this._fsWatcher = fs.watch(
-            _graphQLService.folder,
-            'utf-8',
-            (event, trigger) => this.fileSystemCallback(event, trigger)
-        );
+        try {
+            this._fsWatcher = fs.watch(
+                _graphQLService.folder,
+                'utf-8',
+                (event, trigger) => this.fileSystemCallback(event, trigger)
+            );
+        } catch (e) {
+            this._fsWatcher = fs.watch(
+                join(_graphQLService.folder, '..'),
+                'utf-8',
+                trigger =>
+                    trigger === 'graphqlschema'
+                        ? this.workspaceFolderChanged()
+                        : null
+            );
+        }
         vscode.workspace.onDidChangeWorkspaceFolders(() => {
             this.workspaceFolderChanged();
             this._fsWatcher.close();
@@ -112,10 +124,12 @@ export class CommandService {
         if (vscode.workspace.workspaceFolders !== undefined) {
             this._graphQLService.folder =
                 vscode.workspace.workspaceFolders[0].uri.fsPath;
+
             const schemaFile = path.join(
-                vscode.workspace.workspaceFolders[0].uri.fsPath,
-                this._config.generatedFolder + '/schema.gql'
+                this._graphQLService.folder,
+                '/schema.gql'
             );
+
             this._graphQLService
                 .getSchemaFromFile(schemaFile)
                 .then(schema => {
@@ -123,7 +137,9 @@ export class CommandService {
                     this._graphQLService.getRequestsFromSchema(schema);
                     this._requestNodeProvider.refresh();
                 })
-                .catch(err => vscode.window.showErrorMessage(err));
+                .catch((err: Error) =>
+                    vscode.window.showErrorMessage(err.message)
+                );
         }
     }
 

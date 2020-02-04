@@ -1,5 +1,6 @@
 import { URL } from 'url';
 import { print, parse } from 'graphql';
+import { Framework } from '../services/ConfigurationService';
 /**
  * * Function to validate a given url as string
  * @param value
@@ -48,4 +49,17 @@ export function dedent(callSite, ...args) {
         .join('');
 
     return format(output);
+}
+
+export function toFramework(framework: string): Framework {
+    switch (framework) {
+        case 'ANGULAR':
+            return Framework.ANGULAR;
+        case 'REACT':
+            return Framework.REACT;
+        case 'VUE':
+            return Framework.VUE;
+        default:
+            return Framework.ANGULAR;
+    }
 }
