@@ -275,6 +275,7 @@ export default class GraphQLService {
                     name,
                     'query',
                     stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`),
+                    `${element.label}InputType`,
                     element.args,
                     { command: 'list.selectRequest', title: 'Select' }
                 )
@@ -289,6 +290,7 @@ export default class GraphQLService {
                     stringToGraphQLFormat(
                         `mutation ${name}(${args}){ ${root} }`
                     ),
+                    `${element.label}InputType`,
                     element.args,
                     { command: 'list.selectRequest', title: 'Select' }
                 )
@@ -385,7 +387,7 @@ export default class GraphQLService {
         let functions = '';
         requests.forEach(request => {
             functions = functions.concat(
-                `${request.label}(args){
+                `${request.label}(args: schemaType.${request.inputType}){
     return this.apollo.${
         request.tooltip === 'query'
             ? 'query<schemaTypes.Query>'

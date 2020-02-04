@@ -48,6 +48,7 @@ export class CustomRequest extends vscode.TreeItem {
         public readonly label: string,
         private _type: string,
         private _request: string,
+        private _inputType: string,
         private _args: Array<FieldWrapper>,
         public readonly command?: vscode.Command,
         public collapsibleState: vscode.TreeItemCollapsibleState = 0,
@@ -140,5 +141,9 @@ export class CustomRequest extends vscode.TreeItem {
 
     get args(): Array<FieldWrapper> {
         return this._args;
+    }
+
+    get inputType(): string {
+        return this._inputType;
     }
 }
