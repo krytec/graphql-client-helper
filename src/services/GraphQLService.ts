@@ -29,6 +29,7 @@ import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { resolve } from 'dns';
 import { angularService } from '../constants';
+import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 
 const fetch = require('node-fetch');
 const {
@@ -230,7 +231,14 @@ export default class GraphQLService {
                 .sort((type1, type2) => type1.name.localeCompare(type2.name))
                 .filter(type => !type.name.toLowerCase().startsWith('query'));
             query.forEach(query => {
-                this._state.requests.push(constructQuery(query));
+                const queryWrapper = constructQuery(query);
+                const inputType = new InputTypeWrapper(
+                    queryWrapper.Name + 'InputType',
+                    `Input for ${queryWrapper.Name}Query`
+                );
+                queryWrapper.args.forEach(arg => inputType.addField(arg));
+                this._state.requests.push(queryWrapper);
+                this._state.inputTypes.push(inputType);
             });
         }
         let schemaMutations = schema.getMutationType();
@@ -242,7 +250,14 @@ export default class GraphQLService {
                     type => !type.name.toLowerCase().startsWith('mutation')
                 );
             mutation.forEach(mutation => {
-                this._state.requests.push(constructMutation(mutation));
+                const mutationWrapper = constructMutation(mutation);
+                const inputType = new InputTypeWrapper(
+                    mutationWrapper.Name + 'InputType',
+                    `Input for ${mutationWrapper.Name}Mutation`
+                );
+                mutationWrapper.args.forEach(arg => inputType.addField(arg));
+                this._state.inputTypes.push(inputType);
+                this._state.requests.push(mutationWrapper);
             });
         }
         vscode.commands.executeCommand('setContext', 'schemaLoaded', true);
