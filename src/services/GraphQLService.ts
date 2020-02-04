@@ -192,7 +192,7 @@ export default class GraphQLService {
      * * Method to write all types of the schema as typescript types to a file
      */
     async writeTypesToFile() {
-        let maybe = 'export type Maybe<T> = T | null \n';
+        let maybe = 'export type Maybe<T> = T | null; \n';
         let types = maybe
             .concat(this._state.scalar.toTypescriptType())
             .concat(

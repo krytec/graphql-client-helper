@@ -38,7 +38,7 @@ export class EnumWrapper implements GraphQLWrapper {
         return `
 export enum ${this._name} {
     ${enumvalues}
-}
+};
         `.replace(/^\s*[\r\n]/gm, '');
     }
 

@@ -31,7 +31,7 @@ export class MutationWrapper extends RequestWrapper implements GraphQLWrapper {
             .join('');
         //? FIXME: Find a way to make this code look cleaner
         let typeAsString: string = `
-/**${this.Description}*/
+${this.Description !== undefined ? `/**${this.Description}*/` : ``}
 query ${this.Name}Query{
     ${fieldsAsString}
 };

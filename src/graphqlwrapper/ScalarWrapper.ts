@@ -40,7 +40,7 @@ export type Scalars = {
         .map(x => `\n${x.toTypescriptType()},\n`)
         .map(x => x.replace(/\n/g, '\n    '))
         .join('')}
-}
+};
         `;
         return scalarType;
     }

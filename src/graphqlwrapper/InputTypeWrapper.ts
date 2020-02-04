@@ -47,7 +47,7 @@ export class InputTypeWrapper implements GraphQLWrapper {
             .join('');
         //? FIXME: Find a way to make this code look cleaner
         let typeAsString: string = `
-/**${this._description}*/
+${this._description !== undefined ? `/**${this._description}*/` : ``}
 export type ${this._name} = {
     __typename?: '${this._name}',
     ${fieldsAsString}
