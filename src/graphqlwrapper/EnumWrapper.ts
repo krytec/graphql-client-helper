@@ -22,7 +22,7 @@ export class EnumWrapper implements GraphQLWrapper {
      */
     toString(): string {
         return `EnumWrapper(_name:${this._name}, 
-            _values:[${this._values.map(x => `${x._name}`).join(',')}]
+            _values:[${this._values.map(x => `${x.name}`).join(',')}]
             ${
                 this._description ? `, _description:${this._description}` : ``
             } )`.replace(/\n\s\s+/gm, '');
@@ -33,13 +33,14 @@ export class EnumWrapper implements GraphQLWrapper {
      */
     toTypescriptType(): string {
         let enumvalues: String = this._values
-            .map(x => dedent`\t${x._name},\n`)
-            .join('');
-        return `
+            .map(x => dedent`\t${x.name},`)
+            .join('\n');
+        let enumAsString: string = `
 export enum ${this._name} {
-    ${enumvalues}
+${enumvalues}
 };
-        `.replace(/^\s*[\r\n]/gm, '');
+        `;
+        return enumAsString;
     }
 
     //#region getter and setter
