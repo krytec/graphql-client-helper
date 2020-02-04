@@ -77,8 +77,16 @@ export class ConfigurationService {
                 this._endpoint = vscode.workspace
                     .getConfiguration('graphix')
                     .get('schema.endpoint') as string;
-                this._onDidChangeEndpoint.fire('User');
+            } else if (event.affectsConfiguration('graphix.schema.folder')) {
+                this._generatedFolder = vscode.workspace
+                    .getConfiguration('graphix')
+                    .get('schema.folder') as string;
+            } else if (event.affectsConfiguration('graphix.typescript')) {
+                this._typescript = vscode.workspace
+                    .getConfiguration('graphix')
+                    .get('typescript');
             }
+            this.shouldTriggerEvent = true;
         }
     }
 

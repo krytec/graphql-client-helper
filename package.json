@@ -44,6 +44,20 @@
                         "type": "string",
                         "default": "",
                         "description": "Specifies the graphql endpoint that should be used to fetch the schema and run requests on"
+                    },
+                    "graphix.service.framework": {
+                        "type": "string",
+                        "default": "angular",
+                        "enum": [
+                            "angular",
+                            "react",
+                            "vue"
+                        ],
+                        "enumDescriptions": [
+                            "Creates a graphql service for angular framework",
+                            "Creates a graphql service for react framework",
+                            "Creates a graphql service for vue framework"
+                        ]
                     }
                 }
             }

@@ -207,7 +207,6 @@ export default class GraphQLService {
                     .join('\n')
             );
         try {
-            console.log(types);
             await fs.writeFile(
                 path.join(this._folder, 'schemaTypes.ts'),
                 types,
@@ -231,6 +230,7 @@ export default class GraphQLService {
         await this.writeRequestsToFile(serviceName, requests).then(file => {
             files.push(file);
         });
+        this.writeServiceToFile(serviceName, requests);
         // ! TODO: Next -> select framwork and create a simple service which returns incoming values
         return Promise.resolve(files);
     }
@@ -261,7 +261,26 @@ export default class GraphQLService {
         );
     }
 
-    async writeServiceToFile(serviceName: string, request: CustomRequest[]) {}
+    async writeServiceToFile(serviceName: string, request: CustomRequest[]) {
+        var functions = request
+            .map(request => {
+                return `export async function ${request.label}Service(client, ...args): Promise<any>{
+                let result = client.query<${request.label}>({
+                    query: ${request.label},
+                    variables: args,
+                }).map(data => data.data);
+                return Promise.resolve(result);
+            }`;
+            })
+            .join('\n');
+
+        var content = `import * from './${serviceName}Requests.ts';
+         import { query } from 'apollo-graphql';
+         
+         ${functions}
+         `;
+        console.log(content);
+    }
 
     /**
      * * Method to save a request to the state

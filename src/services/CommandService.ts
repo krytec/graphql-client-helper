@@ -15,6 +15,8 @@ import { ClientService } from './ClientService';
 import { executeRequestCommand } from '../commands/ExecuteRequestCommand';
 import { showCreateServiceCommand } from '../commands/CreateServiceCommand';
 import { dedent } from '../utils/Utils';
+import * as fs from 'fs';
+
 const path = require('path');
 /**
  * Service class to create vscode commands and register them to vscode
@@ -22,7 +24,7 @@ const path = require('path');
 export class CommandService {
     private _logger: LoggingService;
     private _ctx: vscode.ExtensionContext;
-
+    private _fsWatcher: fs.FSWatcher;
     /**
      * Constructor
      * @param _stateService The stateService of the extension
@@ -39,9 +41,20 @@ export class CommandService {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
         this.workspaceFolderChanged();
-        vscode.workspace.onDidChangeWorkspaceFolders(
-            () => this.workspaceFolderChanged
+        this._fsWatcher = fs.watch(
+            _graphQLService.folder,
+            'utf-8',
+            (event, trigger) => this.fileSystemCallback(event, trigger)
         );
+        vscode.workspace.onDidChangeWorkspaceFolders(() => {
+            this.workspaceFolderChanged();
+            this._fsWatcher.close();
+            this._fsWatcher = fs.watch(
+                _graphQLService.folder,
+                'utf-8',
+                (event, trigger) => this.fileSystemCallback(event, trigger)
+            );
+        });
 
         _client.onDidExecuteRequest(ms =>
             vscode.window.showInformationMessage(
@@ -111,6 +124,20 @@ export class CommandService {
                     this._requestNodeProvider.refresh();
                 })
                 .catch(err => vscode.window.showErrorMessage(err));
+        }
+    }
+
+    private fileSystemCallback(event, trigger) {
+        if (trigger === 'schema.gql') {
+            if (
+                !fs.existsSync(path.join(this._graphQLService.folder, trigger))
+            ) {
+                vscode.commands.executeCommand(
+                    'setContext',
+                    'schemaLoaded',
+                    false
+                );
+            }
         }
     }
     /**
