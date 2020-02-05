@@ -66,6 +66,6 @@ export function toFramework(framework: string): Framework {
         case 'VUE':
             return Framework.VUE;
         default:
-            return Framework.ANGULAR;
+            return Framework.NONE;
     }
 }

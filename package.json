@@ -1,6 +1,6 @@
 {
-    "name": "graphql-client-helper",
-    "displayName": "graphql-client-helper",
+    "name": "graphax-generator",
+    "displayName": "Graphax",
     "description": "Creates a schema and typescript types from an graphql endpoint, helps to generate queries and mutations and autogenerates services for a graphql client ",
     "version": "0.0.1",
     "engines": {
@@ -28,24 +28,24 @@
     "contributes": {
         "configuration": [
             {
-                "title": "GraphiX",
+                "title": "Graphax",
                 "properties": {
-                    "graphix.typescript": {
+                    "graphax.typescript": {
                         "type": "boolean",
                         "default": "true",
                         "description": "Specifies whether the extension should create typescript types from the endpoint"
                     },
-                    "graphix.schema.folder": {
+                    "graphax.schema.folder": {
                         "type": "string",
                         "default": "graphqlschema",
                         "description": "Specificies the name of the folder, where generated files will be saved"
                     },
-                    "graphix.schema.endpoint": {
+                    "graphax.schema.endpoint": {
                         "type": "string",
                         "default": "",
                         "description": "Specifies the graphql endpoint that should be used to fetch the schema and run requests on"
                     },
-                    "graphix.service.framework": {
+                    "graphax.service.framework": {
                         "type": "string",
                         "default": "NONE",
                         "enum": [

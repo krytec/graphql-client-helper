@@ -514,8 +514,13 @@ export default class GraphQLService {
                     'src',
                     this._config.generatedFolder
                 );
+                break;
+            case Framework.NONE:
+                this._folder = path.join(folder, this._config.generatedFolder);
+                break;
             default:
                 this._folder = path.join(folder, this._config.generatedFolder);
+                break;
         }
     }
     //#endregion

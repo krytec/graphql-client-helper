@@ -90,6 +90,10 @@ export class CommandService {
                 });
         });
 
+        _config.onDidChangeFramework(e => {
+            this.workspaceFolderChanged();
+        });
+
         /**
          * * Event callback that emmits an informationmessage
          * * when the endpoint was changed in the settings
