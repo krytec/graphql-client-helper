@@ -47,8 +47,9 @@
                     },
                     "graphix.service.framework": {
                         "type": "string",
-                        "default": "ANGULAR",
+                        "default": "NONE",
                         "enum": [
+                            "NONE",
                             "ANGULAR",
                             "REACT",
                             "VUE"

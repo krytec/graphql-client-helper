@@ -325,17 +325,17 @@ export default class GraphQLService {
         switch (+this._config.framework) {
             case Framework.ANGULAR:
                 try {
-                    fs.mkdir(
-                        path.join(
-                            this.folder,
-                            '..',
-                            'app',
-                            `${serviceName}-component`
-                        )
+                    const folderPath = path.join(
+                        this.folder,
+                        '..',
+                        'app',
+                        `${serviceName}-component`
                     );
-                    await this.writeAngularRequestsToFile(
+                    fs.mkdir(folderPath);
+                    await this.createRequests(
                         serviceName,
-                        requests
+                        requests,
+                        folderPath
                     ).then(file => {
                         files.push(file);
                     });
@@ -351,17 +351,22 @@ export default class GraphQLService {
                     );
                 }
                 break;
+
+            case Framework.NONE:
+                this.createRequests(serviceName, requests, this._folder);
         }
         return Promise.resolve(files);
     }
 
     /**
-     * * Method to write the selected requests to a file
+     * Method to write requests to file
      * @param serviceName Name of the service
+     * @param requests Requests that should be created
      */
-    private async writeAngularRequestsToFile(
+    private async createRequests(
         serviceName: string,
-        requests: CustomRequest[]
+        requests: CustomRequest[],
+        folderPath: string
     ): Promise<string> {
         let content = `import gql from 'graphql-tag';\n`;
         var gqlrequests = requests
@@ -372,24 +377,12 @@ export default class GraphQLService {
             .join('\n');
         content = content.concat(gqlrequests);
         await fs.writeFile(
-            path.join(
-                this._folder,
-                '..',
-                'app',
-                `${serviceName}-component`,
-                `${toTitleCase(serviceName)}Requests.ts`
-            ),
+            path.join(folderPath, `${serviceName}Requests.ts`),
             content,
             'utf-8'
         );
         return Promise.resolve(
-            path.join(
-                this._folder,
-                '..',
-                'app',
-                `${serviceName}-component`,
-                `${serviceName}Requests.ts`
-            )
+            path.join(folderPath, `${serviceName}Requests.ts`)
         );
     }
 
@@ -398,7 +391,10 @@ export default class GraphQLService {
      * @param serviceName Name of the service
      * @param requests
      */
-    async createAngularService(serviceName: string, requests: CustomRequest[]) {
+    private async createAngularService(
+        serviceName: string,
+        requests: CustomRequest[]
+    ) {
         let content: string = angularService;
         let imports = `import { ${requests
             .map(request => request.label)
@@ -452,7 +448,7 @@ export default class GraphQLService {
      * @param componentName Name of the component
      * @param requests
      */
-    async createAngularComponent(
+    private async createAngularComponent(
         componentName: string,
         requests: CustomRequest[]
     ) {
@@ -519,11 +515,7 @@ export default class GraphQLService {
                     this._config.generatedFolder
                 );
             default:
-                this._folder = path.join(
-                    folder,
-                    'src',
-                    this._config.generatedFolder
-                );
+                this._folder = path.join(folder, this._config.generatedFolder);
         }
     }
     //#endregion

@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import { toFramework } from '../utils/Utils';
 
 export const enum Framework {
-    ANGULAR = 0,
-    REACT = 1,
-    VUE = 2
+    NONE = 0,
+    ANGULAR = 1,
+    REACT = 2,
+    VUE = 3
 }
 
 /**
