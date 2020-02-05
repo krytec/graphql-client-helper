@@ -20,3 +20,25 @@ export class $serviceName {
 
   $myFunctions
 }`;
+
+export const angularComponent: string = `
+import { Component, OnInit } from '@angular/core';
+import * as schemaTypes from 'src/graphqlschema/schemaTypes';
+import { $myService } from './$myName.service';
+
+
+@Component({
+  selector: 'app-$myName-component',
+  templateUrl: './$myName-component.component.html',
+})
+export class $myNameComponent implements OnInit {
+  $myVariables
+
+  constructor(private service: $myService) { }
+
+  ngOnInit() {
+    $myFunctions
+  }
+
+}
+`;

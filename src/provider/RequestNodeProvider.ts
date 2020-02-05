@@ -304,6 +304,13 @@ export class Request extends vscode.TreeItem {
         return this._type;
     }
 
+    get query(): boolean {
+        if (this._isQuery !== undefined) {
+            return this._isQuery;
+        }
+        return false;
+    }
+
     get description(): string {
         if (this._description !== undefined) {
             return this._description;

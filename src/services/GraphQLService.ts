@@ -24,11 +24,11 @@ import { StateService } from './StateService';
 import { Request } from '../provider/RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
-import { stringToGraphQLFormat } from '../utils/Utils';
+import { stringToGraphQLFormat, toTitleCase } from '../utils/Utils';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { resolve } from 'dns';
-import { angularService } from '../constants';
+import { angularService, angularComponent } from '../constants';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 
 const fetch = require('node-fetch');
@@ -264,16 +264,30 @@ export default class GraphQLService {
     }
 
     /**
-     * * Method to save a request to the state
+     * * Method to save a request to the state,
+     * * breaks if a requests with the same name is already used
      */
     saveRequest(name: string, element: Request) {
+        let alreadyUsed: boolean = false;
+        this._state.myRequests.forEach(request => {
+            if (request.label === name || request.label === name) {
+                alreadyUsed = true;
+            }
+        });
+        if (alreadyUsed) {
+            vscode.window.showErrorMessage(
+                `The request ${name} already exists, please provide a unique name!`
+            );
+            vscode.commands.executeCommand('tree.saveRequest', element);
+            return;
+        }
         if (element.contextValue?.match(/query/)) {
             const root = element.toString();
             const args = element.args.map(ele => ele.toArgs()).join(' ');
             this._state.saveRequest(
                 new CustomRequest(
                     name,
-                    'query',
+                    `query ${element.label} - returns ${element.tooltip}`,
                     stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`),
                     `${element.label}InputType`,
                     element.args,
@@ -286,7 +300,7 @@ export default class GraphQLService {
             this._state.saveRequest(
                 new CustomRequest(
                     name,
-                    'mutation',
+                    `mutation ${element.label} - returns ${element.tooltip}`,
                     stringToGraphQLFormat(
                         `mutation ${name}(${args}){ ${root} }`
                     ),
@@ -325,7 +339,12 @@ export default class GraphQLService {
                     ).then(file => {
                         files.push(file);
                     });
-                    this.createAngularService(serviceName, requests);
+                    this.createAngularService(serviceName, requests).then(
+                        files.push
+                    );
+                    this.createAngularComponent(serviceName, requests).then(
+                        files.push
+                    );
                 } catch (e) {
                     vscode.window.showErrorMessage(
                         'Could not create Angular Component ' + serviceName
@@ -358,7 +377,7 @@ export default class GraphQLService {
                 '..',
                 'app',
                 `${serviceName}-component`,
-                `${serviceName}Requests.ts`
+                `${toTitleCase(serviceName)}Requests.ts`
             ),
             content,
             'utf-8'
@@ -383,17 +402,19 @@ export default class GraphQLService {
         let content: string = angularService;
         let imports = `import { ${requests
             .map(request => request.label)
-            .join(', ')} } from './${serviceName}Requests'`;
+            .join(', ')} } from './${toTitleCase(serviceName)}Requests'`;
         let functions = '';
         requests.forEach(request => {
             functions = functions.concat(
-                `${request.label}(args: schemaType.${request.inputType}){
+                `${request.label}(args: schemaTypes.${request.inputType}){
     return this.apollo.${
-        request.tooltip === 'query'
+        request.tooltip.match(/query/g)
             ? 'query<schemaTypes.Query>'
             : 'mutation<schemaTypes.Mutation>'
     }({
-        ${request.tooltip === 'query' ? 'query' : 'mutation'}: ${request.label},
+        ${request.tooltip.match(/query/g) ? 'query' : 'mutation'}: ${
+                    request.label
+                },
         variables: args,
     });
 }
@@ -402,7 +423,7 @@ export default class GraphQLService {
         });
         content = content
             .replace('$myImports', imports)
-            .replace('$serviceName', serviceName + 'Service')
+            .replace('$serviceName', toTitleCase(serviceName) + 'Service')
             .replace('$myFunctions', functions);
         await fs.writeFile(
             path.join(
@@ -415,6 +436,15 @@ export default class GraphQLService {
             content,
             'utf-8'
         );
+        return Promise.resolve(
+            path.join(
+                this._folder,
+                '..',
+                'app',
+                `${serviceName}-component`,
+                `${serviceName}.service.ts`
+            )
+        );
     }
 
     /**
@@ -425,7 +455,55 @@ export default class GraphQLService {
     async createAngularComponent(
         componentName: string,
         requests: CustomRequest[]
-    ) {}
+    ) {
+        let variables = requests
+            .map(request => {
+                var returnType = request.tooltip.split(': ')[1];
+                return `${request.label
+                    .replace('Query', '')
+                    .replace('Mutation', '')}: schemaTypes.${returnType}[];`;
+            })
+            .join('\n');
+
+        let functions = requests
+            .map(request => {
+                var returnType = request.tooltip.split(': ')[1];
+                return `
+    this.service.${request.label}(null).subscribe(({data}) => {
+        this.${request.label
+            .replace('Query', '')
+            .replace('Mutation', '')} = [data.${returnType.toLowerCase()}];
+    });
+`;
+            })
+            .join('');
+        let content = angularComponent
+            .replace(/\$myName/g, toTitleCase(componentName))
+            .replace(/\$myService/g, toTitleCase(componentName) + 'Service')
+            .replace('$myFunctions', functions)
+            .replace('$myVariables', variables);
+
+        await fs.writeFile(
+            path.join(
+                this._folder,
+                '..',
+                'app',
+                `${componentName}-component`,
+                `${componentName}.component.ts`
+            ),
+            content,
+            'utf-8'
+        );
+        return Promise.resolve(
+            path.join(
+                this._folder,
+                '..',
+                'app',
+                `${componentName}-component`,
+                `${componentName}.component.ts`
+            )
+        );
+    }
 
     //#region getter and setter
     get folder(): string {
