@@ -10,7 +10,7 @@ import { performance } from 'perf_hooks';
  */
 export class ClientService {
     private _graphQLClient: GraphQLClient;
-
+    private outputChannel = vscode.window.createOutputChannel('Graphax Client');
     private _onDidExecuteRequest: vscode.EventEmitter<
         number
     > = new vscode.EventEmitter<number>();
@@ -38,31 +38,48 @@ export class ClientService {
      * @param args Arguments as json object
      */
     async executeRequest(request: string, args) {
+        this.outputChannel.clear();
         var start = performance.now();
-        const data = await this._graphQLClient.request(request, args);
-        var end = performance.now();
-        var curWorkspace =
-            vscode.workspace.workspaceFolders !== undefined
-                ? vscode.workspace.workspaceFolders[0].uri.fsPath
-                : '.';
-        const newFile = vscode.Uri.parse(
-            'untitled:' + join(curWorkspace, 'Result.json')
-        );
-        vscode.workspace.openTextDocument(newFile).then(document => {
-            const edit = new vscode.WorkspaceEdit();
-            edit.insert(
-                newFile,
-                new vscode.Position(0, 0),
-                JSON.stringify(data, undefined, 2)
-            );
-            return vscode.workspace.applyEdit(edit).then(success => {
-                if (success) {
-                    vscode.window.showTextDocument(document);
-                } else {
-                    vscode.window.showInformationMessage('Error!');
-                }
+        var end;
+        this._graphQLClient
+            .request(request, args)
+            .then(data =>
+                this.outputChannel.appendLine(
+                    JSON.stringify(data, undefined, 2)
+                )
+            )
+            .catch(error =>
+                this.outputChannel.appendLine(
+                    JSON.stringify(error, undefined, 2)
+                )
+            )
+            .finally(() => {
+                end = performance.now();
+                this.outputChannel.show();
+                this._onDidExecuteRequest.fire(end - start);
             });
-        });
-        this._onDidExecuteRequest.fire(end - start);
+
+        // var curWorkspace =
+        //     vscode.workspace.workspaceFolders !== undefined
+        //         ? vscode.workspace.workspaceFolders[0].uri.fsPath
+        //         : '.';
+        // const newFile = vscode.Uri.parse(
+        //     'untitled:' + join(curWorkspace, 'Result.json')
+        // );
+        // vscode.workspace.openTextDocument(newFile).then(document => {
+        //     const edit = new vscode.WorkspaceEdit();
+        //     edit.insert(
+        //         newFile,
+        //         new vscode.Position(0, 0),
+        //         JSON.stringify(data, undefined, 2)
+        //     );
+        //     return vscode.workspace.applyEdit(edit).then(success => {
+        //         if (success) {
+        //             vscode.window.showTextDocument(document);
+        //         } else {
+        //             vscode.window.showInformationMessage('Error!');
+        //         }
+        //     });
+        // });
     }
 }
