@@ -56,17 +56,17 @@ export class ConfigurationService {
      */
     constructor() {
         this._endpoint = vscode.workspace
-            .getConfiguration('Graphax')
+            .getConfiguration('graphax')
             .get('schema.endpoint') as string;
         this._generatedFolder = vscode.workspace
-            .getConfiguration('Graphax')
+            .getConfiguration('graphax')
             .get('schema.folder') as string;
         this._typescript = vscode.workspace
-            .getConfiguration('Graphax')
+            .getConfiguration('graphax')
             .get('typescript');
         this._framework = toFramework(
             vscode.workspace
-                .getConfiguration('Graphax')
+                .getConfiguration('graphax')
                 .get('service.framework') as string
         );
         vscode.workspace.onDidChangeConfiguration(e =>
@@ -77,43 +77,43 @@ export class ConfigurationService {
         event: vscode.ConfigurationChangeEvent
     ) {
         if (this.shouldTriggerEvent) {
-            if (event.affectsConfiguration('Graphax.schema.endpoint')) {
+            if (event.affectsConfiguration('graphax.schema.endpoint')) {
                 this._endpoint = vscode.workspace
-                    .getConfiguration('Graphax')
+                    .getConfiguration('graphax')
                     .get('schema.endpoint') as string;
                 this._onDidChangeEndpoint.fire(this.endpoint);
-            } else if (event.affectsConfiguration('Graphax.schema.folder')) {
+            } else if (event.affectsConfiguration('graphax.schema.folder')) {
                 this._generatedFolder = vscode.workspace
-                    .getConfiguration('Graphax')
+                    .getConfiguration('graphax')
                     .get('schema.folder') as string;
                 this._onDidChangeFolder.fire(this.generatedFolder);
-            } else if (event.affectsConfiguration('Graphax.typescript')) {
+            } else if (event.affectsConfiguration('graphax.typescript')) {
                 this._typescript = vscode.workspace
-                    .getConfiguration('Graphax')
+                    .getConfiguration('graphax')
                     .get('typescript');
                 this._onDidChangeTypescript.fire(this.typescript);
             } else if (
-                event.affectsConfiguration('Graphax.service.framework')
+                event.affectsConfiguration('graphax.service.framework')
             ) {
                 this._framework = toFramework(
                     vscode.workspace
-                        .getConfiguration('Graphax')
+                        .getConfiguration('graphax')
                         .get('service.framework') as string
                 );
                 this._onDidChangeFramework.fire(this.framework);
             }
         } else {
-            if (event.affectsConfiguration('Graphax.schema.endpoint')) {
+            if (event.affectsConfiguration('graphax.schema.endpoint')) {
                 this._endpoint = vscode.workspace
-                    .getConfiguration('Graphax')
+                    .getConfiguration('graphax')
                     .get('schema.endpoint') as string;
-            } else if (event.affectsConfiguration('Graphax.schema.folder')) {
+            } else if (event.affectsConfiguration('graphax.schema.folder')) {
                 this._generatedFolder = vscode.workspace
-                    .getConfiguration('Graphax')
+                    .getConfiguration('graphax')
                     .get('schema.folder') as string;
-            } else if (event.affectsConfiguration('Graphax.typescript')) {
+            } else if (event.affectsConfiguration('graphax.typescript')) {
                 this._typescript = vscode.workspace
-                    .getConfiguration('Graphax')
+                    .getConfiguration('graphax')
                     .get('typescript');
             }
             this.shouldTriggerEvent = true;
@@ -124,7 +124,7 @@ export class ConfigurationService {
     set endpoint(value: string) {
         this.shouldTriggerEvent = false;
         vscode.workspace
-            .getConfiguration('Graphax')
+            .getConfiguration('graphax')
             .update('schema.endpoint', value, true);
         this._endpoint = value;
     }
@@ -132,7 +132,7 @@ export class ConfigurationService {
     set generatedFolder(value: string) {
         this.shouldTriggerEvent = false;
         vscode.workspace
-            .getConfiguration('Graphax')
+            .getConfiguration('graphax')
             .update('schema.folder', value, true);
         this._generatedFolder = value;
     }
@@ -140,7 +140,7 @@ export class ConfigurationService {
     set typescript(value: boolean) {
         this.shouldTriggerEvent = false;
         vscode.workspace
-            .getConfiguration('Graphax')
+            .getConfiguration('graphax')
             .update('schema.typescript', value, true);
         this._typescript = value;
     }
