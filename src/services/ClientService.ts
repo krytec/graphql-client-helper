@@ -10,7 +10,6 @@ import { performance } from 'perf_hooks';
  */
 export class ClientService {
     private _graphQLClient: GraphQLClient;
-    private outputChannel = vscode.window.createOutputChannel('Graphax Client');
     private _onDidExecuteRequest: vscode.EventEmitter<
         number
     > = new vscode.EventEmitter<number>();
@@ -37,49 +36,30 @@ export class ClientService {
      * @param request Request as string
      * @param args Arguments as json object
      */
-    async executeRequest(request: string, args) {
-        this.outputChannel.clear();
+    async executeRequest(request: string, args): Promise<string> {
         var start = performance.now();
         var end;
-        this._graphQLClient
+        let requestPromise: Promise<string> | undefined;
+        await this._graphQLClient
             .request(request, args)
-            .then(data =>
-                this.outputChannel.appendLine(
+            .then(data => {
+                requestPromise = Promise.resolve(
                     JSON.stringify(data, undefined, 2)
-                )
-            )
-            .catch(error =>
-                this.outputChannel.appendLine(
+                );
+            })
+            .catch(error => {
+                requestPromise = Promise.reject(
                     JSON.stringify(error, undefined, 2)
-                )
-            )
+                );
+            })
             .finally(() => {
                 end = performance.now();
-                this.outputChannel.show();
                 this._onDidExecuteRequest.fire(end - start);
             });
-
-        // var curWorkspace =
-        //     vscode.workspace.workspaceFolders !== undefined
-        //         ? vscode.workspace.workspaceFolders[0].uri.fsPath
-        //         : '.';
-        // const newFile = vscode.Uri.parse(
-        //     'untitled:' + join(curWorkspace, 'Result.json')
-        // );
-        // vscode.workspace.openTextDocument(newFile).then(document => {
-        //     const edit = new vscode.WorkspaceEdit();
-        //     edit.insert(
-        //         newFile,
-        //         new vscode.Position(0, 0),
-        //         JSON.stringify(data, undefined, 2)
-        //     );
-        //     return vscode.workspace.applyEdit(edit).then(success => {
-        //         if (success) {
-        //             vscode.window.showTextDocument(document);
-        //         } else {
-        //             vscode.window.showInformationMessage('Error!');
-        //         }
-        //     });
-        // });
+        if (requestPromise !== undefined) {
+            return requestPromise;
+        } else {
+            throw new Error('Graphax Client failed to run request');
+        }
     }
 }

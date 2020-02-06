@@ -25,13 +25,18 @@ export function showCreateServiceCommand(
         .then(value => {
             if (value !== undefined) {
                 // ! TODO: Provide way to show created files and correctly implementation
-                service.createService(value, requests).then(files => {
-                    files.forEach(file => {
-                        vscode.workspace
-                            .openTextDocument(vscode.Uri.file(file))
-                            .then(doc => vscode.window.showTextDocument(doc));
-                    });
-                });
+                service
+                    .createService(value, requests)
+                    .then(files => {
+                        files.forEach(file => {
+                            vscode.workspace
+                                .openTextDocument(vscode.Uri.file(file))
+                                .then(doc =>
+                                    vscode.window.showTextDocument(doc)
+                                );
+                        });
+                    })
+                    .catch(error => {});
             }
         });
 }

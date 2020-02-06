@@ -140,7 +140,6 @@ export default class GraphQLService {
             //Return schema object
             return schema;
         } catch (e) {
-            this._logger.logDebug(e);
             throw new Error("Couldn't create schema from response");
         }
     }
@@ -192,7 +191,7 @@ export default class GraphQLService {
     /**
      * * Method to write all types of the schema as typescript types to a file
      */
-    async writeTypesToFile() {
+    async writeTypesToFile(): Promise<string> {
         let maybe = 'export type Maybe<T> = T | null; \n';
         let types = maybe
             .concat(this._state.scalar.toTypescriptType())
@@ -213,9 +212,9 @@ export default class GraphQLService {
                 types,
                 'utf-8'
             );
+            return Promise.resolve(path.join(this._folder, 'schemaTypes.ts'));
         } catch (e) {
-            this._logger.logDebug(e);
-            vscode.window.showErrorMessage('Could not create file!');
+            throw new Error('Could not create file schemaTypes.ts');
         }
     }
 
@@ -267,7 +266,7 @@ export default class GraphQLService {
      * * Method to save a request to the state,
      * * breaks if a requests with the same name is already used
      */
-    saveRequest(name: string, element: Request) {
+    saveRequest(name: string, element: Request): Promise<CustomRequest> {
         let alreadyUsed: boolean = false;
         this._state.myRequests.forEach(request => {
             if (request.label === name || request.label === name) {
@@ -275,41 +274,38 @@ export default class GraphQLService {
             }
         });
         if (alreadyUsed) {
-            vscode.window.showErrorMessage(
+            throw new Error(
                 `The request ${name} already exists, please provide a unique name!`
             );
-            vscode.commands.executeCommand('tree.saveRequest', element);
-            return;
         }
         if (element.contextValue?.match(/query/)) {
             const root = element.toString();
             const args = element.args.map(ele => ele.toArgs()).join(' ');
-            this._state.saveRequest(
-                new CustomRequest(
-                    name,
-                    `query ${element.label} - returns ${element.tooltip}`,
-                    stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`),
-                    `${element.label}InputType`,
-                    element.args,
-                    { command: 'list.selectRequest', title: 'Select' }
-                )
+            const customRequest = new CustomRequest(
+                name,
+                `query ${element.label} - returns ${element.tooltip}`,
+                stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`),
+                `${element.label}InputType`,
+                element.args,
+                { command: 'list.selectRequest', title: 'Select' }
             );
+            this._state.saveRequest(customRequest);
+            return Promise.resolve(customRequest);
         } else if (element.contextValue?.match(/mutation/)) {
             const root = element.toString();
             const args = element.args.map(ele => ele.toArgs()).join(' ');
-            this._state.saveRequest(
-                new CustomRequest(
-                    name,
-                    `mutation ${element.label} - returns ${element.tooltip}`,
-                    stringToGraphQLFormat(
-                        `mutation ${name}(${args}){ ${root} }`
-                    ),
-                    `${element.label}InputType`,
-                    element.args,
-                    { command: 'list.selectRequest', title: 'Select' }
-                )
+            const customRequest = new CustomRequest(
+                name,
+                `mutation ${element.label} - returns ${element.tooltip}`,
+                stringToGraphQLFormat(`mutation ${name}(${args}){ ${root} }`),
+                `${element.label}InputType`,
+                element.args,
+                { command: 'list.selectRequest', title: 'Select' }
             );
+            this._state.saveRequest(customRequest);
+            return Promise.resolve(customRequest);
         }
+        return Promise.reject();
     }
 
     /**
@@ -346,8 +342,8 @@ export default class GraphQLService {
                         files.push
                     );
                 } catch (e) {
-                    vscode.window.showErrorMessage(
-                        'Could not create Angular Component ' + serviceName
+                    throw new Error(
+                        'Could not create Angular component ' + serviceName
                     );
                 }
                 break;

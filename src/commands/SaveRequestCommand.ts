@@ -18,7 +18,10 @@ export async function showSaveRequestCommand(
         .then(value => {
             if (value !== undefined) {
                 value = element.query ? value + 'Query' : value + 'Mutation';
-                graphQLService.saveRequest(value, element);
+                graphQLService.saveRequest(value, element).catch(error => {
+                    vscode.window.showErrorMessage(error);
+                    vscode.commands.executeCommand('tree.saveRequest', element);
+                });
             } else {
                 vscode.window.showErrorMessage(
                     'Error: Please name your request!'

@@ -26,6 +26,9 @@ export class CommandService {
     private _logger: LoggingService;
     private _ctx: vscode.ExtensionContext;
     private _fsWatcher: fs.FSWatcher;
+    private _outputChannel = vscode.window.createOutputChannel(
+        'Graphax Client'
+    );
     /**
      * Constructor
      * @param _stateService The stateService of the extension
@@ -219,7 +222,11 @@ export class CommandService {
         const runRequestCommand = vscode.commands.registerCommand(
             'list.runRequest',
             (element: CustomRequest) =>
-                executeRequestCommand(element, this._client)
+                executeRequestCommand(
+                    element,
+                    this._client,
+                    this._outputChannel
+                )
         );
 
         const createServiceCommand = vscode.commands.registerCommand(

@@ -11,8 +11,10 @@ import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
  */
 export async function executeRequestCommand(
     node: CustomRequest,
-    client: ClientService
+    client: ClientService,
+    channel: vscode.OutputChannel
 ) {
+    channel.clear();
     let vars = '{';
     const steps = node.args.length;
     var count = 0;
@@ -42,7 +44,13 @@ export async function executeRequestCommand(
         count++;
     }
     vars = vars += '}';
-    client.executeRequest(node.request, JSON.parse(vars));
+    client
+        .executeRequest(node.request, JSON.parse(vars))
+        .then(data => {
+            channel.appendLine(data);
+            channel.show();
+        })
+        .catch(error => vscode.window.showErrorMessage(error));
 }
 
 /**
