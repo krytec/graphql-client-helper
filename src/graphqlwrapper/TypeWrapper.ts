@@ -15,11 +15,7 @@ export class TypeWrapper implements GraphQLWrapper {
      * @param name Name of the type
      * @param description Description of the type
      */
-    constructor(
-        private _name: string,
-        private _description?: string,
-        private _ofInterface?: string
-    ) {
+    constructor(private _name: string, private _description?: string) {
         this._fields = new Array<FieldWrapper>();
     }
 
