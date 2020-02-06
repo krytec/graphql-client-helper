@@ -43,7 +43,7 @@ const path = require('path');
 /**
  * A GraphQL service class to retriev information about a GraphQL endpoint
  */
-export default class GraphQLService {
+export class GraphQLService {
     private _folder: string;
     private _logger: LoggingService;
 

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { showCreateSchemaInput } from '../commands/SchemaInputCommand';
-import GraphQLService from './GraphQLService';
+import { GraphQLService } from './GraphQLService';
 import { LoggingService } from './LoggingService';
 import { showLogingWindowCommand } from '../commands/ShowLogCommand';
 import { StateService } from './StateService';
