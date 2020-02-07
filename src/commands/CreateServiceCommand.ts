@@ -1,6 +1,6 @@
 import { StateService } from '../services/StateService';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
-import GraphQLService from '../services/GraphQLService';
+import { GraphQLService } from '../services/GraphQLService';
 import * as vscode from 'vscode';
 
 /**

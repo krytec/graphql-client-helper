@@ -2,8 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { showCreateSchemaInput } from './commands/SchemaInputCommand';
-import GraphQLUtils from './services/GraphQLService';
-import GraphQLService from './services/GraphQLService';
+import { GraphQLService } from './services/GraphQLService';
 import { CommandService } from './services/CommandService';
 import { LoggingService } from './services/LoggingService';
 import { StateService } from './services/StateService';

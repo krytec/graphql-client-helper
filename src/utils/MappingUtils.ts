@@ -29,8 +29,7 @@ export function constructType(type: GraphQLObjectType): TypeWrapper {
         let field: FieldWrapper = constructField(element);
         constructedType.addField(field);
     });
-    //! TODO: implement interfaces
-    let interfaces = Object.values(type.getInterfaces());
+
     return constructedType;
 }
 

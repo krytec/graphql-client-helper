@@ -1,9 +1,8 @@
 import { commands, window, workspace, Uri } from 'vscode';
 import * as vscode from 'vscode';
-import GraphQLUtils from '../services/GraphQLService';
 import { isValidURL } from '../utils/Utils';
 import { join } from 'path';
-import GraphQLService from '../services/GraphQLService';
+import { GraphQLService } from '../services/GraphQLService';
 import { ConfigurationService } from '../services/ConfigurationService';
 
 // Runs an introspection query on given endpoint and creates a schema file
