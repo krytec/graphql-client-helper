@@ -116,7 +116,7 @@ export class CircularQuickInput {
                         }
                     })
                     .then(async value => {
-                        if (value === '' || item.nonNull === false) {
+                        if (value?.trim() === '' && item.nonNull === false) {
                             value = 'null';
                         }
                         if (value !== undefined) {
