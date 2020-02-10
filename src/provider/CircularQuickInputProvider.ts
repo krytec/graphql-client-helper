@@ -222,6 +222,9 @@ export class CircularQuickInput {
     }
 }
 
+/**
+ * FilterArgumentButton class for QuickPick or Input
+ */
 class FilterArgumentButton implements vscode.QuickInputButton {
     constructor(
         public iconPath:
@@ -232,6 +235,9 @@ class FilterArgumentButton implements vscode.QuickInputButton {
     ) {}
 }
 
+/**
+ * ArgumentItem class that represents an argument as QuickPickItem
+ */
 class ArgumentItem implements vscode.QuickPickItem {
     constructor(
         private _key: string,

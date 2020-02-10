@@ -317,7 +317,6 @@ export class GraphQLService {
         requests: CustomRequest[]
     ): Promise<string[]> {
         let files: string[] = new Array<string>();
-        // ! TODO: Next -> select framwork and create a simple service which returns incoming values
         switch (+this._config.framework) {
             case Framework.ANGULAR:
                 try {
@@ -448,6 +447,7 @@ export class GraphQLService {
         componentName: string,
         requests: CustomRequest[]
     ) {
+        //! TODO: Fix CustomRequest
         let variables = requests
             .map(request => {
                 var returnType = request.tooltip.split(': ')[1];
@@ -470,8 +470,13 @@ export class GraphQLService {
             })
             .join('');
         let content = angularComponent
-            .replace(/\$myName/g, toTitleCase(componentName))
-            .replace(/\$myService/g, toTitleCase(componentName) + 'Service')
+            .replace(/\$myNameTitel/g, toTitleCase(componentName))
+            .replace(
+                /\$myServiceTitel/g,
+                toTitleCase(componentName) + 'Service'
+            )
+            .replace(/\$myName/g, componentName)
+            .replace(/\$myService/g, componentName + 'Service')
             .replace('$myFunctions', functions)
             .replace('$myVariables', variables);
 
