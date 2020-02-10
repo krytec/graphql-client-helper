@@ -51,13 +51,12 @@
                         "enum": [
                             "NONE",
                             "ANGULAR",
-                            "REACT",
-                            "VUE"
+                            "REACT"
                         ],
                         "enumDescriptions": [
+                            "Creates a graphql request without an service",
                             "Creates a graphql service for angular framework",
-                            "Creates a graphql service for react framework",
-                            "Creates a graphql service for vue framework"
+                            "Creates a graphql service for react framework"
                         ]
                     }
                 }
@@ -99,6 +98,10 @@
             {
                 "command": "list.save",
                 "title": "Save"
+            },
+            {
+                "command": "list.delete",
+                "title": "Delete"
             }
         ],
         "keybindings": {
@@ -156,6 +159,10 @@
                     "command": "list.runRequest",
                     "when": "view == requestView",
                     "group": "inline"
+                },
+                {
+                    "command": "list.delete",
+                    "when": "view == requestView"
                 }
             ]
         }

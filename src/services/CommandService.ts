@@ -229,6 +229,30 @@ export class CommandService {
                 )
         );
 
+        const deleteRequestCommand = vscode.commands.registerCommand(
+            'list.delete',
+            (element: CustomRequest) => {
+                vscode.window
+                    .showInformationMessage(
+                        `Do you really want to delete request:${element.label}?`,
+                        'Yes',
+                        'No'
+                    )
+                    .then(value => {
+                        if (value === 'Yes') {
+                            const index = this._stateService.myRequests.indexOf(
+                                element,
+                                0
+                            );
+                            if (index > -1) {
+                                this._stateService.myRequests.splice(index, 1);
+                                this._savedRequestNodeProvider.refresh();
+                            }
+                        }
+                    });
+            }
+        );
+
         const createServiceCommand = vscode.commands.registerCommand(
             'list.save',
             () => {
@@ -251,6 +275,7 @@ export class CommandService {
         this._ctx.subscriptions.push(refreshListCommand);
         this._ctx.subscriptions.push(selectRequestCommand);
         this._ctx.subscriptions.push(runRequestCommand);
+        this._ctx.subscriptions.push(deleteRequestCommand);
         this._ctx.subscriptions.push(createServiceCommand);
     }
 }
