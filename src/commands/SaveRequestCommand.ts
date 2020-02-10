@@ -1,5 +1,5 @@
 import { Request, RequestNodeProvider } from '../provider/RequestNodeProvider';
-import GraphQLService from '../services/GraphQLService';
+import { GraphQLService } from '../services/GraphQLService';
 import * as vscode from 'vscode';
 
 export async function showSaveRequestCommand(

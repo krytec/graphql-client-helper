@@ -1,4 +1,4 @@
-import GraphQLUtils from '../../services/GraphQLService';
+import { GraphQLService } from '../../services/GraphQLService';
 import { expect } from 'chai';
 import { GraphQLObjectType } from 'graphql';
 import { LoggingService } from '../../services/LoggingService';
@@ -8,10 +8,10 @@ import { ConfigurationService } from '../../services/ConfigurationService';
 const fs = require('fs');
 const path = require('path');
 
-describe('Test functions of GraphQLUtil class', function() {
+describe('Test functions of GraphQLService class', function() {
     let state = new StateService(new LoggingService());
     let config = new ConfigurationService();
-    let graphQLUtil = new GraphQLUtils(state, config);
+    let graphQLUtil = new GraphQLService(state, config);
     graphQLUtil.folder = __dirname;
     describe('GraphQLUtilTest to test if invalid endpoint throws error', () => {
         let url: string = 'http://google.com';
