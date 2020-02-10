@@ -1,8 +1,16 @@
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import * as vscode from 'vscode';
+/**
+ * CircularQuickInput class to create a quick input that provides input value for every argument
+ */
 export class CircularQuickInput {
     private _argumentGroup: ArgumentItem[];
     private _quickPick: vscode.QuickPick<ArgumentItem>;
+    /**
+     * Constructor for a CircularQuickInput
+     * @param _titel Titel of the QuickInput
+     * @param args Arguments
+     */
     constructor(private _titel, private args: FieldWrapper[]) {
         this._argumentGroup = args.map(
             arg =>
@@ -31,7 +39,10 @@ export class CircularQuickInput {
         });
     }
 
-    createQuickPick(): vscode.QuickPick<ArgumentItem> {
+    /**
+     * Create a QuickPick and returns it
+     */
+    private createQuickPick(): vscode.QuickPick<ArgumentItem> {
         const input = vscode.window.createQuickPick<ArgumentItem>();
         input.items = this._argumentGroup.sort((x, y) => {
             return x.isSet === y.isSet ? 0 : x.isSet ? 1 : -1;
@@ -43,7 +54,10 @@ export class CircularQuickInput {
         return input;
     }
 
-    async showQuickPick(): Promise<ArgumentItem> {
+    /**
+     * Shows the current QuickPick and returns the current selected item as promise
+     */
+    private async showQuickPick(): Promise<ArgumentItem> {
         const disposables: vscode.Disposable[] = [];
         try {
             return await new Promise<ArgumentItem>((resolve, reject) => {
@@ -74,6 +88,13 @@ export class CircularQuickInput {
         }
     }
 
+    /**
+     * Method to show the current QuickPick,
+     * after an item is selected an inputbox is opened to provide the user the option
+     * to provide an argument for the field
+     *
+     * If all requiered arguments are filled the user has the option to run the request
+     */
     async show(): Promise<string> {
         let item = await this.showQuickPick();
         if (item !== undefined) {
@@ -105,11 +126,17 @@ export class CircularQuickInput {
                         }
                         if (
                             this._argumentGroup.filter(
-                                item => item.isSet !== true
+                                item =>
+                                    item.isSet !== true && item.nonNull === true
                             ).length > 0
                         ) {
                             resolve(this.show());
                         } else {
+                            this._argumentGroup.forEach(item => {
+                                if (!item.isSet) {
+                                    item.value = 'null';
+                                }
+                            });
                             const args =
                                 '{' +
                                 this._argumentGroup
@@ -141,7 +168,7 @@ export class CircularQuickInput {
      * @param arg Argument
      * @param value Inputvalue for the argument
      */
-    validateType(arg: ArgumentItem, value: string): boolean {
+    private validateType(arg: ArgumentItem, value: string): boolean {
         if (value === undefined || value === '') {
             if (arg.nonNull === false) {
                 return true;
@@ -180,7 +207,7 @@ export class CircularQuickInput {
      * @param arg Argument
      * @param value Inputvalue
      */
-    argToString(arg: ArgumentItem): string {
+    private argToString(arg: ArgumentItem): string {
         if (arg.value === 'null') {
             return `"${arg.name}": null`;
         }
