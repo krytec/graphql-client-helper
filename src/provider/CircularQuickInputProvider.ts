@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
  */
 export class CircularQuickInput {
     private _argumentGroup: ArgumentItem[];
-    private _quickPick: vscode.QuickPick<ArgumentItem>;
+    private _quickPick?: vscode.QuickPick<ArgumentItem>;
     /**
      * Constructor for a CircularQuickInput
      * @param _titel Titel of the QuickInput
@@ -22,21 +22,6 @@ export class CircularQuickInput {
                     arg.description
                 )
         );
-
-        this._quickPick = vscode.window.createQuickPick();
-        this._quickPick.items = this._argumentGroup;
-        this._quickPick.buttons = [];
-        this._quickPick.placeholder = `Please select an argument:`;
-        this._quickPick.canSelectMany = false;
-        this._quickPick.title = this._titel;
-        this._quickPick.buttons = [new FilterArgumentButton('', 'Filter')];
-        this._quickPick.onDidTriggerButton(button => {
-            if (this._quickPick !== undefined) {
-                this._quickPick.items = this._argumentGroup.filter(
-                    item => item.nonNull === true
-                );
-            }
-        });
     }
 
     /**
@@ -50,39 +35,48 @@ export class CircularQuickInput {
         input.placeholder = `Please select an argument:`;
         input.canSelectMany = false;
         input.title = this._titel;
-        input.buttons = [new FilterArgumentButton('', 'Filter')];
+        input.buttons = [
+            new FilterArgumentButton('', 'Filter'),
+            new RunRequestButton('', 'Run')
+        ];
         return input;
     }
 
     /**
      * Shows the current QuickPick and returns the current selected item as promise
      */
-    private async showQuickPick(): Promise<ArgumentItem> {
+    private async showQuickPick(): Promise<ArgumentItem | RunRequestButton> {
         const disposables: vscode.Disposable[] = [];
         try {
-            return await new Promise<ArgumentItem>((resolve, reject) => {
-                if (this._quickPick) {
-                    this._quickPick.dispose();
-                }
-                this._quickPick = this.createQuickPick();
+            return await new Promise<ArgumentItem | RunRequestButton>(
+                (resolve, reject) => {
+                    if (this._quickPick) {
+                        this._quickPick.dispose();
+                    }
+                    this._quickPick = this.createQuickPick();
 
-                disposables.push(
-                    this._quickPick.onDidChangeSelection(items =>
-                        resolve(items[0])
-                    ),
-                    this._quickPick.onDidTriggerButton(button => {
-                        if (this._quickPick !== undefined) {
-                            this._quickPick.items.length ===
-                            this._argumentGroup.length
-                                ? (this._quickPick.items = this._argumentGroup.filter(
-                                      item => item.nonNull === true
-                                  ))
-                                : (this._quickPick.items = this._argumentGroup);
-                        }
-                    })
-                );
-                this._quickPick.show();
-            });
+                    disposables.push(
+                        this._quickPick.onDidChangeSelection(items =>
+                            resolve(items[0])
+                        ),
+                        this._quickPick.onDidTriggerButton(button => {
+                            if (button instanceof RunRequestButton) {
+                                resolve(button);
+                            } else {
+                                if (this._quickPick !== undefined) {
+                                    this._quickPick.items.length ===
+                                    this._argumentGroup.length
+                                        ? (this._quickPick.items = this._argumentGroup.filter(
+                                              item => item.nonNull === true
+                                          ))
+                                        : (this._quickPick.items = this._argumentGroup);
+                                }
+                            }
+                        })
+                    );
+                    this._quickPick.show();
+                }
+            );
         } finally {
             disposables.forEach(item => item.dispose());
         }
@@ -96,8 +90,9 @@ export class CircularQuickInput {
      * If all requiered arguments are filled the user has the option to run the request
      */
     async show(): Promise<string> {
-        let item = await this.showQuickPick();
-        if (item !== undefined) {
+        let returnValue = await this.showQuickPick();
+        if (returnValue instanceof ArgumentItem) {
+            let item: ArgumentItem = returnValue;
             return new Promise<string>(async (resolve, reject) => {
                 await vscode.window
                     .showInputBox({
@@ -109,7 +104,7 @@ export class CircularQuickInput {
                             : 'Please provide a value for the optional argument ' +
                               item.name,
                         validateInput: text => {
-                            return this.validateType(item, text)
+                            return this.validateType(item as ArgumentItem, text)
                                 ? null
                                 : 'Invalid type for argument of type: ' +
                                       item.ofType;
@@ -121,45 +116,54 @@ export class CircularQuickInput {
                         }
                         if (value !== undefined) {
                             item.value = value;
-                        } else {
-                            resolve(this.show());
-                        }
-                        if (
-                            this._argumentGroup.filter(
-                                item =>
-                                    item.isSet !== true && item.nonNull === true
-                            ).length > 0
-                        ) {
                             resolve(this.show());
                         } else {
-                            this._argumentGroup.forEach(item => {
-                                if (!item.isSet) {
-                                    item.value = 'null';
-                                }
-                            });
-                            const args =
-                                '{' +
-                                this._argumentGroup
-                                    .map(item => this.argToString(item))
-                                    .join(', ') +
-                                '}';
-                            await vscode.window
-                                .showInformationMessage(
-                                    `Do you want to run request with arguments: ${args}?`,
-                                    'Yes',
-                                    'No'
-                                )
-                                .then(button => {
-                                    if (button === 'No') {
-                                        resolve(this.show());
-                                    }
-                                });
-                            resolve(args);
+                            resolve(this.show());
                         }
                     });
             });
         } else {
-            return Promise.reject();
+            return new Promise<string>(async (resolve, reject) => {
+                const nonNullArgs = this._argumentGroup.filter(
+                    item => item.isSet !== true && item.nonNull === true
+                );
+                if (nonNullArgs.length > 0) {
+                    vscode.window.showErrorMessage(
+                        `Non nullable argument(s) can't be null: ${nonNullArgs
+                            .map(arg => arg.name)
+                            .join(', ')}`
+                    );
+                    resolve(this.show());
+                } else {
+                    this._argumentGroup.forEach(item => {
+                        if (!item.isSet) {
+                            item.value = 'null';
+                        }
+                    });
+                    const args =
+                        '{' +
+                        this._argumentGroup
+                            .map(item => this.argToString(item))
+                            .join(', ') +
+                        '}';
+                    await vscode.window
+                        .showInformationMessage(
+                            `Do you want to run request with arguments: ${args}?`,
+                            'Yes',
+                            'No'
+                        )
+                        .then(button => {
+                            if (button === 'No') {
+                                resolve(this.show());
+                            } else if (button === 'Yes') {
+                                resolve(args);
+                            } else {
+                                reject();
+                            }
+                        });
+                    reject();
+                }
+            });
         }
     }
 
@@ -226,6 +230,19 @@ export class CircularQuickInput {
  * FilterArgumentButton class for QuickPick or Input
  */
 class FilterArgumentButton implements vscode.QuickInputButton {
+    constructor(
+        public iconPath:
+            | vscode.Uri
+            | { light: vscode.Uri; dark: vscode.Uri }
+            | vscode.ThemeIcon,
+        public tooltip?: string | undefined
+    ) {}
+}
+
+/**
+ * RunRequestButton class for QuickPick or Input
+ */
+class RunRequestButton implements vscode.QuickInputButton {
     constructor(
         public iconPath:
             | vscode.Uri

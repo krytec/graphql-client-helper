@@ -16,15 +16,16 @@ export async function executeRequestCommand(
 ) {
     channel.clear();
     const quickInput = new CircularQuickInput(node.label, node.args);
-    let vars = await quickInput.show();
-    client
-        .executeRequest(node.request, JSON.parse(vars))
-        .then(data => {
-            channel.appendLine(data);
-            channel.show();
-        })
-        .catch(error => {
-            var obj = JSON.parse(error);
-            vscode.window.showErrorMessage(obj.response.errors[0].message);
-        });
+    await quickInput.show().then(vars => {
+        client
+            .executeRequest(node.request, JSON.parse(vars))
+            .then(data => {
+                channel.appendLine(data);
+                channel.show();
+            })
+            .catch(error => {
+                var obj = JSON.parse(error);
+                vscode.window.showErrorMessage(obj.response.errors[0].message);
+            });
+    });
 }

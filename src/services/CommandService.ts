@@ -184,10 +184,16 @@ export class CommandService {
         const saveRequestCommand = vscode.commands.registerCommand(
             'tree.saveRequest',
             async (element: Request) => {
-                await showSaveRequestCommand(element, this._graphQLService);
-                element.deselect();
-                this._requestNodeProvider.refresh();
-                this._savedRequestNodeProvider.refresh();
+                if (element.selected) {
+                    await showSaveRequestCommand(element, this._graphQLService);
+                    element.deselect();
+                    this._requestNodeProvider.refresh();
+                    this._savedRequestNodeProvider.refresh();
+                } else {
+                    vscode.window.showErrorMessage(
+                        'You must select at least one field of the request!'
+                    );
+                }
             }
         );
 

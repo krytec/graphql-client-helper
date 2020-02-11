@@ -10,9 +10,10 @@ export async function showSaveRequestCommand(
         .showInputBox({
             placeHolder: 'Enter a name for your request',
             validateInput: text => {
-                return text !== undefined && text.trim().length > 0
+                return text !== undefined &&
+                    text.match(/^[a-zA-Z][a-zA-Z0-9]*$/g)
                     ? null
-                    : 'Error: Please name your request!';
+                    : 'Error: A request has to be a string and can`t start with a number!';
             }
         })
         .then(value => {

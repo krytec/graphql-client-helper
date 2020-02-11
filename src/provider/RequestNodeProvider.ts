@@ -236,7 +236,7 @@ export class Request extends vscode.TreeItem {
         if (this.contextValue === 'field') {
             return this._isSelected;
         } else {
-            return this.collapsibleState === 2;
+            return this.fields.map(field => field.selected).includes(true);
         }
     }
 
