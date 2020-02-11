@@ -73,11 +73,19 @@
             },
             {
                 "command": "tree.refresh",
-                "title": "Refresh"
+                "title": "Refresh",
+                "icon": {
+                    "dark": "./resources/dark/reload.svg",
+                    "light": "./resources/light/reload.svg"
+                }
             },
             {
                 "command": "tree.saveRequest",
-                "title": "Create"
+                "title": "Create",
+                "icon": {
+                    "dark": "./resources/dark/save.svg",
+                    "light": "./resources/light/save.svg"
+                }
             },
             {
                 "command": "tree.selectField",
@@ -85,11 +93,19 @@
             },
             {
                 "command": "list.refresh",
-                "title": "Refresh"
+                "title": "Refresh",
+                "icon": {
+                    "dark": "./resources/dark/reload.svg",
+                    "light": "./resources/light/reload.svg"
+                }
             },
             {
                 "command": "list.runRequest",
-                "title": "Run"
+                "title": "Run",
+                "icon": {
+                    "dark": "./resources/dark/play.svg",
+                    "light": "./resources/light/play.svg"
+                }
             },
             {
                 "command": "list.selectRequest",
@@ -97,7 +113,11 @@
             },
             {
                 "command": "list.save",
-                "title": "Save"
+                "title": "Save",
+                "icon": {
+                    "dark": "./resources/dark/save.svg",
+                    "light": "./resources/light/save.svg"
+                }
             },
             {
                 "command": "list.delete",

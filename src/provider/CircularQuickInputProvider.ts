@@ -1,5 +1,6 @@
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import * as vscode from 'vscode';
+import { join } from 'path';
 /**
  * CircularQuickInput class to create a quick input that provides input value for every argument
  */
@@ -232,11 +233,33 @@ export class CircularQuickInput {
 class FilterArgumentButton implements vscode.QuickInputButton {
     constructor(
         public iconPath:
+            | string
             | vscode.Uri
-            | { light: vscode.Uri; dark: vscode.Uri }
+            | { light: vscode.Uri | string; dark: vscode.Uri | string }
             | vscode.ThemeIcon,
         public tooltip?: string | undefined
-    ) {}
+    ) {
+        this.iconPath = {
+            light: join(
+                __filename,
+                '..',
+                '..',
+                '..',
+                'resources',
+                'light',
+                'shrink2.svg'
+            ),
+            dark: join(
+                __filename,
+                '..',
+                '..',
+                '..',
+                'resources',
+                'dark',
+                'maximize-2.svg'
+            )
+        };
+    }
 }
 
 /**
@@ -245,11 +268,33 @@ class FilterArgumentButton implements vscode.QuickInputButton {
 class RunRequestButton implements vscode.QuickInputButton {
     constructor(
         public iconPath:
+            | string
             | vscode.Uri
-            | { light: vscode.Uri; dark: vscode.Uri }
+            | { light: vscode.Uri | string; dark: vscode.Uri | string }
             | vscode.ThemeIcon,
         public tooltip?: string | undefined
-    ) {}
+    ) {
+        this.iconPath = {
+            light: join(
+                __filename,
+                '..',
+                '..',
+                '..',
+                'resources',
+                'light',
+                'play.svg'
+            ),
+            dark: join(
+                __filename,
+                '..',
+                '..',
+                '..',
+                'resources',
+                'dark',
+                'play.svg'
+            )
+        };
+    }
 }
 
 /**

@@ -174,7 +174,7 @@ export class Request extends vscode.TreeItem {
                     '..',
                     'resources',
                     'light',
-                    'checkbox_unfilled.png'
+                    'checkbox_unfilled.svg'
                 ),
                 dark: join(
                     __filename,
@@ -183,7 +183,7 @@ export class Request extends vscode.TreeItem {
                     '..',
                     'resources',
                     'dark',
-                    'checkbox_unfilled.png'
+                    'checkbox_unfilled.svg'
                 )
             };
         }
@@ -251,7 +251,7 @@ export class Request extends vscode.TreeItem {
                         '..',
                         'resources',
                         'light',
-                        'checkbox_filled.png'
+                        'checkbox_filled.svg'
                     ),
                     dark: join(
                         __filename,
@@ -260,7 +260,7 @@ export class Request extends vscode.TreeItem {
                         '..',
                         'resources',
                         'dark',
-                        'checkbox_filled.png'
+                        'checkbox_filled.svg'
                     )
                 };
             } else {
@@ -272,7 +272,7 @@ export class Request extends vscode.TreeItem {
                         '..',
                         'resources',
                         'light',
-                        'checkbox_unfilled.png'
+                        'checkbox_unfilled.svg'
                     ),
                     dark: join(
                         __filename,
@@ -281,7 +281,7 @@ export class Request extends vscode.TreeItem {
                         '..',
                         'resources',
                         'dark',
-                        'checkbox_unfilled.png'
+                        'checkbox_unfilled.svg'
                     )
                 };
             }
