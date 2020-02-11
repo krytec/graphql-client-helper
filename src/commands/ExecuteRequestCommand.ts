@@ -11,10 +11,8 @@ import { CircularQuickInput } from '../provider/CircularQuickInputProvider';
  */
 export async function executeRequestCommand(
     node: CustomRequest,
-    client: ClientService,
-    channel: vscode.OutputChannel
+    client: ClientService
 ) {
-    channel.clear();
     const quickInput = new CircularQuickInput(node.label, node.args);
     await quickInput.show().then(vars => {
         client

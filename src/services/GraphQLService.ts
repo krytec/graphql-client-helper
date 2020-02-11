@@ -286,10 +286,12 @@ export class GraphQLService {
                     : '';
             const customRequest = new CustomRequest(
                 name,
-                `query ${element.label} - returns ${element.tooltip}`,
+                element.label,
+                element.type,
                 stringToGraphQLFormat(`query ${name}${args}{ ${root} }`),
                 `${element.label}InputType`,
                 element.args,
+                'Query',
                 { command: 'list.selectRequest', title: 'Select' }
             );
             this._state.saveRequest(customRequest);
@@ -299,10 +301,12 @@ export class GraphQLService {
             const args = element.args.map(ele => ele.toArgs()).join(' ');
             const customRequest = new CustomRequest(
                 name,
-                `mutation ${element.label} - returns ${element.tooltip}`,
+                element.label,
+                element.type,
                 stringToGraphQLFormat(`mutation ${name}(${args}){ ${root} }`),
                 `${element.label}InputType`,
                 element.args,
+                'Mutation',
                 { command: 'list.selectRequest', title: 'Select' }
             );
             this._state.saveRequest(customRequest);
@@ -401,14 +405,9 @@ export class GraphQLService {
         requests.forEach(request => {
             functions = functions.concat(
                 `${request.label}(args: schemaTypes.${request.inputType}){
-    return this.apollo.${
-        request.tooltip.match(/query/g)
-            ? 'query<schemaTypes.Query>'
-            : 'mutation<schemaTypes.Mutation>'
-    }({
-        ${request.tooltip.match(/query/g) ? 'query' : 'mutation'}: ${
-                    request.label
-                },
+    return this.apollo.${request.kindOf.toLowerCase()}
+        <schemaTypes.${request.kindOf}>({
+        ${request.kindOf.toLowerCase()}: ${request.label},
         variables: args,
     });
 }
@@ -450,24 +449,26 @@ export class GraphQLService {
         componentName: string,
         requests: CustomRequest[]
     ) {
-        //! TODO: Fix CustomRequest
         let variables = requests
             .map(request => {
-                var returnType = request.tooltip.split(': ')[1];
-                return `${request.label
-                    .replace('Query', '')
-                    .replace('Mutation', '')}: schemaTypes.${returnType}[];`;
+                const returnslist = this._state.requests.map(gql => {
+                    if (request.requestName === gql.Name) {
+                        return gql.returnsList;
+                    }
+                });
+                if (returnslist.includes(true)) {
+                    return `${request.name}: schemaTypes.${request.type}[];`;
+                } else {
+                    return `${request.name}: schemaTypes.${request.type};`;
+                }
             })
             .join('\n');
 
         let functions = requests
             .map(request => {
-                var returnType = request.tooltip.split(': ')[1];
                 return `
     this.service.${request.label}(null).subscribe(({data}) => {
-        this.${request.label
-            .replace('Query', '')
-            .replace('Mutation', '')} = [data.${returnType.toLowerCase()}];
+        this.${request.name} = data.${request.requestName};
     });
 `;
             })

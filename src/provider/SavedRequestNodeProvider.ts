@@ -46,10 +46,12 @@ export class SavedRequestNodeProvider
 export class CustomRequest extends vscode.TreeItem {
     constructor(
         public readonly label: string,
+        private _grapqhlrequest: string,
         private _type: string,
-        private _request: string,
+        private _requestAsString: string,
         private _inputType: string,
         private _args: Array<FieldWrapper>,
+        private _kindOf: string,
         public readonly command?: vscode.Command,
         public collapsibleState: vscode.TreeItemCollapsibleState = 0,
         private _isSelected: boolean = false
@@ -66,7 +68,7 @@ export class CustomRequest extends vscode.TreeItem {
                 '..',
                 'resources',
                 'light',
-                'checkbox_unfilled.png'
+                'checkbox_unfilled.svg'
             ),
             dark: join(
                 __filename,
@@ -75,7 +77,7 @@ export class CustomRequest extends vscode.TreeItem {
                 '..',
                 'resources',
                 'dark',
-                'checkbox_unfilled.png'
+                'checkbox_unfilled.svg'
             )
         };
     }
@@ -94,7 +96,7 @@ export class CustomRequest extends vscode.TreeItem {
                     '..',
                     'resources',
                     'light',
-                    'checkbox_filled.png'
+                    'checkbox_filled.svg'
                 ),
                 dark: join(
                     __filename,
@@ -103,7 +105,7 @@ export class CustomRequest extends vscode.TreeItem {
                     '..',
                     'resources',
                     'dark',
-                    'checkbox_filled.png'
+                    'checkbox_filled.svg'
                 )
             };
         } else {
@@ -115,7 +117,7 @@ export class CustomRequest extends vscode.TreeItem {
                     '..',
                     'resources',
                     'light',
-                    'checkbox_unfilled.png'
+                    'checkbox_unfilled.svg'
                 ),
                 dark: join(
                     __filename,
@@ -124,19 +126,27 @@ export class CustomRequest extends vscode.TreeItem {
                     '..',
                     'resources',
                     'dark',
-                    'checkbox_unfilled.png'
+                    'checkbox_unfilled.svg'
                 )
             };
         }
         this._isSelected = value;
     }
 
+    get requestName(): string {
+        return this._grapqhlrequest;
+    }
+
     get request(): string {
-        return this._request;
+        return this._requestAsString;
+    }
+
+    get type(): string {
+        return this._type;
     }
 
     get tooltip(): string {
-        return this._type;
+        return `${this._kindOf} ${this._grapqhlrequest} - Returns Type:${this._type}`;
     }
 
     get args(): Array<FieldWrapper> {
@@ -145,5 +155,13 @@ export class CustomRequest extends vscode.TreeItem {
 
     get inputType(): string {
         return this._inputType;
+    }
+
+    get kindOf(): string {
+        return this._kindOf;
+    }
+
+    get name(): string {
+        return this.label.replace('Mutation', '').replace('Query', '');
     }
 }
