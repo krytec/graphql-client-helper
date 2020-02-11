@@ -1,12 +1,14 @@
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import * as vscode from 'vscode';
 import { join } from 'path';
+import { resolve } from 'dns';
 /**
  * CircularQuickInput class to create a quick input that provides input value for every argument
  */
 export class CircularQuickInput {
     private _argumentGroup: ArgumentItem[];
     private _quickPick?: vscode.QuickPick<ArgumentItem>;
+    private _buttons: vscode.QuickInputButton[];
     /**
      * Constructor for a CircularQuickInput
      * @param _titel Titel of the QuickInput
@@ -23,6 +25,10 @@ export class CircularQuickInput {
                     arg.description
                 )
         );
+        this._buttons = [
+            new FilterArgumentButton('', 'Hide nullable arguments'),
+            new RunRequestButton('', 'Run Request')
+        ];
     }
 
     /**
@@ -36,10 +42,7 @@ export class CircularQuickInput {
         input.placeholder = `Please select an argument:`;
         input.canSelectMany = false;
         input.title = this._titel;
-        input.buttons = [
-            new FilterArgumentButton('', 'Filter'),
-            new RunRequestButton('', 'Run')
-        ];
+        input.buttons = this._buttons;
         return input;
     }
 
@@ -65,12 +68,20 @@ export class CircularQuickInput {
                                 resolve(button);
                             } else {
                                 if (this._quickPick !== undefined) {
-                                    this._quickPick.items.length ===
-                                    this._argumentGroup.length
-                                        ? (this._quickPick.items = this._argumentGroup.filter(
-                                              item => item.nonNull === true
-                                          ))
-                                        : (this._quickPick.items = this._argumentGroup);
+                                    if (
+                                        this._quickPick.items.length ===
+                                        this._argumentGroup.length
+                                    ) {
+                                        this._quickPick.items = this._argumentGroup.filter(
+                                            item => item.nonNull === true
+                                        );
+                                        (button as FilterArgumentButton).switch();
+                                        this._quickPick.buttons = this._buttons;
+                                    } else {
+                                        this._quickPick.items = this._argumentGroup;
+                                        (button as FilterArgumentButton).switch();
+                                        this._quickPick.buttons = this._buttons;
+                                    }
                                 }
                             }
                         })
@@ -231,6 +242,7 @@ export class CircularQuickInput {
  * FilterArgumentButton class for QuickPick or Input
  */
 class FilterArgumentButton implements vscode.QuickInputButton {
+    private isMax: boolean = true;
     constructor(
         public iconPath:
             | string
@@ -247,7 +259,7 @@ class FilterArgumentButton implements vscode.QuickInputButton {
                 '..',
                 'resources',
                 'light',
-                'shrink2.svg'
+                'minimize.svg'
             ),
             dark: join(
                 __filename,
@@ -256,9 +268,58 @@ class FilterArgumentButton implements vscode.QuickInputButton {
                 '..',
                 'resources',
                 'dark',
-                'maximize-2.svg'
+                'minimize.svg'
             )
         };
+    }
+
+    public switch() {
+        if (this.isMax) {
+            this.iconPath = {
+                light: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'light',
+                    'maximize.svg'
+                ),
+                dark: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'dark',
+                    'maximize.svg'
+                )
+            };
+            this.tooltip = 'Show all arguments';
+        } else {
+            this.iconPath = {
+                light: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'light',
+                    'minimize.svg'
+                ),
+                dark: join(
+                    __filename,
+                    '..',
+                    '..',
+                    '..',
+                    'resources',
+                    'dark',
+                    'minimize.svg'
+                )
+            };
+            this.tooltip = 'Hide nullable arguments';
+        }
+        this.isMax = !this.isMax;
     }
 }
 
