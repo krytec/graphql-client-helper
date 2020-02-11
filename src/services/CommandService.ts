@@ -26,9 +26,6 @@ export class CommandService {
     private _logger: LoggingService;
     private _ctx: vscode.ExtensionContext;
     private _fsWatcher: fs.FSWatcher;
-    private _outputChannel = vscode.window.createOutputChannel(
-        'Graphax Client'
-    );
     /**
      * Constructor
      * @param _stateService The stateService of the extension
@@ -184,10 +181,16 @@ export class CommandService {
         const saveRequestCommand = vscode.commands.registerCommand(
             'tree.saveRequest',
             async (element: Request) => {
-                await showSaveRequestCommand(element, this._graphQLService);
-                element.deselect();
-                this._requestNodeProvider.refresh();
-                this._savedRequestNodeProvider.refresh();
+                if (element.selected) {
+                    await showSaveRequestCommand(element, this._graphQLService);
+                    element.deselect();
+                    this._requestNodeProvider.refresh();
+                    this._savedRequestNodeProvider.refresh();
+                } else {
+                    vscode.window.showErrorMessage(
+                        'You must select at least one field of the request!'
+                    );
+                }
             }
         );
 
@@ -222,11 +225,31 @@ export class CommandService {
         const runRequestCommand = vscode.commands.registerCommand(
             'list.runRequest',
             (element: CustomRequest) =>
-                executeRequestCommand(
-                    element,
-                    this._client,
-                    this._outputChannel
-                )
+                executeRequestCommand(element, this._client)
+        );
+
+        const deleteRequestCommand = vscode.commands.registerCommand(
+            'list.delete',
+            (element: CustomRequest) => {
+                vscode.window
+                    .showInformationMessage(
+                        `Do you really want to delete request:${element.label}?`,
+                        'Yes',
+                        'No'
+                    )
+                    .then(value => {
+                        if (value === 'Yes') {
+                            const index = this._stateService.myRequests.indexOf(
+                                element,
+                                0
+                            );
+                            if (index > -1) {
+                                this._stateService.myRequests.splice(index, 1);
+                                this._savedRequestNodeProvider.refresh();
+                            }
+                        }
+                    });
+            }
         );
 
         const createServiceCommand = vscode.commands.registerCommand(
@@ -243,6 +266,17 @@ export class CommandService {
             }
         );
 
+        const showRequestInCodeCommand = vscode.commands.registerCommand(
+            'list.showRequest',
+            async (element: CustomRequest) => {
+                let uri = vscode.Uri.parse(
+                    'request:' + element.label + '.graphql?' + element.request
+                );
+                let doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
+                await vscode.window.showTextDocument(doc, { preview: false });
+            }
+        );
+
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(selectFieldCommand);
@@ -251,6 +285,8 @@ export class CommandService {
         this._ctx.subscriptions.push(refreshListCommand);
         this._ctx.subscriptions.push(selectRequestCommand);
         this._ctx.subscriptions.push(runRequestCommand);
+        this._ctx.subscriptions.push(showRequestInCodeCommand);
+        this._ctx.subscriptions.push(deleteRequestCommand);
         this._ctx.subscriptions.push(createServiceCommand);
     }
 }

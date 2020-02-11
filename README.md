@@ -66,7 +66,4 @@ Added features X, Y, and Z.
 
 ### References
 
--   [Unausgefüllte Checkbox icon by Icons8](https://icons8.de/icons/set/unchecked-checkbox--v2)
--   [Unausgefüllte Checkbox icon by Icons8](https://icons8.de/icons/set/unchecked-checkbox)
--   [Ausgefüllte Checkbox icon by Icons8](https://icons8.de/icons/set/checked-checkbox--v1)
--   [Ausgefüllte Checkbox icon by Icons8](https://icons8.de/icons/set/checked-checkbox)
+-   Icons by [FeatherIcons](https://feathericons.com/)

@@ -280,13 +280,18 @@ export class GraphQLService {
         }
         if (element.contextValue?.match(/query/)) {
             const root = element.toString();
-            const args = element.args.map(ele => ele.toArgs()).join(' ');
+            const args =
+                element.args.length > 0
+                    ? `(${element.args.map(arg => arg.toArgs()).join(' ')})`
+                    : '';
             const customRequest = new CustomRequest(
                 name,
-                `query ${element.label} - returns ${element.tooltip}`,
-                stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`),
+                element.label,
+                element.type,
+                stringToGraphQLFormat(`query ${name}${args}{ ${root} }`),
                 `${element.label}InputType`,
                 element.args,
+                'Query',
                 { command: 'list.selectRequest', title: 'Select' }
             );
             this._state.saveRequest(customRequest);
@@ -296,10 +301,12 @@ export class GraphQLService {
             const args = element.args.map(ele => ele.toArgs()).join(' ');
             const customRequest = new CustomRequest(
                 name,
-                `mutation ${element.label} - returns ${element.tooltip}`,
+                element.label,
+                element.type,
                 stringToGraphQLFormat(`mutation ${name}(${args}){ ${root} }`),
                 `${element.label}InputType`,
                 element.args,
+                'Mutation',
                 { command: 'list.selectRequest', title: 'Select' }
             );
             this._state.saveRequest(customRequest);
@@ -317,7 +324,6 @@ export class GraphQLService {
         requests: CustomRequest[]
     ): Promise<string[]> {
         let files: string[] = new Array<string>();
-        // ! TODO: Next -> select framwork and create a simple service which returns incoming values
         switch (+this._config.framework) {
             case Framework.ANGULAR:
                 try {
@@ -399,14 +405,9 @@ export class GraphQLService {
         requests.forEach(request => {
             functions = functions.concat(
                 `${request.label}(args: schemaTypes.${request.inputType}){
-    return this.apollo.${
-        request.tooltip.match(/query/g)
-            ? 'query<schemaTypes.Query>'
-            : 'mutation<schemaTypes.Mutation>'
-    }({
-        ${request.tooltip.match(/query/g) ? 'query' : 'mutation'}: ${
-                    request.label
-                },
+    return this.apollo.${request.kindOf.toLowerCase()}
+        <schemaTypes.${request.kindOf}>({
+        ${request.kindOf.toLowerCase()}: ${request.label},
         variables: args,
     });
 }
@@ -450,28 +451,36 @@ export class GraphQLService {
     ) {
         let variables = requests
             .map(request => {
-                var returnType = request.tooltip.split(': ')[1];
-                return `${request.label
-                    .replace('Query', '')
-                    .replace('Mutation', '')}: schemaTypes.${returnType}[];`;
+                const returnslist = this._state.requests.map(gql => {
+                    if (request.requestName === gql.Name) {
+                        return gql.returnsList;
+                    }
+                });
+                if (returnslist.includes(true)) {
+                    return `${request.name}: schemaTypes.${request.type}[];`;
+                } else {
+                    return `${request.name}: schemaTypes.${request.type};`;
+                }
             })
             .join('\n');
 
         let functions = requests
             .map(request => {
-                var returnType = request.tooltip.split(': ')[1];
                 return `
     this.service.${request.label}(null).subscribe(({data}) => {
-        this.${request.label
-            .replace('Query', '')
-            .replace('Mutation', '')} = [data.${returnType.toLowerCase()}];
+        this.${request.name} = data.${request.requestName};
     });
 `;
             })
             .join('');
         let content = angularComponent
-            .replace(/\$myName/g, toTitleCase(componentName))
-            .replace(/\$myService/g, toTitleCase(componentName) + 'Service')
+            .replace(/\$myNameTitel/g, toTitleCase(componentName))
+            .replace(
+                /\$myServiceTitel/g,
+                toTitleCase(componentName) + 'Service'
+            )
+            .replace(/\$myName/g, componentName)
+            .replace(/\$myService/g, componentName + 'Service')
             .replace('$myFunctions', functions)
             .replace('$myVariables', variables);
 

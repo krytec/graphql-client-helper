@@ -1,19 +1,19 @@
+import { GraphQLService } from '../../services/GraphQLService';
 import { expect } from 'chai';
 import { GraphQLObjectType } from 'graphql';
 import { LoggingService } from '../../services/LoggingService';
 import { StateService } from '../../services/StateService';
 import { ConfigurationService } from '../../services/ConfigurationService';
-import { GraphQLService } from '../../services/GraphQLService';
 
 const fs = require('fs');
 const path = require('path');
 
-describe('Test functions of graphQLService class', function() {
+describe('Test functions of GraphQLService class', function() {
     let state = new StateService(new LoggingService());
     let config = new ConfigurationService();
     let graphQLService = new GraphQLService(state, config);
     graphQLService.folder = __dirname;
-    describe('graphQLServiceTest to test if invalid endpoint throws error', () => {
+    describe('GraphQLUtilTest to test if invalid endpoint throws error', () => {
         let url: string = 'http://google.com';
         let current_dir: string = path.join(__dirname, 'graphqlschema');
         it('should return false since the folder is only created after schema was fetched', () => {

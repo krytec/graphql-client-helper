@@ -51,13 +51,12 @@
                         "enum": [
                             "NONE",
                             "ANGULAR",
-                            "REACT",
-                            "VUE"
+                            "REACT"
                         ],
                         "enumDescriptions": [
+                            "Creates a graphql request without an service",
                             "Creates a graphql service for angular framework",
-                            "Creates a graphql service for react framework",
-                            "Creates a graphql service for vue framework"
+                            "Creates a graphql service for react framework"
                         ]
                     }
                 }
@@ -74,11 +73,19 @@
             },
             {
                 "command": "tree.refresh",
-                "title": "Refresh"
+                "title": "Refresh",
+                "icon": {
+                    "dark": "./resources/dark/reload.svg",
+                    "light": "./resources/light/reload.svg"
+                }
             },
             {
                 "command": "tree.saveRequest",
-                "title": "Create"
+                "title": "Create",
+                "icon": {
+                    "dark": "./resources/dark/save.svg",
+                    "light": "./resources/light/save.svg"
+                }
             },
             {
                 "command": "tree.selectField",
@@ -86,11 +93,19 @@
             },
             {
                 "command": "list.refresh",
-                "title": "Refresh"
+                "title": "Refresh",
+                "icon": {
+                    "dark": "./resources/dark/reload.svg",
+                    "light": "./resources/light/reload.svg"
+                }
             },
             {
                 "command": "list.runRequest",
-                "title": "Run"
+                "title": "Run",
+                "icon": {
+                    "dark": "./resources/dark/play.svg",
+                    "light": "./resources/light/play.svg"
+                }
             },
             {
                 "command": "list.selectRequest",
@@ -98,7 +113,23 @@
             },
             {
                 "command": "list.save",
-                "title": "Save"
+                "title": "Save",
+                "icon": {
+                    "dark": "./resources/dark/save.svg",
+                    "light": "./resources/light/save.svg"
+                }
+            },
+            {
+                "command": "list.showRequest",
+                "title": "Show In Code",
+                "icon": {
+                    "dark": "./resources/dark/code.svg",
+                    "light": "./resources/light/code.svg"
+                }
+            },
+            {
+                "command": "list.delete",
+                "title": "Delete"
             }
         ],
         "keybindings": {
@@ -118,7 +149,7 @@
             "schema-explorer": [
                 {
                     "id": "schemaExplorer",
-                    "name": "Schema Explorer",
+                    "name": "GraphQL Schema Explorer",
                     "when": "schemaLoaded"
                 },
                 {
@@ -153,9 +184,18 @@
                     "group": "inline"
                 },
                 {
+                    "command": "list.showRequest",
+                    "when": "view == requestView",
+                    "group": "inline"
+                },
+                {
                     "command": "list.runRequest",
                     "when": "view == requestView",
                     "group": "inline"
+                },
+                {
+                    "command": "list.delete",
+                    "when": "view == requestView"
                 }
             ]
         }

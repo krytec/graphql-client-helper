@@ -45,5 +45,9 @@ export abstract class RequestWrapper {
     get isMutation(): boolean {
         return this._isMutation;
     }
+
+    get returnsList(): boolean {
+        return this._returnsList;
+    }
     //#endregion
 }
