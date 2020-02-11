@@ -15,6 +15,7 @@ import {
 } from './provider/SavedRequestNodeProvider';
 import { ConfigurationService } from './services/ConfigurationService';
 import { ClientService } from './services/ClientService';
+import { RequestDocumentProvider } from './provider/RequestDocumentProvider';
 const path = require('path');
 // this method is called when your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -41,6 +42,11 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider(
         'requestView',
         savedRequestNodeProvider
+    );
+    const requestDocumentProvider = new RequestDocumentProvider();
+    vscode.workspace.registerTextDocumentContentProvider(
+        'request',
+        requestDocumentProvider
     );
     // Register commands here -> commands can be found in the /commands directory
     const commandService = new CommandService(

@@ -120,6 +120,14 @@
                 }
             },
             {
+                "command": "list.showRequest",
+                "title": "Show In Code",
+                "icon": {
+                    "dark": "./resources/dark/code.svg",
+                    "light": "./resources/light/code.svg"
+                }
+            },
+            {
                 "command": "list.delete",
                 "title": "Delete"
             }
@@ -141,7 +149,7 @@
             "schema-explorer": [
                 {
                     "id": "schemaExplorer",
-                    "name": "Schema Explorer",
+                    "name": "GraphQL Schema Explorer",
                     "when": "schemaLoaded"
                 },
                 {
@@ -173,6 +181,11 @@
                 {
                     "command": "tree.saveRequest",
                     "when": "view == schemaExplorer && viewItem =~ /(query)/ || viewItem =~ /(mutation)/",
+                    "group": "inline"
+                },
+                {
+                    "command": "list.showRequest",
+                    "when": "view == requestView",
                     "group": "inline"
                 },
                 {

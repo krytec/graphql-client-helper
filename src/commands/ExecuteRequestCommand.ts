@@ -19,9 +19,12 @@ export async function executeRequestCommand(
     await quickInput.show().then(vars => {
         client
             .executeRequest(node.request, JSON.parse(vars))
-            .then(data => {
-                channel.appendLine(data);
-                channel.show();
+            .then(async data => {
+                let uri = vscode.Uri.parse(
+                    'request:' + node.label + `.json?` + data
+                );
+                let doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
+                await vscode.window.showTextDocument(doc, { preview: false });
             })
             .catch(error => {
                 var obj = JSON.parse(error);

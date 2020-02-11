@@ -280,11 +280,14 @@ export class GraphQLService {
         }
         if (element.contextValue?.match(/query/)) {
             const root = element.toString();
-            const args = element.args.map(ele => ele.toArgs()).join(' ');
+            const args =
+                element.args.length > 0
+                    ? `(${element.args.map(arg => arg.toArgs()).join(' ')})`
+                    : '';
             const customRequest = new CustomRequest(
                 name,
                 `query ${element.label} - returns ${element.tooltip}`,
-                stringToGraphQLFormat(`query ${name}(${args}){ ${root} }`),
+                stringToGraphQLFormat(`query ${name}${args}{ ${root} }`),
                 `${element.label}InputType`,
                 element.args,
                 { command: 'list.selectRequest', title: 'Select' }

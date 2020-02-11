@@ -273,6 +273,17 @@ export class CommandService {
             }
         );
 
+        const showRequestInCodeCommand = vscode.commands.registerCommand(
+            'list.showRequest',
+            async (element: CustomRequest) => {
+                let uri = vscode.Uri.parse(
+                    'request:' + element.label + '.graphql?' + element.request
+                );
+                let doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
+                await vscode.window.showTextDocument(doc, { preview: false });
+            }
+        );
+
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(selectFieldCommand);
@@ -281,6 +292,7 @@ export class CommandService {
         this._ctx.subscriptions.push(refreshListCommand);
         this._ctx.subscriptions.push(selectRequestCommand);
         this._ctx.subscriptions.push(runRequestCommand);
+        this._ctx.subscriptions.push(showRequestInCodeCommand);
         this._ctx.subscriptions.push(deleteRequestCommand);
         this._ctx.subscriptions.push(createServiceCommand);
     }
