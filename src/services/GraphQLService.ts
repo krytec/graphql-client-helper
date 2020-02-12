@@ -138,6 +138,7 @@ export class GraphQLService {
                 this.writeTypesToFile();
             }
             //Return schema object
+            this._state.update('schema', schema);
             return schema;
         } catch (e) {
             throw new Error("Couldn't create schema from response");
@@ -159,7 +160,9 @@ export class GraphQLService {
                     console.log(err);
                     throw new Error('Could not read file');
                 });
-            return Promise.resolve(buildSchema(schema));
+            let graphqlschema = buildSchema(schema);
+            this._state.update('schema', graphqlschema);
+            return Promise.resolve(graphqlschema);
         } catch (e) {
             throw new Error('Could not create schema object from given schema');
         }

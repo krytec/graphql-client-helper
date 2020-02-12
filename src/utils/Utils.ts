@@ -1,5 +1,5 @@
 import { URL } from 'url';
-import { print, parse } from 'graphql';
+import { print, parse, DocumentNode, typeFromAST } from 'graphql';
 import { Framework } from '../services/ConfigurationService';
 /**
  * * Function to validate a given url as string
@@ -20,6 +20,10 @@ export function isValidURL(value: string): boolean {
  */
 export function stringToGraphQLFormat(request: string): string {
     return print(parse(request));
+}
+
+export function stringToGraphQLObject(request: string): DocumentNode {
+    return parse(request);
 }
 
 /**
