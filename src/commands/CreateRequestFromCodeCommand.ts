@@ -12,13 +12,14 @@ export async function createRequestFromCode(
     if (te !== undefined) {
         const range = te.selection;
         const selection = te.document.getText(range);
+        let request: Request | undefined = undefined;
         try {
-            let request = await selectionValidation(selection, state);
+            request = await selectionValidation(selection, state);
             if (request) {
                 const nameMatch: any = selection.match(
-                    /[^(mutation|query)\s][a-zA-Z]+[a-zA-Z0-9]*/
+                    /(?!(query$|mutation$)\s*)[a-zA-Z]+[a-zA-Z0-9]*/g
                 );
-                const name = nameMatch[0];
+                const name = nameMatch[1];
                 let result = await setRequestVariables(
                     stringToGraphQLObject(selection),
                     request
@@ -27,6 +28,9 @@ export async function createRequestFromCode(
                 request.deselect();
             }
         } catch (error) {
+            if (request) {
+                request.deselect();
+            }
             vscode.window.showErrorMessage(error.message);
         }
     }

@@ -30,6 +30,7 @@ import { ConfigurationService, Framework } from './ConfigurationService';
 import { resolve } from 'dns';
 import { angularService, angularComponent } from '../constants';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
+import request from 'graphql-request';
 
 const fetch = require('node-fetch');
 const {
@@ -138,7 +139,6 @@ export class GraphQLService {
                 this.writeTypesToFile();
             }
             //Return schema object
-            this._state.update('schema', schema);
             return schema;
         } catch (e) {
             throw new Error("Couldn't create schema from response");
@@ -161,7 +161,6 @@ export class GraphQLService {
                     throw new Error('Could not read file');
                 });
             let graphqlschema = buildSchema(schema);
-            this._state.update('schema', graphqlschema);
             return Promise.resolve(graphqlschema);
         } catch (e) {
             throw new Error('Could not create schema object from given schema');

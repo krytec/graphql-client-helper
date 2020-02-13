@@ -284,7 +284,6 @@ export class CommandService {
         const createRequestFromCodeCommand = vscode.commands.registerCommand(
             'graphax.createRequest',
             () => {
-                //! TODO: await schema loaded...
                 createRequestFromCode(this._stateService, this._graphQLService);
             }
         );

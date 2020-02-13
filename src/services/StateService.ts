@@ -55,10 +55,6 @@ export class StateService implements vscode.Memento {
         return this._logger;
     }
 
-    get schema(): GraphQLSchema {
-        return this.get('schema') as GraphQLSchema;
-    }
-
     get scalar(): ScalarWrapper {
         return this.get('scalar') as ScalarWrapper;
     }

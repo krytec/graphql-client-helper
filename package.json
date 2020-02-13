@@ -167,7 +167,7 @@
             "editor/context": [
                 {
                     "command": "graphax.createRequest",
-                    "when": "resourceExtname == .js || resourceExtname == .ts || resourceExtname == .gql || resourceExtname .graphql && editorHasSelection"
+                    "when": "schemaLoaded && editorHasSelection"
                 }
             ],
             "view/title": [
