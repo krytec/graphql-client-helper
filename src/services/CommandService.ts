@@ -28,7 +28,7 @@ import {
     showSaveRequestCommand,
     executeRequestCommand
 } from '../commands/RequestCommands';
-
+import * as del from 'del';
 const path = require('path');
 /**
  * Service class to create vscode commands and register them to vscode
@@ -287,15 +287,18 @@ export class CommandService {
 
         const createServiceCommand = vscode.commands.registerCommand(
             'list.save',
-            () => {
+            async () => {
                 const myRequests = this._stateService.myRequests.filter(
                     request => request.selected === true
+                );
+                await showCreateServiceCommand(
+                    this._graphQLService,
+                    myRequests
                 );
                 this._stateService.myRequests.forEach(
                     request => (request.selected = false)
                 );
                 this._savedRequestNodeProvider.refresh();
-                showCreateServiceCommand(this._graphQLService, myRequests);
             }
         );
 
@@ -319,37 +322,68 @@ export class CommandService {
         const deleteServiceCommand = vscode.commands.registerCommand(
             'service.delete',
             (service: ServiceNode) => {
-                //! TODO: Implement logic to delete a service from files
-                if (this._stateService.services.includes(service)) {
-                    var idx = this._stateService.services.indexOf(service);
-                    this._stateService.services.splice(idx, 1);
-                }
-                this._serviceNodeProvider.refresh();
+                vscode.window
+                    .showWarningMessage(
+                        `Do you really want to delete service ${service.label} from your file system?`,
+                        'Yes',
+                        'No'
+                    )
+                    .then(async button => {
+                        if (button === 'Yes') {
+                            //! TODO: Implement logic to delete a service from files
+                            if (this._stateService.services.includes(service)) {
+                                const dir = del.sync('*.ts', {
+                                    cwd: service.path
+                                });
+                                vscode.window.showInformationMessage(
+                                    `Deleted service ${service.label}!`
+                                );
+                                var idx = this._stateService.services.indexOf(
+                                    service
+                                );
+                                this._stateService.services.splice(idx, 1);
+                            }
+                            this._serviceNodeProvider.refresh();
+                        }
+                    });
             }
         );
 
         const deleteRequestFromServiceCommand = vscode.commands.registerCommand(
             'service.request.delete',
             (request: ServiceNode) => {
-                //! TODO: Implement logic to delete a request from a service
-                deleteRequestFromService(request, this._config.framework);
-                let currentService: ServiceNode | undefined;
-                this._stateService.services.forEach(service => {
-                    if (service.requests.includes(request)) {
-                        currentService = service;
-                        var idx = service.requests.indexOf(request);
-                        service.requests.splice(idx, 1);
-                    }
-                });
-                if (currentService) {
-                    if (currentService.requests.length === 0) {
-                        vscode.commands.executeCommand(
-                            'service.delete',
-                            currentService
-                        );
-                    }
-                }
-                this._serviceNodeProvider.refresh();
+                vscode.window
+                    .showWarningMessage(
+                        `Do you really want to delete request ${request.label} from your service?`,
+                        'Yes',
+                        'No'
+                    )
+                    .then(button => {
+                        if (button === 'Yes') {
+                            //! TODO: Implement logic to delete a request from a service
+                            deleteRequestFromService(
+                                request,
+                                this._config.framework
+                            );
+                            let currentService: ServiceNode | undefined;
+                            this._stateService.services.forEach(service => {
+                                if (service.requests.includes(request)) {
+                                    currentService = service;
+                                    var idx = service.requests.indexOf(request);
+                                    service.requests.splice(idx, 1);
+                                }
+                            });
+                            if (currentService) {
+                                if (currentService.requests.length === 0) {
+                                    vscode.commands.executeCommand(
+                                        'service.delete',
+                                        currentService
+                                    );
+                                }
+                            }
+                            this._serviceNodeProvider.refresh();
+                        }
+                    });
             }
         );
 

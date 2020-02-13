@@ -11,11 +11,11 @@ import { Framework } from '../services/ConfigurationService';
  * @param service GraphQLService
  * @param requests Selected request
  */
-export function showCreateServiceCommand(
+export async function showCreateServiceCommand(
     service: GraphQLService,
     requests: CustomRequest[]
 ) {
-    vscode.window
+    await vscode.window
         .showInputBox({
             prompt: 'Please provide a name for your service',
             validateInput: text => {
