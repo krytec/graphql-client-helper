@@ -58,6 +58,17 @@
                             "Creates a graphql service for angular framework",
                             "Creates a graphql service for react framework"
                         ]
+                    },
+                    "graphax.client.headers": {
+                        "type": "array",
+                        "default": [],
+                        "uniqueItems": true,
+                        "items" : [
+                            {
+                                "type":"object"
+                            }
+                        ],
+                        "description": "Specifies the graphql client headers for the endpoint to avoid security issues. Has to be in object format for example: {\"Content-Type\":\"application/json\"}."
                     }
                 }
             }

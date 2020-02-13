@@ -21,7 +21,15 @@ export class ClientService {
         private _config: ConfigurationService
     ) {
         this._graphQLClient = new GraphQLClient(this._config.endpoint);
+        this._config.headers.forEach(obj => {
+            for(let [key,value] of Object.entries(obj)){
+                this._graphQLClient.setHeader(key,value);
+            }
+        });
         this._config.onDidChangeEndpoint(e => this.reload());
+        this._config.onDidChangeHeaders(e => {
+            this.reload();
+        });
     }
 
     /**
@@ -29,6 +37,11 @@ export class ClientService {
      */
     private reload() {
         this._graphQLClient = new GraphQLClient(this._config.endpoint);
+        this._config.headers.forEach(obj => {
+            for(let [key,value] of Object.entries(obj)){
+                this._graphQLClient.setHeader(key,value);
+            }
+        });
     }
 
     /**

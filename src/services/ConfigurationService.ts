@@ -4,8 +4,7 @@ import { toFramework } from '../utils/Utils';
 export const enum Framework {
     NONE = 0,
     ANGULAR = 1,
-    REACT = 2,
-    VUE = 3
+    REACT = 2
 }
 
 /**
@@ -15,7 +14,7 @@ export class ConfigurationService {
     private _endpoint?: string;
     private _generatedFolder?: string;
     //! TODO: Implementation of header support for graphqlclient
-    private _headers?: Array<String>;
+    private _headers?: Array<object>;
     private _framework?: Framework;
     private _typescript?: boolean;
 
@@ -48,6 +47,13 @@ export class ConfigurationService {
 
     public readonly onDidChangeFramework: vscode.Event<Framework> = this
         ._onDidChangeFramework.event;
+
+    private _onDidChangeHeaders: vscode.EventEmitter<
+        Array<object>
+    > = new vscode.EventEmitter<Array<object>>();
+
+    public readonly onDidChangeHeaders: vscode.Event<Array<object>> = this
+        ._onDidChangeHeaders.event;
     //#endregion
 
     /**
@@ -69,6 +75,7 @@ export class ConfigurationService {
                 .getConfiguration('graphax')
                 .get('service.framework') as string
         );
+        this._headers = vscode.workspace.getConfiguration('graphax').get('client.headers') as Array<object>;
         vscode.workspace.onDidChangeConfiguration(e =>
             this.configurationChangedCallback(e)
         );
@@ -101,7 +108,11 @@ export class ConfigurationService {
                         .get('service.framework') as string
                 );
                 this._onDidChangeFramework.fire(this.framework);
-            }
+            } else if(
+                event.affectsConfiguration('graphax.client.headers')){
+                    this._headers = vscode.workspace.getConfiguration('graphax').get('client.headers') as Array<object>;
+                    this._onDidChangeHeaders.fire(this.headers);
+                }
         } else {
             if (event.affectsConfiguration('graphax.schema.endpoint')) {
                 this._endpoint = vscode.workspace
@@ -181,6 +192,14 @@ export class ConfigurationService {
         }
         //Default
         return Framework.ANGULAR;
+    }
+
+    get headers(): Array<object> {
+        if(this._headers){
+            return this._headers;
+        }else{
+            return [];
+        }
     }
 
     //#endregion
