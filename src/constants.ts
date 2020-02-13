@@ -29,7 +29,6 @@ import { $myServiceTitel } from './$myNameTitel.service';
 
 @Component({
   selector: 'app-$myName-component',
-  templateUrl: './$myName-component.component.html',
 })
 export class $myNameTitelComponent implements OnInit {
   $myVariables
@@ -37,6 +36,7 @@ export class $myNameTitelComponent implements OnInit {
   constructor(private service: $myServiceTitel) { }
 
   ngOnInit() {
+    //TODO: insert arguments for requests
     $myFunctions
   }
 

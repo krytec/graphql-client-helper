@@ -7,6 +7,7 @@ import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
 import { Request } from '../provider/RequestNodeProvider';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
+import { GraphQLSchema } from 'graphql';
 /**
  * Service for a global extension state,
  * implements the vscode.Memento interface
@@ -52,6 +53,10 @@ export class StateService implements vscode.Memento {
     }
     get logger(): LoggingService {
         return this._logger;
+    }
+
+    get schema(): GraphQLSchema {
+        return this.get('schema') as GraphQLSchema;
     }
 
     get scalar(): ScalarWrapper {

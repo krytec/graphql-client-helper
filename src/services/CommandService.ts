@@ -17,6 +17,7 @@ import { showCreateServiceCommand } from '../commands/CreateServiceCommand';
 import { dedent } from '../utils/Utils';
 import * as fs from 'fs';
 import { join } from 'path';
+import { createRequestFromCode } from '../commands/CreateRequestFromCodeCommand';
 
 const path = require('path');
 /**
@@ -140,6 +141,9 @@ export class CommandService {
                     this._graphQLService.createTypesFromSchema(schema);
                     this._graphQLService.getRequestsFromSchema(schema);
                     this._requestNodeProvider.refresh();
+                    vscode.commands.executeCommand(
+                        'workbench.view.extension.schema-explorer'
+                    );
                 })
                 .catch((err: Error) =>
                     vscode.window.showErrorMessage(err.message)
@@ -277,8 +281,17 @@ export class CommandService {
             }
         );
 
+        const createRequestFromCodeCommand = vscode.commands.registerCommand(
+            'graphax.createRequest',
+            () => {
+                //! TODO: await schema loaded...
+                createRequestFromCode(this._stateService, this._graphQLService);
+            }
+        );
+
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
+        this._ctx.subscriptions.push(createRequestFromCodeCommand);
         this._ctx.subscriptions.push(selectFieldCommand);
         this._ctx.subscriptions.push(saveRequestCommand);
         this._ctx.subscriptions.push(refreshCommand);

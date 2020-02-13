@@ -72,6 +72,10 @@
                 "title": "Show GraphQL Helper Log"
             },
             {
+                "command": "graphax.createRequest",
+                "title": "GraphaX: Create Request"
+            },
+            {
                 "command": "tree.refresh",
                 "title": "Refresh",
                 "icon": {
@@ -160,6 +164,12 @@
             ]
         },
         "menus": {
+            "editor/context": [
+                {
+                    "command": "graphax.createRequest",
+                    "when": "resourceExtname == .js || resourceExtname == .ts || resourceExtname == .gql || resourceExtname .graphql && editorHasSelection"
+                }
+            ],
             "view/title": [
                 {
                     "command": "tree.refresh",
