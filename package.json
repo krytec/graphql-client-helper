@@ -159,6 +159,10 @@
                 }
             },
             {
+                "command": "service.add",
+                "title": "GraphaX: Add to services"
+            },
+            {
                 "command": "service.delete",
                 "title": "Delete",
                 "icon": {
@@ -216,6 +220,12 @@
             ]
         },
         "menus": {
+            "explorer/context": [
+                {
+                    "command": "service.add",
+                    "when": "explorerResourceIsFolder"
+                }
+            ],
             "editor/context": [
                 {
                     "command": "graphax.createRequest",

@@ -21,7 +21,8 @@ import {
 import {
     showServiceRequestInCodeCommand,
     showCreateServiceCommand,
-    deleteRequestFromService
+    deleteRequestFromService,
+    addServiceCommand
 } from '../commands/ServiceCommands';
 import {
     createRequestFromCode,
@@ -319,6 +320,13 @@ export class CommandService {
             () => this._serviceNodeProvider.refresh()
         );
 
+        const addServiceFromFolderCommand = vscode.commands.registerCommand(
+            'service.add',
+            (folder: vscode.Uri) => {
+                addServiceCommand(folder.fsPath);
+            }
+        );
+
         const deleteServiceCommand = vscode.commands.registerCommand(
             'service.delete',
             (service: ServiceNode) => {
@@ -390,7 +398,6 @@ export class CommandService {
         const serviceCodeCommand = vscode.commands.registerCommand(
             'service.request.code',
             (request: ServiceNode) => {
-                //! TODO: Implement logic to show the file where the request is written and highlight the request
                 showServiceRequestInCodeCommand(request);
             }
         );
@@ -406,6 +413,7 @@ export class CommandService {
         this._ctx.subscriptions.push(refreshListCommand);
         this._ctx.subscriptions.push(selectRequestCommand);
         this._ctx.subscriptions.push(runRequestCommand);
+        this._ctx.subscriptions.push(addServiceFromFolderCommand);
         this._ctx.subscriptions.push(showRequestInCodeCommand);
         this._ctx.subscriptions.push(deleteRequestCommand);
         this._ctx.subscriptions.push(createServiceCommand);

@@ -271,52 +271,55 @@ export class GraphQLService {
      * * breaks if a requests with the same name is already used
      */
     saveRequest(name: string, element: Request): Promise<CustomRequest> {
-        let alreadyUsed: boolean = false;
-        this._state.myRequests.forEach(request => {
-            if (request.label === name || request.label === name) {
-                alreadyUsed = true;
+        return new Promise<CustomRequest>((resolve, reject) => {
+            let alreadyUsed: boolean = false;
+            this._state.myRequests.forEach(request => {
+                if (request.label === name || request.label === name) {
+                    alreadyUsed = true;
+                }
+            });
+            if (alreadyUsed) {
+                throw new Error(
+                    `The request ${name} already exists, please provide a unique name!`
+                );
+            }
+            if (element.contextValue?.match(/query/)) {
+                const root = element.toString();
+                const args =
+                    element.args.length > 0
+                        ? `(${element.args.map(arg => arg.toArgs()).join(' ')})`
+                        : '';
+                const customRequest = new CustomRequest(
+                    name,
+                    element.label,
+                    element.type,
+                    stringToGraphQLFormat(`query ${name}${args}{ ${root} }`),
+                    `${element.label}InputType`,
+                    element.args,
+                    'Query',
+                    { command: 'list.selectRequest', title: 'Select' }
+                );
+                this._state.saveRequest(customRequest);
+                resolve(customRequest);
+            } else if (element.contextValue?.match(/mutation/)) {
+                const root = element.toString();
+                const args = element.args.map(ele => ele.toArgs()).join(' ');
+                const customRequest = new CustomRequest(
+                    name,
+                    element.label,
+                    element.type,
+                    stringToGraphQLFormat(
+                        `mutation ${name}(${args}){ ${root} }`
+                    ),
+                    `${element.label}InputType`,
+                    element.args,
+                    'Mutation',
+                    { command: 'list.selectRequest', title: 'Select' }
+                );
+                this._state.saveRequest(customRequest);
+                resolve(customRequest);
             }
         });
-        if (alreadyUsed) {
-            throw new Error(
-                `The request ${name} already exists, please provide a unique name!`
-            );
-        }
-        if (element.contextValue?.match(/query/)) {
-            const root = element.toString();
-            const args =
-                element.args.length > 0
-                    ? `(${element.args.map(arg => arg.toArgs()).join(' ')})`
-                    : '';
-            const customRequest = new CustomRequest(
-                name,
-                element.label,
-                element.type,
-                stringToGraphQLFormat(`query ${name}${args}{ ${root} }`),
-                `${element.label}InputType`,
-                element.args,
-                'Query',
-                { command: 'list.selectRequest', title: 'Select' }
-            );
-            this._state.saveRequest(customRequest);
-            return Promise.resolve(customRequest);
-        } else if (element.contextValue?.match(/mutation/)) {
-            const root = element.toString();
-            const args = element.args.map(ele => ele.toArgs()).join(' ');
-            const customRequest = new CustomRequest(
-                name,
-                element.label,
-                element.type,
-                stringToGraphQLFormat(`mutation ${name}(${args}){ ${root} }`),
-                `${element.label}InputType`,
-                element.args,
-                'Mutation',
-                { command: 'list.selectRequest', title: 'Select' }
-            );
-            this._state.saveRequest(customRequest);
-            return Promise.resolve(customRequest);
-        }
-        return Promise.reject();
     }
 
     /**

@@ -4,7 +4,11 @@ import { StateService } from '../services/StateService';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { GraphQLService } from '../services/GraphQLService';
 import { Framework } from '../services/ConfigurationService';
-
+import * as fs from 'fs';
+import request from 'graphql-request';
+import { join } from 'path';
+import { createRequestFromCode } from './RequestCommands';
+import { stringToGraphQLFormat } from '../utils/Utils';
 /**
  * Provides a CreateServiceCommand which executes the createService
  * method of the GraphQLService
@@ -41,6 +45,23 @@ export async function showCreateServiceCommand(
                     .catch(error => {});
             }
         });
+}
+
+export function addServiceCommand(fsPath: string) {
+    let dir = fs.readdirSync(fsPath);
+    dir.forEach(async file => {
+        const filePath = join(fsPath, file);
+        if (fs.statSync(filePath).isFile()) {
+            var doc = await vscode.workspace.openTextDocument(filePath);
+            var idx = 0;
+            var end = 0;
+            while (doc.getText().includes('gql`', end + 1)) {
+                idx = doc.getText().indexOf('gql`', end);
+                end = doc.getText().indexOf('`;', idx);
+                var request = doc.getText().slice(idx + 4, end);
+            }
+        }
+    });
 }
 
 export async function showServiceRequestInCodeCommand(request: ServiceNode) {

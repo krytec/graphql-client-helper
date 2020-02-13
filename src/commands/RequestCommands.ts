@@ -72,28 +72,43 @@ export async function createRequestFromCode(
     if (te !== undefined) {
         const range = te.selection;
         const selection = te.document.getText(range);
+        let request: CustomRequest | undefined = undefined;
+        getRequestFromString(state, graphqlService, selection);
+    }
+}
+
+export async function getRequestFromString(
+    state: StateService,
+    graphqlService: GraphQLService,
+    requestAsString: string
+): Promise<CustomRequest> {
+    return new Promise<CustomRequest>(async (resolve, reject) => {
         let request: Request | undefined = undefined;
         try {
-            request = await selectionValidation(selection, state);
+            request = await selectionValidation(requestAsString, state);
             if (request) {
-                const nameMatch: any = selection.match(
+                const nameMatch: any = requestAsString.match(
                     /(?!(query$|mutation$)\s*)[a-zA-Z]+[a-zA-Z0-9]*/g
                 );
                 const name = nameMatch[1];
                 let result = await setRequestVariables(
-                    stringToGraphQLObject(selection),
+                    stringToGraphQLObject(requestAsString),
                     request
                 );
-                await graphqlService.saveRequest(name, result);
-                request.deselect();
+                let customRequest = await graphqlService.saveRequest(
+                    name,
+                    result
+                );
+                if (customRequest) {
+                    request.deselect();
+                    resolve(customRequest);
+                }
             }
         } catch (error) {
-            if (request) {
-                request.deselect();
-            }
+            request?.deselect();
             vscode.window.showErrorMessage(error.message);
         }
-    }
+    });
 }
 
 //#region Helperfunctions
