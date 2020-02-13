@@ -4,7 +4,6 @@ import { GraphQLService } from './GraphQLService';
 import { LoggingService } from './LoggingService';
 import { showLogingWindowCommand } from '../commands/ShowLogCommand';
 import { StateService } from './StateService';
-import { showSaveRequestCommand } from '../commands/SaveRequestCommand';
 import { Request, RequestNodeProvider } from '../provider/RequestNodeProvider';
 import {
     CustomRequest,
@@ -12,12 +11,23 @@ import {
 } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { ClientService } from './ClientService';
-import { executeRequestCommand } from '../commands/ExecuteRequestCommand';
-import { showCreateServiceCommand } from '../commands/CreateServiceCommand';
 import { dedent } from '../utils/Utils';
 import * as fs from 'fs';
 import { join } from 'path';
-import { createRequestFromCode } from '../commands/CreateRequestFromCodeCommand';
+import {
+    ServiceNodeProvider,
+    ServiceNode
+} from '../provider/ServiceNodeProvider';
+import {
+    showServiceRequestInCodeCommand,
+    showCreateServiceCommand,
+    deleteRequestFromService
+} from '../commands/ServiceCommands';
+import {
+    createRequestFromCode,
+    showSaveRequestCommand,
+    executeRequestCommand
+} from '../commands/RequestCommands';
 
 const path = require('path');
 /**
@@ -38,6 +48,7 @@ export class CommandService {
         private _graphQLService: GraphQLService,
         private _client: ClientService,
         private _requestNodeProvider: RequestNodeProvider,
+        private _serviceNodeProvider: ServiceNodeProvider,
         private _savedRequestNodeProvider: SavedRequestNodeProvider
     ) {
         this._logger = _stateService.logger;
@@ -161,10 +172,12 @@ export class CommandService {
             }
         }
     }
+
     /**
      * Method to register all commands in the extension
      */
     registerCommands() {
+        //#region extension
         const showLogCommand = vscode.commands.registerCommand(
             'extension.showLog',
             () => {
@@ -179,6 +192,22 @@ export class CommandService {
             }
         );
 
+        const createRequestFromCodeCommand = vscode.commands.registerCommand(
+            'graphax.createRequest',
+            async () => {
+                await vscode.commands
+                    .executeCommand('workbench.view.extension.schema-explorer')
+                    .then(() => {
+                        createRequestFromCode(
+                            this._stateService,
+                            this._graphQLService
+                        ).then(() => this._savedRequestNodeProvider.refresh());
+                    });
+            }
+        );
+        //#endregion
+
+        //#region schemaView
         const saveRequestCommand = vscode.commands.registerCommand(
             'tree.saveRequest',
             async (element: Request) => {
@@ -210,6 +239,9 @@ export class CommandService {
             }
         );
 
+        //#endregion
+
+        //#region requestView
         const refreshListCommand = vscode.commands.registerCommand(
             'list.refresh',
             () => this._savedRequestNodeProvider.refresh()
@@ -278,20 +310,59 @@ export class CommandService {
             }
         );
 
-        const createRequestFromCodeCommand = vscode.commands.registerCommand(
-            'graphax.createRequest',
-            async () => {
-                await vscode.commands
-                    .executeCommand('workbench.view.extension.schema-explorer')
-                    .then(() => {
-                        createRequestFromCode(
-                            this._stateService,
-                            this._graphQLService
-                        ).then(() => this._savedRequestNodeProvider.refresh());
-                    });
+        //#endregion
+        const refreshServicesCommand = vscode.commands.registerCommand(
+            'service.refresh',
+            () => this._serviceNodeProvider.refresh()
+        );
+
+        const deleteServiceCommand = vscode.commands.registerCommand(
+            'service.delete',
+            (service: ServiceNode) => {
+                //! TODO: Implement logic to delete a service from files
+                if (this._stateService.services.includes(service)) {
+                    var idx = this._stateService.services.indexOf(service);
+                    this._stateService.services.splice(idx, 1);
+                }
+                this._serviceNodeProvider.refresh();
             }
         );
 
+        const deleteRequestFromServiceCommand = vscode.commands.registerCommand(
+            'service.request.delete',
+            (request: ServiceNode) => {
+                //! TODO: Implement logic to delete a request from a service
+                deleteRequestFromService(request, this._config.framework);
+                let currentService: ServiceNode | undefined;
+                this._stateService.services.forEach(service => {
+                    if (service.requests.includes(request)) {
+                        currentService = service;
+                        var idx = service.requests.indexOf(request);
+                        service.requests.splice(idx, 1);
+                    }
+                });
+                if (currentService) {
+                    if (currentService.requests.length === 0) {
+                        vscode.commands.executeCommand(
+                            'service.delete',
+                            currentService
+                        );
+                    }
+                }
+                this._serviceNodeProvider.refresh();
+            }
+        );
+
+        const serviceCodeCommand = vscode.commands.registerCommand(
+            'service.request.code',
+            (request: ServiceNode) => {
+                //! TODO: Implement logic to show the file where the request is written and highlight the request
+                showServiceRequestInCodeCommand(request);
+            }
+        );
+        //#region serviceView
+
+        //#endregion
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(createRequestFromCodeCommand);

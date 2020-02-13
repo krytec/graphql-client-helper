@@ -59,9 +59,14 @@ export class ServiceNode extends vscode.TreeItem {
         private _tooltip: string,
         private _path: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public readonly contextValue
+        public readonly contextValue,
+        public readonly request?: string,
+        public readonly command?: vscode.Command
     ) {
         super(label, collapsibleState);
+        if (this.command) {
+            this.command.arguments = [this];
+        }
     }
 
     //#region setter & getter
@@ -89,7 +94,8 @@ export class ServiceNode extends vscode.TreeItem {
                 request.tooltip,
                 join(this._path, `${this.label}Requests.ts`),
                 0,
-                'serviceRequest'
+                'serviceRequest',
+                request.request
             )
         );
     }

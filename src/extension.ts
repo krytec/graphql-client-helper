@@ -58,6 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
         graphQLService,
         clientService,
         requestNodeProvider,
+        serviceNodeProvider,
         savedRequestNodeProvider
     );
     commandService.registerCommands();
