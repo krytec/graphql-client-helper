@@ -141,9 +141,6 @@ export class CommandService {
                     this._graphQLService.createTypesFromSchema(schema);
                     this._graphQLService.getRequestsFromSchema(schema);
                     this._requestNodeProvider.refresh();
-                    vscode.commands.executeCommand(
-                        'workbench.view.extension.schema-explorer'
-                    );
                 })
                 .catch((err: Error) =>
                     vscode.window.showErrorMessage(err.message)
@@ -283,8 +280,15 @@ export class CommandService {
 
         const createRequestFromCodeCommand = vscode.commands.registerCommand(
             'graphax.createRequest',
-            () => {
-                createRequestFromCode(this._stateService, this._graphQLService);
+            async () => {
+                await vscode.commands
+                    .executeCommand('workbench.view.extension.schema-explorer')
+                    .then(() => {
+                        createRequestFromCode(
+                            this._stateService,
+                            this._graphQLService
+                        ).then(() => this._savedRequestNodeProvider.refresh());
+                    });
             }
         );
 

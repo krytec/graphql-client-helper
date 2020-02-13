@@ -16,6 +16,7 @@ import {
 import { ConfigurationService } from './services/ConfigurationService';
 import { ClientService } from './services/ClientService';
 import { RequestDocumentProvider } from './provider/RequestDocumentProvider';
+import { ServiceNodeProvider } from './provider/ServiceNodeProvider';
 const path = require('path');
 // this method is called when your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -38,11 +39,13 @@ export function activate(context: vscode.ExtensionContext) {
     // Create a node provider and adds a new TreeView to vscode
     const requestNodeProvider = new RequestNodeProvider(stateService);
     const savedRequestNodeProvider = new SavedRequestNodeProvider(stateService);
+    const serviceNodeProvider = new ServiceNodeProvider(stateService);
     const requestService = new RequestService(requestNodeProvider);
     vscode.window.registerTreeDataProvider(
         'requestView',
         savedRequestNodeProvider
     );
+    vscode.window.registerTreeDataProvider('serviceView', serviceNodeProvider);
     const requestDocumentProvider = new RequestDocumentProvider();
     vscode.workspace.registerTextDocumentContentProvider(
         'request',

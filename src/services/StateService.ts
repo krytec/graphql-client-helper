@@ -8,6 +8,7 @@ import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
 import { Request } from '../provider/RequestNodeProvider';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { GraphQLSchema } from 'graphql';
+import { ServiceNode } from '../provider/ServiceNodeProvider';
 /**
  * Service for a global extension state,
  * implements the vscode.Memento interface
@@ -45,6 +46,11 @@ export class StateService implements vscode.Memento {
     saveRequest(customRequest: CustomRequest) {
         this.myRequests.push(customRequest);
         vscode.commands.executeCommand('setContext', 'hasRequests', true);
+    }
+
+    saveService(service: ServiceNode) {
+        this.services.push(service);
+        vscode.commands.executeCommand('setContext', 'hasServices', true);
     }
 
     //#region getter and setter
@@ -87,6 +93,10 @@ export class StateService implements vscode.Memento {
         return this.get('myRequests') as Array<CustomRequest>;
     }
 
+    get services(): Array<ServiceNode> {
+        return this.get('services') as Array<ServiceNode>;
+    }
+
     //#endregion
 
     /**
@@ -106,5 +116,6 @@ export class StateService implements vscode.Memento {
         this.update('currentTree', new Array<Request>());
         this.update('requests', new Array<RequestWrapper>());
         this.update('myRequests', new Array<CustomRequest>());
+        this.update('services', new Array<ServiceNode>());
     }
 }

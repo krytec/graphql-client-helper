@@ -63,9 +63,9 @@
                         "type": "array",
                         "default": [],
                         "uniqueItems": true,
-                        "items" : [
+                        "items": [
                             {
-                                "type":"object"
+                                "type": "object"
                             }
                         ],
                         "description": "Specifies the graphql client headers for the endpoint to avoid security issues. Has to be in object format for example: {\"Content-Type\":\"application/json\"}."
@@ -144,7 +144,43 @@
             },
             {
                 "command": "list.delete",
-                "title": "Delete"
+                "title": "Delete",
+                "icon": {
+                    "dark": "./resources/dark/delete.svg",
+                    "light": "./resources/light/delete.svg"
+                }
+            },
+            {
+                "command": "service.refresh",
+                "title": "Refresh",
+                "icon": {
+                    "dark": "./resources/dark/reload.svg",
+                    "light": "./resources/light/reload.svg"
+                }
+            },
+            {
+                "command": "service.delete",
+                "title": "Delete",
+                "icon": {
+                    "dark": "./resources/dark/delete.svg",
+                    "light": "./resources/light/delete.svg"
+                }
+            },
+            {
+                "command": "service.request.code",
+                "title": "Code",
+                "icon": {
+                    "dark": "./resources/dark/code.svg",
+                    "light": "./resources/light/code.svg"
+                }
+            },
+            {
+                "command": "service.request.delete",
+                "title": "Delete",
+                "icon": {
+                    "dark": "./resources/dark/delete.svg",
+                    "light": "./resources/light/delete.svg"
+                }
             }
         ],
         "keybindings": {
@@ -171,6 +207,11 @@
                     "id": "requestView",
                     "name": "My Requests",
                     "when": "hasRequests"
+                },
+                {
+                    "id": "serviceView",
+                    "name": "Services",
+                    "when": "hasServices"
                 }
             ]
         },
@@ -196,6 +237,11 @@
                     "command": "list.save",
                     "when": "view == requestView",
                     "group": "navigation"
+                },
+                {
+                    "command": "service.refresh",
+                    "when": "view == serviceView",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
@@ -217,6 +263,21 @@
                 {
                     "command": "list.delete",
                     "when": "view == requestView"
+                },
+                {
+                    "command": "service.delete",
+                    "when": "view == serviceView && viewItem == service",
+                    "group": "inline"
+                },
+                {
+                    "command": "service.request.code",
+                    "when": "view == serviceView && viewItem == serviceRequest",
+                    "group": "inline"
+                },
+                {
+                    "command": "service.request.delete",
+                    "when": "view == serviceView && viewItem == serviceRequest",
+                    "group": "inline"
                 }
             ]
         }

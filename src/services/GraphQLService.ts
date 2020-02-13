@@ -31,6 +31,8 @@ import { resolve } from 'dns';
 import { angularService, angularComponent } from '../constants';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import request from 'graphql-request';
+import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { mkdir } from 'fs';
 
 const fetch = require('node-fetch');
 const {
@@ -349,6 +351,16 @@ export class GraphQLService {
                     this.createAngularComponent(serviceName, requests).then(
                         files.push
                     );
+                    // Create service tree item from requests
+                    const service = new ServiceNode(
+                        serviceName,
+                        'Angular Service',
+                        folderPath,
+                        2,
+                        'service'
+                    );
+                    requests.forEach(req => service.addRequest(req));
+                    this._state.saveService(service);
                 } catch (e) {
                     throw new Error(
                         'Could not create Angular component ' + serviceName
@@ -357,7 +369,27 @@ export class GraphQLService {
                 break;
 
             case Framework.NONE:
-                this.createRequests(serviceName, requests, this._folder);
+                const folderPath = path.join(
+                    this._folder,
+                    '..',
+                    `${serviceName}-service`
+                );
+                try {
+                    fs.mkdir(folderPath);
+                    this.createRequests(serviceName, requests, folderPath);
+                    // Create service tree item from requests
+                    const service = new ServiceNode(
+                        serviceName,
+                        'Service',
+                        folderPath,
+                        2,
+                        'service'
+                    );
+                    requests.forEach(req => service.addRequest(req));
+                    this._state.saveService(service);
+                } catch (error) {
+                    throw new Error('Could not create service ' + serviceName);
+                }
         }
         return Promise.resolve(files);
     }
