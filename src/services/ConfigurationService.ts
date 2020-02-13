@@ -13,7 +13,6 @@ export const enum Framework {
 export class ConfigurationService {
     private _endpoint?: string;
     private _generatedFolder?: string;
-    //! TODO: Implementation of header support for graphqlclient
     private _headers?: Array<object>;
     private _framework?: Framework;
     private _typescript?: boolean;
