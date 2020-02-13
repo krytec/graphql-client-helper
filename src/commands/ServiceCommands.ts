@@ -7,7 +7,7 @@ import { Framework } from '../services/ConfigurationService';
 import * as fs from 'fs';
 import request from 'graphql-request';
 import { join } from 'path';
-import { createRequestFromCode } from './RequestCommands';
+import { createRequestFromCode, getRequestFromString } from './RequestCommands';
 import { stringToGraphQLFormat } from '../utils/Utils';
 /**
  * Provides a CreateServiceCommand which executes the createService
@@ -16,6 +16,7 @@ import { stringToGraphQLFormat } from '../utils/Utils';
  * @param requests Selected request
  */
 export async function showCreateServiceCommand(
+    state: StateService,
     service: GraphQLService,
     requests: CustomRequest[]
 ) {
@@ -47,7 +48,11 @@ export async function showCreateServiceCommand(
         });
 }
 
-export function addServiceCommand(fsPath: string) {
+export function addServiceCommand(
+    state: StateService,
+    graphqlService: GraphQLService,
+    fsPath: string
+) {
     let dir = fs.readdirSync(fsPath);
     dir.forEach(async file => {
         const filePath = join(fsPath, file);
@@ -59,6 +64,8 @@ export function addServiceCommand(fsPath: string) {
                 idx = doc.getText().indexOf('gql`', end);
                 end = doc.getText().indexOf('`;', idx);
                 var request = doc.getText().slice(idx + 4, end);
+                console.log(request);
+                getRequestFromString(state, graphqlService, request);
             }
         }
     });

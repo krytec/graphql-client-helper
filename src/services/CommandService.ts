@@ -293,6 +293,7 @@ export class CommandService {
                     request => request.selected === true
                 );
                 await showCreateServiceCommand(
+                    this._stateService,
                     this._graphQLService,
                     myRequests
                 );
@@ -323,7 +324,11 @@ export class CommandService {
         const addServiceFromFolderCommand = vscode.commands.registerCommand(
             'service.add',
             (folder: vscode.Uri) => {
-                addServiceCommand(folder.fsPath);
+                addServiceCommand(
+                    this._stateService,
+                    this._graphQLService,
+                    folder.fsPath
+                );
             }
         );
 
