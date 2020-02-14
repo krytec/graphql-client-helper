@@ -342,7 +342,6 @@ export class CommandService {
                     )
                     .then(async button => {
                         if (button === 'Yes') {
-                            //! TODO: Implement logic to delete a service from files
                             if (this._stateService.services.includes(service)) {
                                 const dir = del.sync('*.ts', {
                                     cwd: service.path
@@ -373,7 +372,13 @@ export class CommandService {
                     .then(button => {
                         if (button === 'Yes') {
                             //! TODO: Implement logic to delete a request from a service
+                            let service = this._serviceNodeProvider.getParent(
+                                request
+                            );
                             deleteRequestFromService(
+                                this._serviceNodeProvider.getParent(
+                                    request
+                                ) as ServiceNode,
                                 request,
                                 this._config.framework
                             );

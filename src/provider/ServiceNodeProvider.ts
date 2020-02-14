@@ -47,6 +47,15 @@ export class ServiceNodeProvider
             return this._state.services;
         }
     }
+
+    getParent(element: ServiceNode): vscode.ProviderResult<ServiceNode> {
+        this._state.services.forEach(service => {
+            if (service.requests.includes(element)) {
+                return service;
+            }
+        });
+        return element;
+    }
 }
 
 /**

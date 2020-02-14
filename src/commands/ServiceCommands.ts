@@ -6,7 +6,7 @@ import { GraphQLService } from '../services/GraphQLService';
 import { Framework } from '../services/ConfigurationService';
 import * as fs from 'fs';
 import request from 'graphql-request';
-import { join, basename } from 'path';
+import { join, basename, dirname } from 'path';
 import { stringToGraphQLFormat } from '../utils/Utils';
 
 /**
@@ -89,31 +89,106 @@ export async function showServiceRequestInCodeCommand(request: ServiceNode) {
  * @param framework Framework that is currently used
  */
 export async function deleteRequestFromService(
+    service: ServiceNode,
     request: ServiceNode,
     framework: Framework
 ) {
     switch (+framework) {
+        //! TODO: Add angular support
         case Framework.ANGULAR:
+            const serviceDir = dirname(request.path);
+            var serviceName = basename(serviceDir).split('-')[0];
+            const requestDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(request.path)
+            );
+            const serviceDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(join(serviceDir, `${serviceName}.service.ts`))
+            );
+            const componentDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(join(serviceDir, `${serviceName}.component.ts`))
+            );
+
+            await removeRequestFromFile(requestDoc, request);
+            await removeFromService(serviceDoc, request);
+            await removeFromComponent(componentDoc, request);
             break;
         case Framework.NONE:
             const doc = await vscode.workspace.openTextDocument(
                 vscode.Uri.file(request.path)
             );
-            let range = getTextRange(
-                doc,
-                `export const ${request.label}`,
-                '`;'
-            );
-            doc.getText(range);
-            vscode.window.showTextDocument(doc).then(te => {
-                te.edit(editBuilder => {
-                    editBuilder.replace(range, '');
-                });
-            });
+            removeRequestFromFile(doc, request);
             break;
     }
 }
 
+async function removeRequestFromFile(
+    doc: vscode.TextDocument,
+    request: ServiceNode
+) {
+    let range = getTextRange(doc, `export const ${request.label}`, '`;');
+    await vscode.window.showTextDocument(doc).then(te => {
+        te.edit(editBuilder => {
+            editBuilder.replace(range, '');
+        });
+    });
+}
+
+async function removeFromService(
+    doc: vscode.TextDocument,
+    request: ServiceNode
+) {
+    let range: vscode.Range;
+    let fullrange = getTextRange(doc, `${request.label}(args`, '(args');
+    if (fullrange.start.line === 0) {
+        fullrange = getTextRange(doc, `${request.label}(args`, '}');
+    }
+    range = new vscode.Range(fullrange.start, fullrange.end.with(undefined, 0));
+
+    await vscode.window.showTextDocument(doc).then(te => {
+        te.edit(editBuilder => {
+            editBuilder.replace(range, '');
+        });
+    });
+}
+
+async function removeFromComponent(
+    doc: vscode.TextDocument,
+    request: ServiceNode
+) {
+    let propRange: vscode.Range;
+    for (let index = 0; index < doc.lineCount; index++) {
+        const text = doc.lineAt(index).text;
+        if (
+            text.includes(
+                request.label.split('Query')[0].split('Mutation')[0] + ':'
+            )
+        ) {
+            propRange = doc.lineAt(index).rangeIncludingLineBreak;
+            break;
+        }
+    }
+    let serviceRange: vscode.Range;
+    let fullRange: vscode.Range = getTextRange(
+        doc,
+        `this.service.${request.label}(`,
+        `this.service.`
+    );
+    if (fullRange.start.line === 0) {
+        serviceRange = getTextRange(doc, `this.service.${request.label}(`, '}');
+    } else {
+        serviceRange = new vscode.Range(
+            fullRange.start,
+            fullRange.end.with(undefined, 0)
+        );
+    }
+
+    await vscode.window.showTextDocument(doc).then(te => {
+        te.edit(editBuilder => {
+            editBuilder.delete(propRange);
+            editBuilder.delete(serviceRange);
+        });
+    });
+}
 /**
  * Function to select a range from a vscode.TextDocument from textStart to textEnd
  * @param doc vscode.TextDocument
