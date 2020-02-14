@@ -327,6 +327,7 @@ export class CommandService {
             (folder: vscode.Uri) => {
                 this._requestNodeProvider.getChildren();
                 addServiceCommand(this._graphQLService, folder.fsPath);
+                this._serviceNodeProvider.refresh();
             }
         );
 

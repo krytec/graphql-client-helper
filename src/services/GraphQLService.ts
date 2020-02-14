@@ -555,6 +555,11 @@ export class GraphQLService {
     }
 
     //#region From code creation
+    /**
+     * Async method to create a service from a given folder
+     * If the folder has any .ts or .js file the getCustomRequestFromFile method will be called
+     * @param fsPath Path to folder
+     */
     async createServiceFromFolder(fsPath: string): Promise<ServiceNode> {
         return new Promise<ServiceNode>(async (resolve, reject) => {
             let serviceName = basename(fsPath);
@@ -600,6 +605,13 @@ export class GraphQLService {
         });
     }
 
+    /**
+     * Reads the file and gets all requests within that file.
+     * If a request is found the getRequestFromString method will be called
+     * After the called method was successful the request will be addet to the service
+     * @param filePath Path to file
+     * @param service Service that should be created
+     */
     private async getCustomRequestsFromFile(
         filePath: string,
         service: ServiceNode
@@ -631,6 +643,7 @@ export class GraphQLService {
 
     /**
      * Async function to get a customrequest from a string
+     * And adds it to the state
      * @param state StateService
      * @param graphqlService GraphQLService
      * @param requestAsString The request as a string
