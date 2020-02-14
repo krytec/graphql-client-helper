@@ -6,6 +6,7 @@ import { StateService } from '../services/StateService';
 import { Request } from '../provider/RequestNodeProvider';
 import { stringToGraphQLObject } from '../utils/Utils';
 import { GraphQLService } from '../services/GraphQLService';
+import { OperationDefinitionNode, FieldNode, graphql } from 'graphql';
 
 /**
  * Executes a request with the internal graphqlclient,
@@ -35,6 +36,11 @@ export async function executeRequestCommand(
     });
 }
 
+/**
+ * Async function to get a name for a customrequest and save the request as customrequest
+ * @param element Request that should be saved
+ * @param graphQLService GraphQlService
+ */
 export async function showSaveRequestCommand(
     element: Request,
     graphQLService: GraphQLService
@@ -52,10 +58,24 @@ export async function showSaveRequestCommand(
         .then(value => {
             if (value !== undefined) {
                 value = element.query ? value + 'Query' : value + 'Mutation';
-                graphQLService.saveRequest(value, element).catch(error => {
-                    vscode.window.showErrorMessage(error);
-                    vscode.commands.executeCommand('tree.saveRequest', element);
-                });
+                // graphQLService.saveRequest(value, element).catch(error => {
+                //     vscode.window.showErrorMessage(error);
+                //     vscode.commands.executeCommand('tree.saveRequest', element);
+                // });
+                graphQLService.saveRequest(value, element).then(
+                    onresolved => {},
+                    onrejected => {
+                        vscode.window.showErrorMessage(
+                            'A request with the name ' +
+                                onrejected.label +
+                                ' already exists! Please provide a unique name.'
+                        );
+                        vscode.commands.executeCommand(
+                            'tree.saveRequest',
+                            element
+                        );
+                    }
+                );
             } else {
                 vscode.window.showErrorMessage(
                     'Error: Please name your request!'
@@ -64,129 +84,17 @@ export async function showSaveRequestCommand(
         });
 }
 
-export async function createRequestFromCode(
-    state: StateService,
-    graphqlService: GraphQLService
-) {
+/**
+ * Async function to create a request from code
+ * @param state State of the extension
+ * @param graphqlService GraphQlService
+ */
+export async function createRequestFromCode(graphqlService: GraphQLService) {
     const te = vscode.window.activeTextEditor;
     if (te !== undefined) {
         const range = te.selection;
         const selection = te.document.getText(range);
         let request: CustomRequest | undefined = undefined;
-        getRequestFromString(state, graphqlService, selection);
+        graphqlService.getRequestFromString(selection);
     }
 }
-
-export async function getRequestFromString(
-    state: StateService,
-    graphqlService: GraphQLService,
-    requestAsString: string
-): Promise<CustomRequest> {
-    return new Promise<CustomRequest>(async (resolve, reject) => {
-        let request: Request | undefined = undefined;
-        try {
-            request = await selectionValidation(requestAsString, state);
-            if (request) {
-                const nameMatch: any = requestAsString.match(
-                    /(?!(query$|mutation$)\s*)[a-zA-Z]+[a-zA-Z0-9]*/g
-                );
-                const name = nameMatch[1];
-                let result = await setRequestVariables(
-                    stringToGraphQLObject(requestAsString),
-                    request
-                );
-                let customRequest = await graphqlService.saveRequest(
-                    name,
-                    result
-                );
-                if (customRequest) {
-                    request.deselect();
-                    resolve(customRequest);
-                }
-            }
-        } catch (error) {
-            request?.deselect();
-            vscode.window.showErrorMessage(error.message);
-        }
-    });
-}
-
-//#region Helperfunctions
-async function selectionValidation(
-    selection: string,
-    state: StateService
-): Promise<Request> {
-    return new Promise<Request>((resolve, reject) => {
-        if (
-            /**
-             * * Regex to match the beginning of a query | mutation
-             * * (query|mutation){1} [a-zA-Z]+(\((\$[a-zA-Z]+:\s*[a-zA-Z]+(\!)?((,\s?)|\)))+)*\s*{
-             * * Has to start with "query" or "mutation", then has a name that doesnt start with a digit
-             * * After that takes care that the query has either zero or at least one argument in form of "$argument:scalar"
-             * * Followed by an optional !. After that makes sure that either another argument is provided and seperated by a ,
-             * * or the bracket is closed with a ) after that the query starts with an {
-             */
-            !selection.match(
-                /(query|mutation){1} [a-zA-Z]+[a-zA-Z0-9]*(\((\$[a-zA-Z]+:\s*[a-zA-Z]+(\!)?((,\s?)|\)))+)*\s*{/g
-            )
-        ) {
-            throw new Error('Invalid request format');
-        } else {
-            let requestname = '';
-            const request = selection.match(/(?:\r\n?|\n)\s.*/g);
-            if (request) {
-                requestname = request[0].split('(')[0].trim();
-                const graphqlrequest:
-                    | Request
-                    | undefined = state.currentTree.find(
-                    req => req.label === requestname
-                );
-                if (graphqlrequest) {
-                    resolve(graphqlrequest);
-                }
-            } else {
-                throw new Error('Request was not found in schema');
-            }
-            reject();
-        }
-    });
-}
-
-async function setRequestVariables(
-    documentAST,
-    request: Request
-): Promise<Request> {
-    return new Promise<Request>((resolve, reject) => {
-        var def = documentAST.definitions[0];
-        var fields = def.selectionSet.selections[0].selectionSet;
-        fields.selections.forEach(async element => {
-            await selectField(element, request.fields).then(
-                () => resolve(request),
-                () => reject()
-            );
-        });
-    });
-}
-
-async function selectField(field, requestFields: Request[]): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-        if (field.selectionSet) {
-            field.selectionSet.selections.forEach(selection => {
-                requestFields.forEach(req => {
-                    if (req.label === field.name.value) {
-                        selectField(selection, req.fields);
-                    }
-                });
-            });
-        } else {
-            requestFields.forEach(req => {
-                if (req.label === field.name.value) {
-                    req.selected = true;
-                    resolve(true);
-                }
-            });
-        }
-        reject(false);
-    });
-}
-//#endregion

@@ -6,9 +6,9 @@ import { GraphQLService } from '../services/GraphQLService';
 import { Framework } from '../services/ConfigurationService';
 import * as fs from 'fs';
 import request from 'graphql-request';
-import { join } from 'path';
-import { createRequestFromCode, getRequestFromString } from './RequestCommands';
+import { join, basename } from 'path';
 import { stringToGraphQLFormat } from '../utils/Utils';
+
 /**
  * Provides a CreateServiceCommand which executes the createService
  * method of the GraphQLService
@@ -48,29 +48,29 @@ export async function showCreateServiceCommand(
         });
 }
 
-export function addServiceCommand(
-    state: StateService,
+/**
+ * Async function to add a service to the extension
+ * @param graphqlService GraphQLService
+ * @param fsPath Path of the service that should be addet to the extension
+ */
+export async function addServiceCommand(
     graphqlService: GraphQLService,
     fsPath: string
 ) {
-    let dir = fs.readdirSync(fsPath);
-    dir.forEach(async file => {
-        const filePath = join(fsPath, file);
-        if (fs.statSync(filePath).isFile()) {
-            var doc = await vscode.workspace.openTextDocument(filePath);
-            var idx = 0;
-            var end = 0;
-            while (doc.getText().includes('gql`', end + 1)) {
-                idx = doc.getText().indexOf('gql`', end);
-                end = doc.getText().indexOf('`;', idx);
-                var request = doc.getText().slice(idx + 4, end);
-                console.log(request);
-                getRequestFromString(state, graphqlService, request);
-            }
-        }
-    });
+    graphqlService.createServiceFromFolder(fsPath).then(
+        () => {
+            vscode.commands.executeCommand(
+                'workbench.view.extension.schema-explorer'
+            );
+        },
+        err => vscode.window.showErrorMessage(err.message)
+    );
 }
 
+/**
+ * Async function to show a selected request in code
+ * @param request Request that should be shown in code
+ */
 export async function showServiceRequestInCodeCommand(request: ServiceNode) {
     if (request.request) {
         const doc = await vscode.workspace.openTextDocument(
@@ -83,6 +83,11 @@ export async function showServiceRequestInCodeCommand(request: ServiceNode) {
     }
 }
 
+/**
+ * Async function to delete a request from the service
+ * @param request Request that should be deleted
+ * @param framework Framework that is currently used
+ */
 export async function deleteRequestFromService(
     request: ServiceNode,
     framework: Framework
@@ -109,6 +114,12 @@ export async function deleteRequestFromService(
     }
 }
 
+/**
+ * Function to select a range from a vscode.TextDocument from textStart to textEnd
+ * @param doc vscode.TextDocument
+ * @param textStart Start string
+ * @param textEnd End string
+ */
 function getTextRange(
     doc: vscode.TextDocument,
     textStart: string,

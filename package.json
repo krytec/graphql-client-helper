@@ -223,7 +223,7 @@
             "explorer/context": [
                 {
                     "command": "service.add",
-                    "when": "explorerResourceIsFolder"
+                    "when": "explorerResourceIsFolder && schemaLoaded"
                 }
             ],
             "editor/context": [

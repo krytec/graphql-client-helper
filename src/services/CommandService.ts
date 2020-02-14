@@ -199,10 +199,9 @@ export class CommandService {
                 await vscode.commands
                     .executeCommand('workbench.view.extension.schema-explorer')
                     .then(() => {
-                        createRequestFromCode(
-                            this._stateService,
-                            this._graphQLService
-                        ).then(() => this._savedRequestNodeProvider.refresh());
+                        createRequestFromCode(this._graphQLService).then(() =>
+                            this._savedRequestNodeProvider.refresh()
+                        );
                     });
             }
         );
@@ -316,6 +315,8 @@ export class CommandService {
         );
 
         //#endregion
+
+        //#region ServiceCommands
         const refreshServicesCommand = vscode.commands.registerCommand(
             'service.refresh',
             () => this._serviceNodeProvider.refresh()
@@ -324,11 +325,8 @@ export class CommandService {
         const addServiceFromFolderCommand = vscode.commands.registerCommand(
             'service.add',
             (folder: vscode.Uri) => {
-                addServiceCommand(
-                    this._stateService,
-                    this._graphQLService,
-                    folder.fsPath
-                );
+                this._requestNodeProvider.getChildren();
+                addServiceCommand(this._graphQLService, folder.fsPath);
             }
         );
 
@@ -406,8 +404,6 @@ export class CommandService {
                 showServiceRequestInCodeCommand(request);
             }
         );
-        //#region serviceView
-
         //#endregion
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
@@ -422,5 +418,9 @@ export class CommandService {
         this._ctx.subscriptions.push(showRequestInCodeCommand);
         this._ctx.subscriptions.push(deleteRequestCommand);
         this._ctx.subscriptions.push(createServiceCommand);
+        this._ctx.subscriptions.push(serviceCodeCommand);
+        this._ctx.subscriptions.push(deleteRequestFromServiceCommand);
+        this._ctx.subscriptions.push(refreshServicesCommand);
+        this._ctx.subscriptions.push(deleteServiceCommand);
     }
 }

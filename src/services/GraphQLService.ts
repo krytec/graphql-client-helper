@@ -8,7 +8,9 @@ import {
     buildSchema,
     GraphQLInputObjectType,
     parse,
-    print
+    print,
+    OperationDefinitionNode,
+    FieldNode
 } from 'graphql';
 import {
     constructType,
@@ -24,7 +26,11 @@ import { StateService } from './StateService';
 import { Request } from '../provider/RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
-import { stringToGraphQLFormat, toTitleCase } from '../utils/Utils';
+import {
+    stringToGraphQLFormat,
+    toTitleCase,
+    stringToGraphQLObject
+} from '../utils/Utils';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { resolve } from 'dns';
@@ -32,7 +38,8 @@ import { angularService, angularComponent } from '../constants';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import request from 'graphql-request';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
-import { mkdir } from 'fs';
+import { mkdir, readdirSync, statSync } from 'fs';
+import { basename, join } from 'path';
 
 const fetch = require('node-fetch');
 const {
@@ -274,50 +281,54 @@ export class GraphQLService {
         return new Promise<CustomRequest>((resolve, reject) => {
             let alreadyUsed: boolean = false;
             this._state.myRequests.forEach(request => {
-                if (request.label === name || request.label === name) {
+                if (request.label === name) {
+                    reject(request);
                     alreadyUsed = true;
                 }
             });
-            if (alreadyUsed) {
-                throw new Error(
-                    `The request ${name} already exists, please provide a unique name!`
-                );
-            }
-            if (element.contextValue?.match(/query/)) {
-                const root = element.toString();
-                const args =
-                    element.args.length > 0
-                        ? `(${element.args.map(arg => arg.toArgs()).join(' ')})`
-                        : '';
-                const customRequest = new CustomRequest(
-                    name,
-                    element.label,
-                    element.type,
-                    stringToGraphQLFormat(`query ${name}${args}{ ${root} }`),
-                    `${element.label}InputType`,
-                    element.args,
-                    'Query',
-                    { command: 'list.selectRequest', title: 'Select' }
-                );
-                this._state.saveRequest(customRequest);
-                resolve(customRequest);
-            } else if (element.contextValue?.match(/mutation/)) {
-                const root = element.toString();
-                const args = element.args.map(ele => ele.toArgs()).join(' ');
-                const customRequest = new CustomRequest(
-                    name,
-                    element.label,
-                    element.type,
-                    stringToGraphQLFormat(
-                        `mutation ${name}(${args}){ ${root} }`
-                    ),
-                    `${element.label}InputType`,
-                    element.args,
-                    'Mutation',
-                    { command: 'list.selectRequest', title: 'Select' }
-                );
-                this._state.saveRequest(customRequest);
-                resolve(customRequest);
+            if (!alreadyUsed) {
+                if (element.contextValue?.match(/query/)) {
+                    const root = element.toString();
+                    const args =
+                        element.args.length > 0
+                            ? `(${element.args
+                                  .map(arg => arg.toArgs())
+                                  .join(' ')})`
+                            : '';
+                    const customRequest = new CustomRequest(
+                        name,
+                        element.label,
+                        element.type,
+                        stringToGraphQLFormat(
+                            `query ${name}${args}{ ${root} }`
+                        ),
+                        `${element.label}InputType`,
+                        element.args,
+                        'Query',
+                        { command: 'list.selectRequest', title: 'Select' }
+                    );
+                    this._state.saveRequest(customRequest);
+                    resolve(customRequest);
+                } else if (element.contextValue?.match(/mutation/)) {
+                    const root = element.toString();
+                    const args = element.args
+                        .map(ele => ele.toArgs())
+                        .join(' ');
+                    const customRequest = new CustomRequest(
+                        name,
+                        element.label,
+                        element.type,
+                        stringToGraphQLFormat(
+                            `mutation ${name}(${args}){ ${root} }`
+                        ),
+                        `${element.label}InputType`,
+                        element.args,
+                        'Mutation',
+                        { command: 'list.selectRequest', title: 'Select' }
+                    );
+                    this._state.saveRequest(customRequest);
+                    resolve(customRequest);
+                }
             }
         });
     }
@@ -542,6 +553,231 @@ export class GraphQLService {
             )
         );
     }
+
+    //#region From code creation
+    async createServiceFromFolder(fsPath: string): Promise<ServiceNode> {
+        return new Promise<ServiceNode>(async (resolve, reject) => {
+            let serviceName = basename(fsPath);
+            let dir = readdirSync(fsPath);
+
+            const service = new ServiceNode(
+                serviceName,
+                'Custom Service',
+                fsPath,
+                2,
+                'service'
+            );
+
+            const promised = await Promise.all(
+                dir.map(async file => {
+                    if (file.endsWith('.ts') || file.endsWith('.js')) {
+                        const filePath = join(fsPath, file);
+                        return this.getCustomRequestsFromFile(
+                            filePath,
+                            service
+                        );
+                    }
+                })
+            );
+            if (promised) {
+                if (service.requests.length > 0) {
+                    this._state.saveService(service);
+                    resolve(service);
+                } else {
+                    reject(
+                        new Error(
+                            'Could not create Service, because there were no requests found in directory'
+                        )
+                    );
+                }
+            } else {
+                reject(
+                    new Error(
+                        'Could not create Service, because there were no requests found in directory'
+                    )
+                );
+            }
+        });
+    }
+
+    private async getCustomRequestsFromFile(
+        filePath: string,
+        service: ServiceNode
+    ): Promise<ServiceNode> {
+        return new Promise<ServiceNode>(async (resolve, reject) => {
+            if (statSync(filePath).isFile()) {
+                var doc = await vscode.workspace.openTextDocument(filePath);
+                var idx = 0;
+                var end = 0;
+                while (doc.getText().includes('gql`', end + 1)) {
+                    idx = doc.getText().indexOf('gql`', end);
+                    end = doc.getText().indexOf('`;', idx);
+                    var request = doc.getText().slice(idx + 4, end);
+                    await this.getRequestFromString(request).then(
+                        request => {
+                            if (request) {
+                                service.addRequest(request, filePath);
+                            }
+                        },
+                        err => {
+                            reject(err);
+                        }
+                    );
+                }
+                resolve(service);
+            }
+        });
+    }
+
+    /**
+     * Async function to get a customrequest from a string
+     * @param state StateService
+     * @param graphqlService GraphQLService
+     * @param requestAsString The request as a string
+     */
+    async getRequestFromString(
+        requestAsString: string
+    ): Promise<CustomRequest> {
+        return new Promise<CustomRequest>(async (resolve, reject) => {
+            let request: Request | undefined = undefined;
+            try {
+                request = await this.selectionValidation(requestAsString);
+                if (request) {
+                    const nameMatch: any = requestAsString.match(
+                        /(?!(query$|mutation$)\s*)[a-zA-Z]+[a-zA-Z0-9]*/g
+                    );
+                    const name = nameMatch[1];
+
+                    this._state.myRequests.forEach(myReq => {
+                        if (name === myReq.label) {
+                            resolve(myReq);
+                        }
+                    });
+
+                    let result = await this.setRequestVariables(
+                        stringToGraphQLObject(requestAsString),
+                        request
+                    );
+                    this.saveRequest(name, result).then(
+                        onfullfilled => {
+                            if (onfullfilled) {
+                                request?.deselect();
+                                resolve(onfullfilled);
+                            }
+                        },
+                        onreject => {
+                            request?.deselect();
+                            reject(onreject);
+                        }
+                    );
+                }
+            } catch (error) {
+                request?.deselect();
+                reject(error);
+            }
+        });
+    }
+
+    //#region Helperfunctions
+    /**
+     * Validates a request as string
+     * @param selection Current selected text / request
+     */
+    private async selectionValidation(selection: string): Promise<Request> {
+        return new Promise<Request>((resolve, reject) => {
+            if (
+                /**
+                 * * Regex to match the beginning of a query | mutation
+                 * * (query|mutation){1} [a-zA-Z]+(\((\$[a-zA-Z]+:\s*[a-zA-Z]+(\!)?((,\s?)|\)))+)*\s*{
+                 * * Has to start with "query" or "mutation", then has a name that doesnt start with a digit
+                 * * After that takes care that the query has either zero or at least one argument in form of "$argument:scalar"
+                 * * Followed by an optional !. After that makes sure that either another argument is provided and seperated by a ,
+                 * * or the bracket is closed with a ) after that the query starts with an {
+                 */
+                !selection.match(
+                    /(query|mutation){1} [a-zA-Z]+[a-zA-Z0-9]*(\((\$[a-zA-Z]+:\s*[a-zA-Z]+(\!)?((,\s?)|\)))+)*\s*{/g
+                ) &&
+                !selection.match(/}$/)
+            ) {
+                throw new Error('Invalid request format');
+            } else {
+                let requestname = '';
+                //const request = selection.match(/(?:\r\n?|\n)\s.*/g);
+                const request = stringToGraphQLObject(selection);
+                //Get name of request
+                if (request) {
+                    requestname = ((request
+                        .definitions[0] as OperationDefinitionNode).selectionSet
+                        .selections[0] as FieldNode).name.value;
+                    const graphqlrequest:
+                        | Request
+                        | undefined = this._state.currentTree.find(
+                        req => req.label === requestname
+                    );
+                    if (graphqlrequest) {
+                        resolve(graphqlrequest);
+                    } else {
+                        throw new Error('Request was not found in schema');
+                    }
+                } else {
+                    throw new Error('Request was not found in schema');
+                }
+                reject();
+            }
+        });
+    }
+
+    /**
+     * Async method to select the fields of a request with a request as documentAST
+     * @param documentAST Request as DocumentAST
+     * @param request Request object that is used to select the fields
+     */
+    private async setRequestVariables(
+        documentAST,
+        request: Request
+    ): Promise<Request> {
+        return new Promise<Request>((resolve, reject) => {
+            var def = documentAST.definitions[0];
+            var fields = def.selectionSet.selections[0].selectionSet;
+            fields.selections.forEach(async element => {
+                await this.selectField(element, request.fields).then(
+                    () => resolve(request),
+                    () => reject()
+                );
+            });
+        });
+    }
+
+    /**
+     * Async recursive method that selects a single field of a request
+     * @param field Field that should be selected
+     * @param requestFields All fields of the current iterration
+     */
+    private async selectField(
+        field,
+        requestFields: Request[]
+    ): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            if (field.selectionSet) {
+                field.selectionSet.selections.forEach(selection => {
+                    requestFields.forEach(req => {
+                        if (req.label === field.name.value) {
+                            this.selectField(selection, req.fields);
+                        }
+                    });
+                });
+            } else {
+                requestFields.forEach(req => {
+                    if (req.label === field.name.value) {
+                        req.selected = true;
+                        resolve(true);
+                    }
+                });
+            }
+            reject(false);
+        });
+    }
+    //#endregion
 
     //#region getter and setter
     get folder(): string {

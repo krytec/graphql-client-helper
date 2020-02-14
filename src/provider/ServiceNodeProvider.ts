@@ -87,16 +87,29 @@ export class ServiceNode extends vscode.TreeItem {
      * Adds a request to the service as ServiceNode
      * @param request Request which belongs to the service
      */
-    addRequest(request: CustomRequest) {
-        this._serviceRequests.push(
-            new ServiceNode(
-                request.label,
-                request.tooltip,
-                join(this._path, `${this.label}Requests.ts`),
-                0,
-                'serviceRequest',
-                request.request
-            )
-        );
+    addRequest(request: CustomRequest, customPath?: string) {
+        if (customPath) {
+            this._serviceRequests.push(
+                new ServiceNode(
+                    request.label,
+                    request.tooltip,
+                    customPath,
+                    0,
+                    'serviceRequest',
+                    request.request
+                )
+            );
+        } else {
+            this._serviceRequests.push(
+                new ServiceNode(
+                    request.label,
+                    request.tooltip,
+                    join(this._path, `${this.label}Requests.ts`),
+                    0,
+                    'serviceRequest',
+                    request.request
+                )
+            );
+        }
     }
 }
