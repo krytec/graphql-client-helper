@@ -4,10 +4,8 @@ import { StateService } from '../services/StateService';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { GraphQLService } from '../services/GraphQLService';
 import { Framework } from '../services/ConfigurationService';
-import * as fs from 'fs';
-import request from 'graphql-request';
 import { join, basename, dirname } from 'path';
-import { stringToGraphQLFormat } from '../utils/Utils';
+import { sleep } from '../utils/Utils';
 
 /**
  * Provides a CreateServiceCommand which executes the createService
@@ -20,32 +18,78 @@ export async function showCreateServiceCommand(
     service: GraphQLService,
     requests: CustomRequest[]
 ) {
-    await vscode.window
-        .showInputBox({
-            prompt: 'Please provide a name for your service',
-            validateInput: text => {
-                return text !== undefined
-                    ? null
-                    : 'Please provide a name for your service';
-            }
-        })
-        .then(value => {
-            if (value !== undefined) {
-                // ! TODO: Provide way to show created files and correctly implementation
-                service
-                    .createService(value, requests)
-                    .then(files => {
-                        files.forEach(file => {
-                            vscode.workspace
-                                .openTextDocument(vscode.Uri.file(file))
-                                .then(doc =>
-                                    vscode.window.showTextDocument(doc)
-                                );
-                        });
+    await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: 'Create service',
+            cancellable: true
+        },
+        async (progress, token) => {
+            token.onCancellationRequested(() => {
+                vscode.window.showInformationMessage(
+                    'Cancelled request creation!'
+                );
+            });
+            progress.report({
+                increment: 33,
+                message: 'Please provide a unique name for your service!'
+            });
+            let done = false;
+            while (!done) {
+                await vscode.window
+                    .showInputBox({
+                        prompt: 'Please provide a name for your service',
+                        validateInput: text => {
+                            return text !== undefined
+                                ? null
+                                : 'Please provide a name for your service';
+                        }
                     })
-                    .catch(error => {});
+                    .then(async value => {
+                        if (value !== undefined) {
+                            await service.createService(value, requests).then(
+                                async files => {
+                                    progress.report({
+                                        increment: 66,
+                                        message: 'Creating service...'
+                                    });
+
+                                    // ! TODO: Provide way to show created files and correctly implementation
+                                    files.forEach(file => {
+                                        vscode.workspace
+                                            .openTextDocument(
+                                                vscode.Uri.file(file)
+                                            )
+                                            .then(doc =>
+                                                vscode.window.showTextDocument(
+                                                    doc
+                                                )
+                                            );
+                                    });
+                                    progress.report({
+                                        increment: 100,
+                                        message: 'Finished creating service!'
+                                    });
+                                    await sleep(1000);
+                                    done = true;
+                                },
+                                () => {
+                                    progress.report({
+                                        increment: 33,
+                                        message: `Service ${value} already exists! Please provide a unique name!`
+                                    });
+                                }
+                            );
+                        } else {
+                            done = true;
+                            vscode.window.showInformationMessage(
+                                'Cancelled request creation!'
+                            );
+                        }
+                    });
             }
-        });
+        }
+    );
 }
 
 /**
@@ -120,6 +164,11 @@ export async function deleteRequestFromService(
     }
 }
 
+/**
+ * Async fucntion to delete a request from a RequestFile
+ * @param doc Document in which the request is written
+ * @param request Request that should be deleted
+ */
 async function removeRequestFromFile(
     doc: vscode.TextDocument,
     request: ServiceNode
@@ -132,6 +181,11 @@ async function removeRequestFromFile(
     });
 }
 
+/**
+ * Removes a request from a service
+ * @param doc Servicedocument
+ * @param request Request which should be removed
+ */
 async function removeFromService(
     doc: vscode.TextDocument,
     request: ServiceNode
@@ -150,6 +204,11 @@ async function removeFromService(
     });
 }
 
+/**
+ * Async fucntion to remove a request from a component
+ * @param doc Component document
+ * @param request Request which should be removed
+ */
 async function removeFromComponent(
     doc: vscode.TextDocument,
     request: ServiceNode

@@ -7,7 +7,6 @@ import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
 import { Request } from '../provider/RequestNodeProvider';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
-import { GraphQLSchema } from 'graphql';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
 /**
  * Service for a global extension state,

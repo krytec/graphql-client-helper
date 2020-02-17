@@ -300,6 +300,7 @@ export class CommandService {
                     request => (request.selected = false)
                 );
                 this._savedRequestNodeProvider.refresh();
+                this._serviceNodeProvider.refresh();
             }
         );
 

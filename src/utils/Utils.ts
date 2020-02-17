@@ -15,6 +15,14 @@ export function isValidURL(value: string): boolean {
 }
 
 /**
+ * Sleep function to sleep for ms miliseconds
+ * @param ms Miliseconds
+ */
+export function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
  * * Function to parse a string to graphql and return it as string
  * @param request Input string to pars
  */

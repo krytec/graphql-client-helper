@@ -341,71 +341,93 @@ export class GraphQLService {
         serviceName: string,
         requests: CustomRequest[]
     ): Promise<string[]> {
-        let files: string[] = new Array<string>();
-        switch (+this._config.framework) {
-            case Framework.ANGULAR:
-                try {
-                    const folderPath = path.join(
-                        this.folder,
-                        '..',
-                        'app',
-                        `${serviceName}-component`
-                    );
-                    fs.mkdir(folderPath);
-                    await this.createRequests(
-                        serviceName,
-                        requests,
-                        folderPath
-                    ).then(file => {
-                        files.push(file);
-                    });
-                    this.createAngularService(serviceName, requests).then(
-                        files.push
-                    );
-                    this.createAngularComponent(serviceName, requests).then(
-                        files.push
-                    );
-                    // Create service tree item from requests
-                    const service = new ServiceNode(
-                        serviceName,
-                        'Angular Service',
-                        folderPath,
-                        2,
-                        'service'
-                    );
-                    requests.forEach(req => service.addRequest(req));
-                    this._state.saveService(service);
-                } catch (e) {
-                    throw new Error(
-                        'Could not create Angular component ' + serviceName
-                    );
+        return new Promise<string[]>(async (resolve, reject) => {
+            let files: string[] = new Array<string>();
+            let alreadyUsed = false;
+            this._state.services.forEach(service => {
+                if (service.label === serviceName) {
+                    alreadyUsed = true;
+                    reject();
                 }
-                break;
+            });
+            if (!alreadyUsed) {
+                switch (+this._config.framework) {
+                    case Framework.ANGULAR:
+                        try {
+                            const folderPath = path.join(
+                                this.folder,
+                                '..',
+                                'app',
+                                `${serviceName}-component`
+                            );
+                            fs.mkdir(folderPath);
+                            await this.createRequests(
+                                serviceName,
+                                requests,
+                                folderPath
+                            ).then(file => {
+                                files.push(file);
+                            });
+                            this.createAngularService(
+                                serviceName,
+                                requests
+                            ).then(files.push);
+                            this.createAngularComponent(
+                                serviceName,
+                                requests
+                            ).then(files.push);
+                            // Create service tree item from requests
+                            const service = new ServiceNode(
+                                serviceName,
+                                'Angular Service',
+                                folderPath,
+                                2,
+                                'service'
+                            );
+                            requests.forEach(req => service.addRequest(req));
+                            this._state.saveService(service);
+                        } catch (e) {
+                            throw new Error(
+                                'Could not create Angular component ' +
+                                    serviceName
+                            );
+                        }
+                        break;
 
-            case Framework.NONE:
-                const folderPath = path.join(
-                    this._folder,
-                    '..',
-                    `${serviceName}-service`
-                );
-                try {
-                    fs.mkdir(folderPath);
-                    this.createRequests(serviceName, requests, folderPath);
-                    // Create service tree item from requests
-                    const service = new ServiceNode(
-                        serviceName,
-                        'Service',
-                        folderPath,
-                        2,
-                        'service'
-                    );
-                    requests.forEach(req => service.addRequest(req));
-                    this._state.saveService(service);
-                } catch (error) {
-                    throw new Error('Could not create service ' + serviceName);
+                    case Framework.NONE:
+                        const folderPath = path.join(
+                            this._folder,
+                            '..',
+                            `${serviceName}-service`
+                        );
+                        try {
+                            fs.mkdir(folderPath);
+                            this.createRequests(
+                                serviceName,
+                                requests,
+                                folderPath
+                            );
+                            // Create service tree item from requests
+                            const service = new ServiceNode(
+                                serviceName,
+                                'Service',
+                                folderPath,
+                                2,
+                                'service'
+                            );
+                            requests.forEach(req => service.addRequest(req));
+                            this._state.saveService(service);
+                        } catch (error) {
+                            reject(
+                                new Error(
+                                    'Could not create service ' + serviceName
+                                )
+                            );
+                        }
                 }
-        }
-        return Promise.resolve(files);
+                resolve(files);
+            }
+        });
     }
 
     /**

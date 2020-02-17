@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { CircularQuickInput } from '../provider/CircularQuickInputProvider';
 import { StateService } from '../services/StateService';
 import { Request } from '../provider/RequestNodeProvider';
-import { stringToGraphQLObject } from '../utils/Utils';
+import { stringToGraphQLObject, sleep } from '../utils/Utils';
 import { GraphQLService } from '../services/GraphQLService';
 import { OperationDefinitionNode, FieldNode, graphql } from 'graphql';
 
@@ -45,43 +45,68 @@ export async function showSaveRequestCommand(
     element: Request,
     graphQLService: GraphQLService
 ) {
-    await vscode.window
-        .showInputBox({
-            placeHolder: 'Enter a name for your request',
-            validateInput: text => {
-                return text !== undefined &&
-                    text.match(/^[a-zA-Z][a-zA-Z0-9]*$/g)
-                    ? null
-                    : 'Error: A request has to be a string and can`t start with a number!';
-            }
-        })
-        .then(value => {
-            if (value !== undefined) {
-                value = element.query ? value + 'Query' : value + 'Mutation';
-                // graphQLService.saveRequest(value, element).catch(error => {
-                //     vscode.window.showErrorMessage(error);
-                //     vscode.commands.executeCommand('tree.saveRequest', element);
-                // });
-                graphQLService.saveRequest(value, element).then(
-                    onresolved => {},
-                    onrejected => {
-                        vscode.window.showErrorMessage(
-                            'A request with the name ' +
-                                onrejected.label +
-                                ' already exists! Please provide a unique name.'
-                        );
-                        vscode.commands.executeCommand(
-                            'tree.saveRequest',
-                            element
-                        );
-                    }
+    await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: 'Create request',
+            cancellable: true
+        },
+        async (progress, token) => {
+            token.onCancellationRequested(() => {
+                vscode.window.showInformationMessage(
+                    'Cancelled request creation!'
                 );
-            } else {
-                vscode.window.showErrorMessage(
-                    'Error: Please name your request!'
-                );
+            });
+            progress.report({ increment: 33 });
+            let done = false;
+            while (!done) {
+                await vscode.window
+                    .showInputBox({
+                        placeHolder: 'Enter a name for your request',
+                        validateInput: text => {
+                            return text !== undefined &&
+                                text.match(/^[a-zA-Z][a-zA-Z0-9]*$/g)
+                                ? null
+                                : 'Error: A request has to be a string and can`t start with a number!';
+                        }
+                    })
+                    .then(async value => {
+                        if (value !== undefined) {
+                            value = element.query
+                                ? value + 'Query'
+                                : value + 'Mutation';
+                            progress.report({
+                                increment: 66,
+                                message: `Creating request ${value}...`
+                            });
+                            await graphQLService
+                                .saveRequest(value, element)
+                                .then(
+                                    async onresolved => {
+                                        progress.report({
+                                            increment: 100,
+                                            message: `Finished creating request ${value}`
+                                        });
+                                        await sleep(1500);
+                                        done = true;
+                                    },
+                                    onrejected => {
+                                        progress.report({
+                                            increment: 33,
+                                            message: `Request ${value} already exists! Please provide a unique name for your request!`
+                                        });
+                                    }
+                                );
+                        } else {
+                            vscode.window.showInformationMessage(
+                                'Cancelled request creation!'
+                            );
+                            done = true;
+                        }
+                    });
             }
-        });
+        }
+    );
 }
 
 /**
