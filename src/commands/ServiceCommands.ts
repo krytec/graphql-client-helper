@@ -94,7 +94,6 @@ export async function deleteRequestFromService(
     framework: Framework
 ) {
     switch (+framework) {
-        //! TODO: Add angular support
         case Framework.ANGULAR:
             const serviceDir = dirname(request.path);
             var serviceName = basename(serviceDir).split('-')[0];

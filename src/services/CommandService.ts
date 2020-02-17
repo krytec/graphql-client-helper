@@ -371,7 +371,6 @@ export class CommandService {
                     )
                     .then(button => {
                         if (button === 'Yes') {
-                            //! TODO: Implement logic to delete a request from a service
                             let service = this._serviceNodeProvider.getParent(
                                 request
                             );

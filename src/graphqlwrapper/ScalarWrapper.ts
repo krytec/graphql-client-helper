@@ -24,10 +24,12 @@ export class ScalarWrapper implements GraphQLWrapper {
     }
 
     /**
-     * !TODO: Implementation
+     * Basic to string method
      */
     toString(): string {
-        throw new Error('Not yet implemented');
+        return `ScalarWrapper{fields: ${this._scalars
+            .map(scalar => scalar.toString())
+            .join(', ')}}`;
     }
 
     /**
@@ -70,7 +72,7 @@ export class ScalarFieldWrapper implements GraphQLWrapper {
      * Basic toString() method to represent a Scalar as String
      */
     toString(): string {
-        return `ScalarWrapper(name:${this._name}, type:${this._type}, description:${this._description})`;
+        return `ScalarFieldWrapper(name:${this._name}, type:${this._type}, description:${this._description})`;
     }
 
     /**

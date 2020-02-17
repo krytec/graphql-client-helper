@@ -30,10 +30,12 @@ export class InputTypeWrapper implements GraphQLWrapper {
     }
 
     /**
-     * ! TODO: Implementation
+     * Basic toString method
      */
     toString(): string {
-        throw new Error('Method not implemented.');
+        return `InputTypeWrapper(name:${this._name}, description:${
+            this._description
+        }, fields:${this._fields.map(field => field.toString()).join('; ')})`;
     }
 
     /**
