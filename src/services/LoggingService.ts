@@ -1,5 +1,4 @@
 import { window } from 'vscode';
-import { projectId } from '../constants';
 
 type LOG_LEVEL = 'WARN' | 'INFO' | 'DEBUG';
 
@@ -7,7 +6,7 @@ type LOG_LEVEL = 'WARN' | 'INFO' | 'DEBUG';
  * LoggingService for the extension
  */
 export class LoggingService {
-    private outputChannel = window.createOutputChannel(projectId);
+    private outputChannel = window.createOutputChannel('GraphaX Log');
 
     constructor() {}
 

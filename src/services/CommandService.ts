@@ -180,14 +180,14 @@ export class CommandService {
     registerCommands() {
         //#region extension
         const showLogCommand = vscode.commands.registerCommand(
-            'extension.showLog',
+            'graphax.showLog',
             () => {
                 showLogingWindowCommand(this._logger);
             }
         );
 
         const createSchemaCommand = vscode.commands.registerCommand(
-            'extension.createSchema',
+            'graphax.createSchema',
             () => {
                 showCreateSchemaInput(this._graphQLService, this._config);
             }

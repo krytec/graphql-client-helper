@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
-export const projectId = 'graphql-client-helper';
-export const version = '0.0.1';
-export const publisherId = 'flo.ortmann@web.de';
+//Default maximum query depth as it is used with graphql clients
 export const maxQueryDepth = 5;
 
 export const angularService: string = `

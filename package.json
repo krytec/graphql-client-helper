@@ -75,12 +75,12 @@
         ],
         "commands": [
             {
-                "command": "extension.createSchema",
-                "title": "Create Schema"
+                "command": "graphax.createSchema",
+                "title": "GraphaX: Create Schema"
             },
             {
-                "command": "extension.showLog",
-                "title": "Show GraphQL Helper Log"
+                "command": "graphax.showLog",
+                "title": "GraphaX: Show Log"
             },
             {
                 "command": "graphax.createRequest",
@@ -220,6 +220,68 @@
             ]
         },
         "menus": {
+            "commandPalette": [
+                {
+                    "command": "service.add",
+                    "when": "never"
+                },
+                {
+                    "command": "tree.refresh",
+                    "when": "never"
+                },
+                {
+                    "command": "tree.saveRequest",
+                    "when": "never"
+                },
+                {
+                    "command": "tree.selectField",
+                    "when": "never"
+                },
+                {
+                    "command": "list.refresh",
+                    "when": "never"
+                },
+                {
+                    "command": "list.runRequest",
+                    "when": "never"
+                },
+                {
+                    "command": "list.selectRequest",
+                    "when": "never"
+                },
+                {
+                    "command": "list.save",
+                    "when": "never"
+                },
+                {
+                    "command": "list.showRequest",
+                    "when": "never"
+                },
+                {
+                    "command": "list.delete",
+                    "when": "never"
+                },
+                {
+                    "command": "service.refresh",
+                    "when": "never"
+                },
+                {
+                    "command": "service.add",
+                    "when": "never"
+                },
+                {
+                    "command": "service.delete",
+                    "when": "never"
+                },
+                {
+                    "command": "service.request.code",
+                    "when": "never"
+                },
+                {
+                    "command": "service.request.delete",
+                    "when": "never"
+                }
+            ],
             "explorer/context": [
                 {
                     "command": "service.add",
