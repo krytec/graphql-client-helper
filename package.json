@@ -1,6 +1,10 @@
 {
     "name": "graphax-generator",
-    "displayName": "Graphax",
+    "displayName": "GraphaX",
+    "publisher": "axenton",
+    "repository": {
+        "url": "https://github.com/krytec/graphql-client-helper"
+    },
     "description": "Creates a schema and typescript types from an graphql endpoint, helps to generate queries and mutations and autogenerates services for a graphql client ",
     "version": "0.0.1",
     "engines": {
