@@ -11,7 +11,7 @@ import {
 } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { ClientService } from './ClientService';
-import { dedent } from '../utils/Utils';
+import { dedent, sleep } from '../utils/Utils';
 import * as fs from 'fs';
 import { join } from 'path';
 import {
@@ -136,28 +136,48 @@ export class CommandService {
     /**
      * Callback method that listens to the workspacefolderschangedevent
      */
-    private workspaceFolderChanged() {
-        vscode.commands.executeCommand('setContext', 'schemaLoaded', false);
-        if (vscode.workspace.workspaceFolders !== undefined) {
-            this._graphQLService.folder =
-                vscode.workspace.workspaceFolders[0].uri.fsPath;
-
-            const schemaFile = path.join(
-                this._graphQLService.folder,
-                '/schema.gql'
-            );
-
-            this._graphQLService
-                .getSchemaFromFile(schemaFile)
-                .then(schema => {
-                    this._graphQLService.createTypesFromSchema(schema);
-                    this._graphQLService.getRequestsFromSchema(schema);
-                    this._requestNodeProvider.refresh();
-                })
-                .catch((err: Error) =>
-                    vscode.window.showErrorMessage(err.message)
+    private async workspaceFolderChanged() {
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Window,
+                cancellable: false,
+                title: 'Loading Schema'
+            },
+            (progress, token) => {
+                vscode.commands.executeCommand(
+                    'setContext',
+                    'schemaLoaded',
+                    false
                 );
-        }
+                if (vscode.workspace.workspaceFolders !== undefined) {
+                    this._graphQLService.folder =
+                        vscode.workspace.workspaceFolders[0].uri.fsPath;
+
+                    const schemaFile = path.join(
+                        this._graphQLService.folder,
+                        '/schema.gql'
+                    );
+                    progress.report({ message: 'Loading schema' });
+                    this._graphQLService
+                        .getSchemaFromFile(schemaFile)
+                        .then(schema => {
+                            progress.report({ message: 'Creating types' });
+                            this._graphQLService.createTypesFromSchema(schema);
+                            progress.report({
+                                message: 'Creating Requests'
+                            });
+                            this._graphQLService.getRequestsFromSchema(schema);
+                            progress.report({ message: 'Refreshing view' });
+                            this._requestNodeProvider.refresh();
+                        })
+                        .catch((err: Error) =>
+                            vscode.window.showErrorMessage(err.message)
+                        );
+                }
+                var p = sleep(1000);
+                return p;
+            }
+        );
     }
 
     private fileSystemCallback(event, trigger) {
@@ -411,6 +431,7 @@ export class CommandService {
             }
         );
         //#endregion
+
         this._ctx.subscriptions.push(showLogCommand);
         this._ctx.subscriptions.push(createSchemaCommand);
         this._ctx.subscriptions.push(createRequestFromCodeCommand);
