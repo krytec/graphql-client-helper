@@ -7,14 +7,12 @@ import { CommandService } from './services/CommandService';
 import { LoggingService } from './services/LoggingService';
 import { StateService } from './services/StateService';
 import { RequestNodeProvider } from './provider/RequestNodeProvider';
-import { RequestService } from './services/RequestService';
 import { stringToGraphQLFormat } from './utils/Utils';
 import {
     SavedRequestNodeProvider,
     CustomRequest
 } from './provider/SavedRequestNodeProvider';
 import { ConfigurationService } from './services/ConfigurationService';
-import { ClientService } from './services/ClientService';
 import { RequestDocumentProvider } from './provider/RequestDocumentProvider';
 import { ServiceNodeProvider } from './provider/ServiceNodeProvider';
 const path = require('path');
@@ -34,18 +32,19 @@ export function activate(context: vscode.ExtensionContext) {
         stateService,
         configurationService
     );
-    const clientService = new ClientService(stateService, configurationService);
-    //clientService.executeRequest(query, vars);
     // Create a node provider and adds a new TreeView to vscode
     const requestNodeProvider = new RequestNodeProvider(stateService);
     const savedRequestNodeProvider = new SavedRequestNodeProvider(stateService);
     const serviceNodeProvider = new ServiceNodeProvider(stateService);
-    const requestService = new RequestService(requestNodeProvider);
     vscode.window.registerTreeDataProvider(
         'requestView',
         savedRequestNodeProvider
     );
     vscode.window.registerTreeDataProvider('serviceView', serviceNodeProvider);
+    vscode.window.registerTreeDataProvider(
+        'schemaExplorer',
+        requestNodeProvider
+    );
     const requestDocumentProvider = new RequestDocumentProvider();
     vscode.workspace.registerTextDocumentContentProvider(
         'request',
@@ -56,7 +55,6 @@ export function activate(context: vscode.ExtensionContext) {
         stateService,
         configurationService,
         graphQLService,
-        clientService,
         requestNodeProvider,
         serviceNodeProvider,
         savedRequestNodeProvider

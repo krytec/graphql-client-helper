@@ -10,16 +10,10 @@ import {
     parse,
     print,
     OperationDefinitionNode,
-    FieldNode
+    FieldNode,
+    GraphQLNonNull,
+    GraphQLList
 } from 'graphql';
-import {
-    constructType,
-    constructScalarField,
-    constructEnumType,
-    constructInputType,
-    constructQuery,
-    constructMutation
-} from '../utils/MappingUtils';
 import { LoggingService } from './LoggingService';
 import * as vscode from 'vscode';
 import { StateService } from './StateService';
@@ -36,10 +30,14 @@ import { ConfigurationService, Framework } from './ConfigurationService';
 import { resolve } from 'dns';
 import { angularService, angularComponent } from '../constants';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
-import request from 'graphql-request';
+import request, { GraphQLClient } from 'graphql-request';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
 import { mkdir, readdirSync, statSync } from 'fs';
 import { basename, join } from 'path';
+import { TypeWrapper } from '../graphqlwrapper/TypeWrapper';
+import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
+import { ScalarFieldWrapper } from '../graphqlwrapper/ScalarWrapper';
+import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 
 const fetch = require('node-fetch');
 const {
@@ -56,9 +54,16 @@ const path = require('path');
 export class GraphQLService {
     private _folder: string;
     private _logger: LoggingService;
+    private _graphQLClient: GraphQLClient;
+
+    private _onDidExecuteRequest: vscode.EventEmitter<
+        number
+    > = new vscode.EventEmitter<number>();
+    public readonly onDidExecuteRequest: vscode.Event<number> = this
+        ._onDidExecuteRequest.event;
 
     /**
-     * Constructor for GraphQLUtils
+     * Constructor for GraphQLService
      * @param folder the folder where the generated files should be saved
      */
     constructor(
@@ -72,6 +77,17 @@ export class GraphQLService {
             if (curWorkspace !== undefined) {
                 this.folder = curWorkspace[0].uri.fsPath;
             }
+        });
+
+        this._graphQLClient = new GraphQLClient(this._config.endpoint);
+        this._config.headers.forEach(obj => {
+            for (let [key, value] of Object.entries(obj)) {
+                this._graphQLClient.setHeader(key, value);
+            }
+        });
+        this._config.onDidChangeEndpoint(e => this.reload());
+        this._config.onDidChangeHeaders(e => {
+            this.reload();
         });
     }
 
@@ -188,13 +204,13 @@ export class GraphQLService {
             .filter(type => !type.name.startsWith('__'));
         types.forEach(element => {
             if (element instanceof GraphQLObjectType) {
-                this._state.types.push(constructType(element));
+                this._state.types.push(this.constructType(element));
             } else if (element instanceof GraphQLScalarType) {
-                this._state.scalar.addField(constructScalarField(element));
+                this._state.scalar.addField(this.constructScalarField(element));
             } else if (element instanceof GraphQLEnumType) {
-                this._state.enums.push(constructEnumType(element));
+                this._state.enums.push(this.constructEnumType(element));
             } else if (element instanceof GraphQLInputObjectType) {
-                this._state.inputTypes.push(constructInputType(element));
+                this._state.inputTypes.push(this.constructInputType(element));
             }
         });
     }
@@ -241,7 +257,7 @@ export class GraphQLService {
                 .sort((type1, type2) => type1.name.localeCompare(type2.name))
                 .filter(type => !type.name.toLowerCase().startsWith('query'));
             query.forEach(query => {
-                const queryWrapper = constructQuery(query);
+                const queryWrapper = this.constructQuery(query);
                 const inputType = new InputTypeWrapper(
                     queryWrapper.Name + 'InputType',
                     `Input for ${queryWrapper.Name}Query`
@@ -260,7 +276,7 @@ export class GraphQLService {
                     type => !type.name.toLowerCase().startsWith('mutation')
                 );
             mutation.forEach(mutation => {
-                const mutationWrapper = constructMutation(mutation);
+                const mutationWrapper = this.constructMutation(mutation);
                 const inputType = new InputTypeWrapper(
                     mutationWrapper.Name + 'InputType',
                     `Input for ${mutationWrapper.Name}Mutation`
@@ -712,6 +728,53 @@ export class GraphQLService {
             }
         });
     }
+    //#endregion
+
+    //#region Client
+    /**
+     * Method to reload the graphqlclient with a new endpoint
+     */
+    private reload() {
+        this._graphQLClient = new GraphQLClient(this._config.endpoint);
+        this._config.headers.forEach(obj => {
+            for (let [key, value] of Object.entries(obj)) {
+                this._graphQLClient.setHeader(key, value);
+            }
+        });
+    }
+
+    /**
+     * Method to execute a given request and shows output in an unsaved file
+     * @param request Request as string
+     * @param args Arguments as json object
+     */
+    async executeRequest(request: string, args): Promise<string> {
+        var start = performance.now();
+        var end;
+        let requestPromise: Promise<string> | undefined;
+        await this._graphQLClient
+            .request(request, args)
+            .then(data => {
+                requestPromise = Promise.resolve(
+                    JSON.stringify(data, undefined, 2)
+                );
+            })
+            .catch(error => {
+                requestPromise = Promise.reject(
+                    JSON.stringify(error, undefined, 2)
+                );
+            })
+            .finally(() => {
+                end = performance.now();
+                this._onDidExecuteRequest.fire(end - start);
+            });
+        if (requestPromise !== undefined) {
+            return requestPromise;
+        } else {
+            throw new Error('Graphax Client failed to run request');
+        }
+    }
+    //#endregion
 
     //#region Helperfunctions
     /**
@@ -811,6 +874,192 @@ export class GraphQLService {
             }
             reject(false);
         });
+    }
+
+    /**
+     * Method to construct a TypeWrapper from a GraphQLObjectType
+     * @param type GraphQLObjectType
+     */
+    private constructType(type: GraphQLObjectType): TypeWrapper {
+        let constructedType = new TypeWrapper(
+            type.name,
+            type.description ? type.description : undefined
+        );
+        let fields = Object.values(type.getFields());
+        fields.forEach(element => {
+            let field: FieldWrapper = this.constructField(element);
+            constructedType.addField(field);
+        });
+
+        return constructedType;
+    }
+
+    /**
+     * Method to construct a FieldWrapper from a GraphQLType
+     * @param field Field of a GraphQLType
+     */
+    private constructField(field: any): FieldWrapper {
+        let name = field.name;
+        let nonNull = false;
+        let isScalar = false;
+        let ofType = '';
+        let isList = false;
+        let description = field.description;
+        let args = field.args;
+        if (field.type instanceof GraphQLNonNull) {
+            nonNull = true;
+            if (
+                field.type.ofType instanceof GraphQLObjectType ||
+                field.type.ofType instanceof GraphQLInputObjectType
+            ) {
+                ofType = field.type.ofType.name;
+                nonNull = true;
+            } else if (field.type.ofType instanceof GraphQLScalarType) {
+                isScalar = true;
+                ofType = field.type.ofType.name;
+            } else if (field.type.ofType instanceof GraphQLEnumType) {
+                ofType = field.type.ofType.name;
+            } else if (field.type.ofType instanceof GraphQLList) {
+                ofType = field.type.ofType.ofType.name;
+                isList = true;
+            }
+        } else if (field.type instanceof GraphQLScalarType) {
+            isScalar = true;
+            ofType = field.type.name;
+        } else if (field.type instanceof GraphQLEnumType) {
+            ofType = field.type.name;
+        } else if (field.type instanceof GraphQLList) {
+            isList = true;
+            if (field.type.ofType instanceof GraphQLNonNull) {
+                var listtype = field.type.ofType.ofType;
+                nonNull = true;
+                if (
+                    listtype instanceof GraphQLObjectType ||
+                    listtype instanceof GraphQLInputObjectType
+                ) {
+                    ofType = listtype.name;
+                    nonNull = true;
+                } else if (listtype instanceof GraphQLScalarType) {
+                    isScalar = true;
+                    ofType = listtype.name;
+                } else if (listtype instanceof GraphQLEnumType) {
+                    ofType = listtype.name;
+                }
+            } else {
+                ofType = field.type.ofType.name;
+            }
+        } else if (
+            field.type instanceof GraphQLObjectType ||
+            field.type instanceof GraphQLInputObjectType
+        ) {
+            ofType = field.type.name;
+        }
+        const fieldWrapper = new FieldWrapper(
+            name,
+            nonNull,
+            isScalar,
+            isList,
+            ofType,
+            description
+        );
+
+        if (args !== undefined && args.length > 0) {
+            args.forEach(argument => {
+                fieldWrapper.args.push(this.constructField(argument));
+            });
+        }
+
+        return fieldWrapper;
+    }
+
+    /**
+     * Method to create a Scalar from a GraphQLScalarType
+     * @param scalarType GraphQLScalarType
+     */
+    private constructScalarField(
+        scalarType: GraphQLScalarType
+    ): ScalarFieldWrapper {
+        let name = scalarType.name;
+        let description = scalarType.description;
+        let type = 'any';
+        if (
+            scalarType.name === 'Int' ||
+            scalarType.name === 'Float' ||
+            scalarType.name === 'Double'
+        ) {
+            type = 'number';
+        } else if (scalarType.name === 'String' || scalarType.name === 'ID') {
+            type = 'string';
+        } else if (scalarType.name === 'Boolean') {
+            type = 'boolean';
+        }
+        return new ScalarFieldWrapper(
+            name,
+            type,
+            description ? description : undefined
+        );
+    }
+
+    /**
+     * Creates a InputTypeWrapper from a GraphQLInputObjectType and returns it
+     * @param inputType GraphQLInputObjectType
+     */
+    private constructInputType(inputType: GraphQLInputObjectType) {
+        let inputTypeWrapper = new InputTypeWrapper(
+            inputType.name,
+            inputType.description ? inputType.description : undefined
+        );
+
+        let fields = Object.values(inputType.getFields());
+        fields.forEach(field => {
+            var fieldWrapper = this.constructField(field);
+            inputTypeWrapper.addField(fieldWrapper);
+        });
+        return inputTypeWrapper;
+    }
+
+    /**
+     * Method to construct a EnumWrapper from a GraphQLEnumType
+     * @param enumType GraphQLEnumType
+     */
+    private constructEnumType(enumType: GraphQLEnumType) {
+        return new EnumWrapper(
+            enumType.name,
+            enumType.getValues(),
+            enumType.description ? enumType.description : undefined
+        );
+    }
+
+    /**
+     * Method to construct a QueryWrapper from a query object
+     * @param query Query
+     */
+    private constructQuery(query: any): QueryWrapper {
+        var queryAsField = this.constructField(query);
+        const queryWrapper = new QueryWrapper(
+            queryAsField.name,
+            queryAsField.ofType,
+            queryAsField.isList,
+            queryAsField.description
+        );
+        queryWrapper.args = queryAsField.args;
+        return queryWrapper;
+    }
+
+    /**
+     * Method to construct a MutationWrapper from a mutation object
+     * @param mutation mutation
+     */
+    private constructMutation(mutation: any): MutationWrapper {
+        var mutationAsField = this.constructField(mutation);
+        const mutationWrapper = new MutationWrapper(
+            mutationAsField.name,
+            mutationAsField.ofType,
+            mutationAsField.isList,
+            mutationAsField.description
+        );
+        mutationWrapper.args = mutationAsField.args;
+        return mutationWrapper;
     }
     //#endregion
 

@@ -10,7 +10,6 @@ import {
     SavedRequestNodeProvider
 } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
-import { ClientService } from './ClientService';
 import { dedent, sleep } from '../utils/Utils';
 import * as fs from 'fs';
 import { join } from 'path';
@@ -47,7 +46,6 @@ export class CommandService {
         private _stateService: StateService,
         private _config: ConfigurationService,
         private _graphQLService: GraphQLService,
-        private _client: ClientService,
         private _requestNodeProvider: RequestNodeProvider,
         private _serviceNodeProvider: ServiceNodeProvider,
         private _savedRequestNodeProvider: SavedRequestNodeProvider
@@ -81,7 +79,7 @@ export class CommandService {
             );
         });
 
-        _client.onDidExecuteRequest(ms =>
+        _graphQLService.onDidExecuteRequest(ms =>
             vscode.window.showInformationMessage(
                 'Request finished after ' + ms + 'ms.'
             )
@@ -278,7 +276,7 @@ export class CommandService {
         const runRequestCommand = vscode.commands.registerCommand(
             'list.runRequest',
             (element: CustomRequest) =>
-                executeRequestCommand(element, this._client)
+                executeRequestCommand(element, this._graphQLService)
         );
 
         const deleteRequestCommand = vscode.commands.registerCommand(

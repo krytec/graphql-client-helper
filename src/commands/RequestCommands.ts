@@ -1,5 +1,4 @@
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
-import { ClientService } from '../services/ClientService';
 import * as vscode from 'vscode';
 import { CircularQuickInput } from '../provider/CircularQuickInputProvider';
 import { StateService } from '../services/StateService';
@@ -16,7 +15,7 @@ import { OperationDefinitionNode, FieldNode, graphql } from 'graphql';
  */
 export async function executeRequestCommand(
     node: CustomRequest,
-    client: ClientService
+    client: GraphQLService
 ) {
     const quickInput = new CircularQuickInput(node.label, node.args);
     await quickInput.show().then(vars => {
