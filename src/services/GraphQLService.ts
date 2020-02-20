@@ -234,12 +234,10 @@ export class GraphQLService {
                     .join('\n')
             );
         try {
-            await fs.writeFile(
-                path.join(this._folder, 'schemaTypes.ts'),
-                types,
-                'utf-8'
-            );
-            return Promise.resolve(path.join(this._folder, 'schemaTypes.ts'));
+            var filePath = path.join(this._folder, 'schemaTypes.ts');
+            await fs.writeFile(filePath, types, 'utf-8');
+            this._logger.logDebug('Created file: ' + filePath);
+            return Promise.resolve(filePath);
         } catch (e) {
             throw new Error('Could not create file schemaTypes.ts');
         }
@@ -384,14 +382,18 @@ export class GraphQLService {
                             ).then(file => {
                                 files.push(file);
                             });
-                            this.createAngularService(
+                            await this.createAngularService(
                                 serviceName,
                                 requests
-                            ).then(files.push);
-                            this.createAngularComponent(
+                            ).then(file => {
+                                files.push(file);
+                            });
+                            await this.createAngularComponent(
                                 serviceName,
                                 requests
-                            ).then(files.push);
+                            ).then(file => {
+                                files.push(file);
+                            });
                             // Create service tree item from requests
                             const service = new ServiceNode(
                                 serviceName,
@@ -418,11 +420,13 @@ export class GraphQLService {
                         );
                         try {
                             fs.mkdir(folderPath);
-                            this.createRequests(
+                            await this.createRequests(
                                 serviceName,
                                 requests,
                                 folderPath
-                            );
+                            ).then(file => {
+                                files.push(file);
+                            });
                             // Create service tree item from requests
                             const service = new ServiceNode(
                                 serviceName,
@@ -441,6 +445,7 @@ export class GraphQLService {
                             );
                         }
                 }
+                files.forEach(file => this._logger.logDebug('Created ' + file));
                 resolve(files);
             }
         });

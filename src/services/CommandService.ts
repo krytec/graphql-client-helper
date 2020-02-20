@@ -167,6 +167,8 @@ export class CommandService {
                             this._graphQLService.getRequestsFromSchema(schema);
                             progress.report({ message: 'Refreshing view' });
                             this._requestNodeProvider.refresh();
+                            this._savedRequestNodeProvider.refresh();
+                            this._serviceNodeProvider.refresh();
                         })
                         .catch((err: Error) =>
                             vscode.window.showErrorMessage(err.message)

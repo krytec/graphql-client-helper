@@ -1,13 +1,17 @@
 import { window } from 'vscode';
 
-type LOG_LEVEL = 'WARN' | 'INFO' | 'DEBUG';
+enum LOG_LEVEL {
+    'WARN',
+    'INFO',
+    'DEBUG'
+}
 
 /**
  * LoggingService for the extension
  */
 export class LoggingService {
     private outputChannel = window.createOutputChannel('GraphaX Log');
-
+    private loglevel: LOG_LEVEL = LOG_LEVEL.DEBUG;
     constructor() {}
 
     /**
@@ -16,9 +20,9 @@ export class LoggingService {
      * @param data Logging data
      */
     public logInfo(msg: string, data?: Object): void {
-        this.logMessage(msg, 'INFO');
+        this.logMessage(msg, LOG_LEVEL.INFO);
         if (data) {
-            this.logObject(data, 'INFO');
+            this.logObject(data, LOG_LEVEL.INFO);
         }
     }
 
@@ -28,9 +32,9 @@ export class LoggingService {
      * @param data Logging data
      */
     public logWarn(msg: string, data?: Object): void {
-        this.logMessage(msg, 'WARN');
+        this.logMessage(msg, LOG_LEVEL.WARN);
         if (data) {
-            this.logObject(data, 'WARN');
+            this.logObject(data, LOG_LEVEL.WARN);
         }
     }
 
@@ -40,9 +44,9 @@ export class LoggingService {
      * @param data Logging data
      */
     public logDebug(msg: string, data?: Object): void {
-        this.logMessage(msg, 'DEBUG');
+        this.logMessage(msg, LOG_LEVEL.DEBUG);
         if (data) {
-            this.logObject(data, 'DEBUG');
+            this.logObject(data, LOG_LEVEL.DEBUG);
         }
     }
 
@@ -59,9 +63,13 @@ export class LoggingService {
      * @param level The current loglevel
      */
     private logObject(data: Object, level: LOG_LEVEL): void {
-        const titel = new Date().toLocaleTimeString();
-        const msg = JSON.stringify(data, null, 2);
-        this.outputChannel.appendLine(`${titel}: ${level}: ${msg}`);
+        if (this.loglevel <= level) {
+            const titel = new Date().toLocaleTimeString();
+            const msg = JSON.stringify(data, null, 2);
+            this.outputChannel.appendLine(
+                `${titel}: ${LOG_LEVEL[level]}: ${msg}`
+            );
+        }
     }
 
     /**
@@ -70,7 +78,11 @@ export class LoggingService {
      * @param level The current loglevel
      */
     private logMessage(msg: string, level: LOG_LEVEL): void {
-        const titel = new Date().toLocaleTimeString();
-        this.outputChannel.appendLine(`LOG [${level} ${titel}]: ${msg}`);
+        if (this.loglevel <= level) {
+            const titel = new Date().toLocaleTimeString();
+            this.outputChannel.appendLine(
+                `LOG [${LOG_LEVEL[level]} ${titel}]: ${msg}`
+            );
+        }
     }
 }
