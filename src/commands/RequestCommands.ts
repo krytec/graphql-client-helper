@@ -18,8 +18,8 @@ export async function executeRequestCommand(
     client: GraphQLService
 ) {
     const quickInput = new CircularQuickInput(node.label, node.args);
-    await quickInput.show().then(vars => {
-        client
+    await quickInput.show().then(async vars => {
+        await client
             .executeRequest(node.request, JSON.parse(vars))
             .then(async data => {
                 let uri = vscode.Uri.parse(
@@ -29,8 +29,12 @@ export async function executeRequestCommand(
                 await vscode.window.showTextDocument(doc, { preview: false });
             })
             .catch(error => {
-                var obj = JSON.parse(error);
-                vscode.window.showErrorMessage(obj.response.errors[0].message);
+                if (error !== undefined) {
+                    var obj = JSON.parse(error);
+                    vscode.window.showErrorMessage(
+                        obj.response.errors[0].message
+                    );
+                }
             });
     });
 }

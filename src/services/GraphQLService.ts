@@ -28,7 +28,10 @@ import {
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { resolve } from 'dns';
-import { angularService, angularComponent } from '../constants';
+import {
+    angularServiceTemplate,
+    angularComponentTemplate
+} from '../templates/Angulartemplate';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import request, { GraphQLClient } from 'graphql-request';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
@@ -38,13 +41,13 @@ import { TypeWrapper } from '../graphqlwrapper/TypeWrapper';
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import { ScalarFieldWrapper } from '../graphqlwrapper/ScalarWrapper';
 import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
-
 const fetch = require('node-fetch');
 const {
     introspectionQuery,
     buildClientSchema,
     printSchema
 } = require('graphql');
+const { performance } = require('perf_hooks');
 const { promises: fs } = require('fs');
 const path = require('path');
 
@@ -488,7 +491,7 @@ export class GraphQLService {
         serviceName: string,
         requests: CustomRequest[]
     ) {
-        let content: string = angularService;
+        let content: string = angularServiceTemplate;
         let imports = `import { ${requests
             .map(request => request.label)
             .join(', ')} } from './${toTitleCase(serviceName)}Requests'`;
@@ -564,7 +567,7 @@ export class GraphQLService {
 `;
             })
             .join('');
-        let content = angularComponent
+        let content = angularComponentTemplate
             .replace(/\$myNameTitel/g, toTitleCase(componentName))
             .replace(
                 /\$myServiceTitel/g,
@@ -765,9 +768,7 @@ export class GraphQLService {
                 );
             })
             .catch(error => {
-                requestPromise = Promise.reject(
-                    JSON.stringify(error, undefined, 2)
-                );
+                requestPromise = Promise.reject(error);
             })
             .finally(() => {
                 end = performance.now();
