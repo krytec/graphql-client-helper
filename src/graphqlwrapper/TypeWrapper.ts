@@ -81,7 +81,7 @@ export type ${this._name} = ${interfacesAsString} {
      * @returns String representation of the object
      */
     toString(): string {
-        return `SchemaType (name:${this.name}, description: ${this._description}, fields: ${this._fields})`;
+        return `TypeWrapper (name:${this.name}, description: ${this._description}, fields: ${this._fields})`;
     }
 
     get name() {

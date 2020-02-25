@@ -30,6 +30,10 @@ export class CircularQuickInput {
         ];
     }
 
+    /**
+     * Method to create an ArgumentItem out of a FieldWrapper
+     * @param arg FieldWrapper to be presented as an ArgumentItem
+     */
     private getArgumentItem(arg: FieldWrapper): ArgumentItem {
         var argItem = new ArgumentItem(
             arg.name,

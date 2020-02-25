@@ -17,7 +17,7 @@ export class MutationWrapper extends RequestWrapper implements GraphQLWrapper {
     }
 
     toString(): string {
-        return '';
+        return 'Mutation: ' + this.Name;
     }
 
     /**

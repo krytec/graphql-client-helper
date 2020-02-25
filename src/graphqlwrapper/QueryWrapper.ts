@@ -18,7 +18,7 @@ export class QueryWrapper extends RequestWrapper implements GraphQLWrapper {
     }
 
     toString(): string {
-        return '';
+        return 'Query: ' + this.Name;
     }
 
     /**

@@ -43,7 +43,9 @@ export class InterfaceWrapper implements GraphQLWrapper {
      * Basic toString method to represent an interfacewrapper as string
      */
     toString(): string {
-        throw new Error('Method not implemented.');
+        return `InterfaceWrapper(name:${this.name}, description: ${
+            this._description
+        }, fields: ${this._fields.map(field => field.toString()).join(',')})`;
     }
 
     /**
