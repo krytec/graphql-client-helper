@@ -15,9 +15,10 @@ import { OperationDefinitionNode, FieldNode, graphql } from 'graphql';
  */
 export async function executeRequestCommand(
     node: CustomRequest,
-    client: GraphQLService
+    client: GraphQLService,
+    state: StateService
 ) {
-    const quickInput = new CircularQuickInput(node.label, node.args);
+    const quickInput = new CircularQuickInput(state, node.label, node.args);
     await quickInput.show().then(async vars => {
         await client
             .executeRequest(node.request, JSON.parse(vars))
@@ -30,10 +31,7 @@ export async function executeRequestCommand(
             })
             .catch(error => {
                 if (error !== undefined) {
-                    var obj = JSON.parse(error);
-                    vscode.window.showErrorMessage(
-                        obj.response.errors[0].message
-                    );
+                    vscode.window.showErrorMessage(error);
                 }
             });
     });

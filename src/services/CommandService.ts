@@ -278,7 +278,11 @@ export class CommandService {
         const runRequestCommand = vscode.commands.registerCommand(
             'list.runRequest',
             (element: CustomRequest) =>
-                executeRequestCommand(element, this._graphQLService)
+                executeRequestCommand(
+                    element,
+                    this._graphQLService,
+                    this._stateService
+                )
         );
 
         const deleteRequestCommand = vscode.commands.registerCommand(

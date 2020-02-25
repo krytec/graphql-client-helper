@@ -2,11 +2,14 @@ import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import * as vscode from 'vscode';
 import { join } from 'path';
 import { resolve } from 'dns';
+import { StateService } from '../services/StateService';
+import { getVSCodeDownloadUrl } from 'vscode-test/out/util';
 /**
  * CircularQuickInput class to create a quick input that provides input value for every argument
  */
 export class CircularQuickInput {
     private _argumentGroup: ArgumentItem[];
+    private _currentArgumentGroup: ArgumentItem[];
     private _quickPick?: vscode.QuickPick<ArgumentItem>;
     private _buttons: vscode.QuickInputButton[];
     /**
@@ -14,21 +17,53 @@ export class CircularQuickInput {
      * @param _titel Titel of the QuickInput
      * @param args Arguments
      */
-    constructor(private _titel, private args: FieldWrapper[]) {
-        this._argumentGroup = args.map(
-            arg =>
-                new ArgumentItem(
-                    arg.name,
-                    '',
-                    arg.ofType,
-                    arg.nonNull,
-                    arg.description
-                )
-        );
+    constructor(
+        private _state: StateService,
+        private _titel,
+        private args: FieldWrapper[]
+    ) {
+        this._argumentGroup = args.map(arg => this.getArgumentItem(arg));
+        this._currentArgumentGroup = this._argumentGroup;
         this._buttons = [
             new FilterArgumentButton('', 'Hide nullable arguments'),
             new RunRequestButton('', 'Run Request')
         ];
+    }
+
+    private getArgumentItem(arg: FieldWrapper): ArgumentItem {
+        var argItem = new ArgumentItem(
+            arg.name,
+            '',
+            arg.ofType,
+            arg.nonNull,
+            arg.description
+        );
+        if (!arg.isScalar) {
+            this._state.inputTypes.forEach(input => {
+                if (input.name === arg.ofType) {
+                    input.field.forEach(inputField => {
+                        argItem.addField(this.getArgumentItem(inputField));
+                    });
+                }
+            });
+            this._state.enums.forEach(enums => {
+                if (enums.name === arg.ofType) {
+                    argItem.isEnum = true;
+                    enums.values.forEach(val =>
+                        argItem.addField(
+                            new ArgumentItem(
+                                val.name,
+                                '',
+                                'EnumValue',
+                                true,
+                                enums.description
+                            )
+                        )
+                    );
+                }
+            });
+        }
+        return argItem;
     }
 
     /**
@@ -36,7 +71,7 @@ export class CircularQuickInput {
      */
     private createQuickPick(): vscode.QuickPick<ArgumentItem> {
         const input = vscode.window.createQuickPick<ArgumentItem>();
-        input.items = this._argumentGroup.sort((x, y) => {
+        input.items = this._currentArgumentGroup.sort((x, y) => {
             return x.isSet === y.isSet ? 0 : x.isSet ? 1 : -1;
         });
         input.placeholder = `Please select an argument:`;
@@ -70,15 +105,15 @@ export class CircularQuickInput {
                                 if (this._quickPick !== undefined) {
                                     if (
                                         this._quickPick.items.length ===
-                                        this._argumentGroup.length
+                                        this._currentArgumentGroup.length
                                     ) {
-                                        this._quickPick.items = this._argumentGroup.filter(
+                                        this._quickPick.items = this._currentArgumentGroup.filter(
                                             item => item.nonNull === true
                                         );
                                         (button as FilterArgumentButton).switch();
                                         this._quickPick.buttons = this._buttons;
                                     } else {
-                                        this._quickPick.items = this._argumentGroup;
+                                        this._quickPick.items = this._currentArgumentGroup;
                                         (button as FilterArgumentButton).switch();
                                         this._quickPick.buttons = this._buttons;
                                     }
@@ -106,33 +141,53 @@ export class CircularQuickInput {
         if (returnValue instanceof ArgumentItem) {
             let item: ArgumentItem = returnValue;
             return new Promise<string>(async (resolve, reject) => {
-                await vscode.window
-                    .showInputBox({
-                        placeHolder: item.value,
-                        prompt: item.nonNull
-                            ? 'Please provide a value for the required argument ' +
-                              item.name +
-                              '!'
-                            : 'Please provide a value for the optional argument ' +
-                              item.name,
-                        validateInput: text => {
-                            return this.validateType(item as ArgumentItem, text)
-                                ? null
-                                : 'Invalid type for argument of type: ' +
-                                      item.ofType;
-                        }
-                    })
-                    .then(async value => {
-                        if (value?.trim() === '' && item.nonNull === false) {
-                            value = 'null';
-                        }
-                        if (value !== undefined) {
-                            item.value = value;
-                            resolve(this.show());
-                        } else {
-                            resolve(this.show());
-                        }
-                    });
+                if (item.fields) {
+                    this._currentArgumentGroup = item.fields;
+                    resolve(this.show());
+                } else if (item.ofType === 'EnumValue') {
+                    this._currentArgumentGroup.forEach(
+                        field => (field.value = '')
+                    );
+                    item.value = 'selected';
+                    this._currentArgumentGroup = this._argumentGroup;
+                    resolve(this.show());
+                } else {
+                    await vscode.window
+                        .showInputBox({
+                            placeHolder: item.value,
+                            prompt: item.nonNull
+                                ? 'Please provide a value for the required argument ' +
+                                  item.name +
+                                  '!'
+                                : 'Please provide a value for the optional argument ' +
+                                  item.name,
+                            validateInput: text => {
+                                return this.validateType(
+                                    item as ArgumentItem,
+                                    text
+                                )
+                                    ? null
+                                    : 'Invalid type for argument of type: ' +
+                                          item.ofType;
+                            }
+                        })
+                        .then(async value => {
+                            if (
+                                value?.trim() === '' &&
+                                item.nonNull === false
+                            ) {
+                                value = 'null';
+                            }
+                            if (value !== undefined) {
+                                item.value = value;
+                                this._currentArgumentGroup = this._argumentGroup;
+                                resolve(this.show());
+                            } else {
+                                this._currentArgumentGroup = this._argumentGroup;
+                                resolve(this.show());
+                            }
+                        });
+                }
             });
         } else {
             return new Promise<string>(async (resolve, reject) => {
@@ -212,17 +267,16 @@ export class CircularQuickInput {
                 return false;
             }
         } else {
-            try {
-                JSON.parse(value);
-                return true;
-            } catch (err) {
-                return false;
+            if (arg.nonNull) {
+                try {
+                    JSON.parse(value);
+                    return true;
+                } catch (err) {
+                    return false;
+                }
             }
+            return true;
         }
-        if (arg.nonNull) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -240,8 +294,29 @@ export class CircularQuickInput {
             return `"${arg.name}": ${Number.parseInt(arg.value)}`;
         } else if (arg.ofType === 'Float') {
             return `"${arg.name}": ${Number.parseFloat(arg.value)}`;
+        } else if (arg.ofType === 'String') {
+            return `"${arg.name}": ${arg.value}`;
+        } else if (arg.ofType === 'EnumValue') {
+            if (arg.isSet) {
+                return `"${arg.name}"`;
+            } else {
+                return '';
+            }
+        } else {
+            if (arg.fields && !arg.isEnum) {
+                arg.value =
+                    '{' +
+                    arg.fields
+                        .map(field => this.argToString(field))
+                        .join(', ') +
+                    '}';
+            } else if (arg.fields && arg.isEnum) {
+                arg.value = arg.fields
+                    .map(field => this.argToString(field))
+                    .join('');
+            }
+            return `"${arg.name}": ${arg.value}`;
         }
-        return `"${arg.name}": "${arg.value}"`;
     }
 }
 
@@ -369,6 +444,8 @@ class RunRequestButton implements vscode.QuickInputButton {
  * ArgumentItem class that represents an argument as QuickPickItem
  */
 class ArgumentItem implements vscode.QuickPickItem {
+    private _fields?: Array<ArgumentItem>;
+    private _isEnum: boolean = false;
     constructor(
         private _key: string,
         private _value: string,
@@ -381,14 +458,38 @@ class ArgumentItem implements vscode.QuickPickItem {
     ) {}
 
     get label(): string {
-        return `${this._key}: ${this._value}`;
+        return `${this._key} ${
+            this._value !== '' ? `: ${this._value}` : `- Type : ${this._ofType}`
+        }`;
     }
 
     get isSet(): boolean {
         if (this._value !== '' && this._value !== undefined) {
             return true;
+        } else if (this._fields) {
+            let isFieldSet = false;
+            this.fields?.forEach(field => {
+                if (field.nonNull) {
+                    if (field.isSet) {
+                        isFieldSet = true;
+                    } else if (!field.isSet && field.ofType !== 'EnumValue') {
+                        isFieldSet = false;
+                    }
+                } else {
+                    isFieldSet = true;
+                }
+            });
+            return isFieldSet;
         }
         return false;
+    }
+
+    get isEnum(): boolean {
+        return this._isEnum;
+    }
+
+    set isEnum(value: boolean) {
+        this._isEnum = value;
     }
 
     get nonNull(): boolean {
@@ -405,6 +506,17 @@ class ArgumentItem implements vscode.QuickPickItem {
 
     get value(): string {
         return this._value;
+    }
+
+    get fields(): Array<ArgumentItem> | undefined {
+        return this._fields;
+    }
+
+    addField(field: ArgumentItem) {
+        if (this._fields === undefined) {
+            this._fields = new Array<ArgumentItem>();
+        }
+        this._fields.push(field);
     }
 
     set value(value: string) {
