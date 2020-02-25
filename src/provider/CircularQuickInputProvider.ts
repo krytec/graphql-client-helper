@@ -78,6 +78,9 @@ export class CircularQuickInput {
         input.canSelectMany = false;
         input.title = this._titel;
         input.buttons = this._buttons;
+        if (this._currentArgumentGroup !== this._argumentGroup) {
+            input.buttons = this._buttons.concat(vscode.QuickInputButtons.Back);
+        }
         return input;
     }
 
@@ -101,7 +104,7 @@ export class CircularQuickInput {
                         this._quickPick.onDidTriggerButton(button => {
                             if (button instanceof RunRequestButton) {
                                 resolve(button);
-                            } else {
+                            } else if (button instanceof FilterArgumentButton) {
                                 if (this._quickPick !== undefined) {
                                     if (
                                         this._quickPick.items.length ===
@@ -117,6 +120,11 @@ export class CircularQuickInput {
                                         (button as FilterArgumentButton).switch();
                                         this._quickPick.buttons = this._buttons;
                                     }
+                                }
+                            } else {
+                                if (this._quickPick !== undefined) {
+                                    this._quickPick.items = this._argumentGroup;
+                                    this._quickPick.buttons = this._buttons;
                                 }
                             }
                         })
@@ -180,10 +188,10 @@ export class CircularQuickInput {
                             }
                             if (value !== undefined) {
                                 item.value = value;
-                                this._currentArgumentGroup = this._argumentGroup;
+                                //this._currentArgumentGroup = this._argumentGroup;
                                 resolve(this.show());
                             } else {
-                                this._currentArgumentGroup = this._argumentGroup;
+                                //this._currentArgumentGroup = this._argumentGroup;
                                 resolve(this.show());
                             }
                         });
