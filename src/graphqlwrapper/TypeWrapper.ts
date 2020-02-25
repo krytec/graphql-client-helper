@@ -3,13 +3,14 @@ import { type } from 'os';
 import { dedent } from '../utils/Utils';
 import { FieldWrapper } from './FieldWrapper';
 import { GraphQLWrapper } from './GraphQLWrapperInterface';
+import { InterfaceWrapper } from './InterfaceWrapper';
 
 /**
  * GraphQL Type class to represent a GraphQL Type
  */
 export class TypeWrapper implements GraphQLWrapper {
     private _fields: Array<FieldWrapper>;
-
+    private _interfaces?: Array<InterfaceWrapper>;
     /**
      * Constructor for a GraphQL Type, which can have fields
      * @param name Name of the type
@@ -19,6 +20,12 @@ export class TypeWrapper implements GraphQLWrapper {
         this._fields = new Array<FieldWrapper>();
     }
 
+    addInterface(value: InterfaceWrapper) {
+        if (!this._interfaces) {
+            this._interfaces = new Array<InterfaceWrapper>();
+        }
+        this._interfaces.push(value);
+    }
     /**
      * Add a this to the type
      * key:String, value:String
@@ -47,15 +54,21 @@ export class TypeWrapper implements GraphQLWrapper {
      * @returns obj as Typescript type code as a String
      */
     toTypescriptType(): string {
+        let interfacesAsString: string = '';
         let fieldsAsString: string = this._fields
             .map(x => dedent`\n${x.toTypescriptType()},\n`)
             .map(x => x.replace(/\n/g, '\n    '))
             .join('');
+        if (this._interfaces) {
+            interfacesAsString = this._interfaces
+                .map(i => `${i.name} & `)
+                .join('');
+        }
         //? FIXME: Find a way to make this code look cleaner
         let typeAsString: string = `
 ${this._description !== undefined ? `/**${this._description}*/` : ``}
-export type ${this.name} = {
-    __typename?: '${this.name}',
+export type ${this._name} = ${interfacesAsString} {
+    __typename?: '${this._name}',
     ${fieldsAsString}
 };
         `;

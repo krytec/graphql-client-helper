@@ -211,6 +211,13 @@ export class CircularQuickInput {
             } else {
                 return false;
             }
+        } else {
+            try {
+                JSON.parse(value);
+                return true;
+            } catch (err) {
+                return false;
+            }
         }
         if (arg.nonNull) {
             return false;

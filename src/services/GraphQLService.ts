@@ -12,7 +12,8 @@ import {
     OperationDefinitionNode,
     FieldNode,
     GraphQLNonNull,
-    GraphQLList
+    GraphQLList,
+    GraphQLInterfaceType
 } from 'graphql';
 import { LoggingService } from './LoggingService';
 import * as vscode from 'vscode';
@@ -41,6 +42,8 @@ import { TypeWrapper } from '../graphqlwrapper/TypeWrapper';
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import { ScalarFieldWrapper } from '../graphqlwrapper/ScalarWrapper';
 import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
+import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
+import { Interface } from 'readline';
 const fetch = require('node-fetch');
 const {
     introspectionQuery,
@@ -206,14 +209,24 @@ export class GraphQLService {
             .sort((type1, type2) => type1.name.localeCompare(type2.name))
             .filter(type => !type.name.startsWith('__'));
         types.forEach(element => {
-            if (element instanceof GraphQLObjectType) {
-                this._state.types.push(this.constructType(element));
-            } else if (element instanceof GraphQLScalarType) {
-                this._state.scalar.addField(this.constructScalarField(element));
-            } else if (element instanceof GraphQLEnumType) {
-                this._state.enums.push(this.constructEnumType(element));
-            } else if (element instanceof GraphQLInputObjectType) {
-                this._state.inputTypes.push(this.constructInputType(element));
+            if (!element.name.startsWith('_')) {
+                if (element instanceof GraphQLObjectType) {
+                    this._state.types.push(this.constructType(element));
+                } else if (element instanceof GraphQLScalarType) {
+                    this._state.scalar.addField(
+                        this.constructScalarField(element)
+                    );
+                } else if (element instanceof GraphQLEnumType) {
+                    this._state.enums.push(this.constructEnumType(element));
+                } else if (element instanceof GraphQLInterfaceType) {
+                    this._state.interfaces.push(
+                        this.constructInterface(element)
+                    );
+                } else if (element instanceof GraphQLInputObjectType) {
+                    this._state.inputTypes.push(
+                        this.constructInputType(element)
+                    );
+                }
             }
         });
     }
@@ -225,6 +238,11 @@ export class GraphQLService {
         let maybe = 'export type Maybe<T> = T | null; \n';
         let types = maybe
             .concat(this._state.scalar.toTypescriptType())
+            .concat(
+                this._state.interfaces
+                    .map(ele => ele.toTypescriptType())
+                    .join('\n')
+            )
             .concat(
                 this._state.types.map(ele => ele.toTypescriptType()).join('\n')
             )
@@ -891,6 +909,19 @@ export class GraphQLService {
             type.name,
             type.description ? type.description : undefined
         );
+        let interfaces = Object.values(type.getInterfaces());
+        interfaces.forEach(element => {
+            let interfaceWrapper: InterfaceWrapper | undefined = undefined;
+            this._state.interfaces.forEach(i => {
+                if (i.name === element.name) {
+                    interfaceWrapper = i;
+                }
+            });
+            if (interfaceWrapper === undefined) {
+                interfaceWrapper = this.constructInterface(element);
+            }
+            constructedType.addInterface(interfaceWrapper);
+        });
         let fields = Object.values(type.getFields());
         fields.forEach(element => {
             let field: FieldWrapper = this.constructField(element);
@@ -898,6 +929,24 @@ export class GraphQLService {
         });
 
         return constructedType;
+    }
+
+    /**
+     * Method to construct an InterfaceWrapper from a GraphQLObjectType
+     * @param type GraphQLObjectType
+     */
+    private constructInterface(type: GraphQLInterfaceType): InterfaceWrapper {
+        let constructedInterface = new InterfaceWrapper(
+            type.name,
+            type.description ? type.description : undefined
+        );
+        let fields = Object.values(type.getFields());
+        fields.forEach(element => {
+            let field: FieldWrapper = this.constructField(element);
+            constructedInterface.addField(field);
+        });
+
+        return constructedInterface;
     }
 
     /**

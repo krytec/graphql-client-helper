@@ -8,6 +8,7 @@ import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
 import { Request } from '../provider/RequestNodeProvider';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
 /**
  * Service for a global extension state,
  * implements the vscode.Memento interface
@@ -72,6 +73,10 @@ export class StateService implements vscode.Memento {
         return this.get('enums') as Array<EnumWrapper>;
     }
 
+    get interfaces(): Array<InterfaceWrapper> {
+        return this.get('interfaces') as Array<InterfaceWrapper>;
+    }
+
     get inputTypes(): Array<InputTypeWrapper> {
         return this.get('inputtypes') as Array<InputTypeWrapper>;
     }
@@ -111,6 +116,7 @@ export class StateService implements vscode.Memento {
         this.update('types', new Array<TypeWrapper>());
         this.update('scalar', new ScalarWrapper());
         this.update('enums', new Array<EnumWrapper>());
+        this.update('interfaces', new Array<InterfaceWrapper>());
         this.update('inputtypes', new Array<InputTypeWrapper>());
         this.update('currentTree', new Array<Request>());
         this.update('requests', new Array<RequestWrapper>());
