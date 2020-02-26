@@ -1066,8 +1066,13 @@ const test_${request.label} = {
             } else if (field.type.ofType instanceof GraphQLEnumType) {
                 ofType = field.type.ofType.name;
             } else if (field.type.ofType instanceof GraphQLList) {
-                ofType = field.type.ofType.ofType.name;
-                isList = true;
+                if (field.type.ofType.ofType instanceof GraphQLNonNull) {
+                    ofType = field.type.ofType.ofType.ofType.name;
+                    isList = true;
+                } else {
+                    ofType = field.type.ofType.ofType.name;
+                    isList = true;
+                }
             }
         } else if (field.type instanceof GraphQLScalarType) {
             isScalar = true;

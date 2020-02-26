@@ -203,9 +203,10 @@ export class CircularQuickInput {
             });
         } else {
             return new Promise<string>(async (resolve, reject) => {
-                const nonNullArgs = this._argumentGroup.filter(
-                    item => item.isSet !== true && item.nonNull === true
-                );
+                const nonNullArgs = this._argumentGroup.filter(item => {
+                    console.log(item.isSet);
+                    this.nonNullFilter(item);
+                });
                 if (nonNullArgs.length > 0) {
                     vscode.window.showErrorMessage(
                         `Non nullable argument(s) can't be null: ${nonNullArgs
@@ -244,6 +245,23 @@ export class CircularQuickInput {
                 }
             });
         }
+    }
+
+    private nonNullFilter(argField: ArgumentItem) {
+        let isNull = true;
+
+        if (argField.fields) {
+            argField.fields.forEach(field => {
+                isNull = isNull && this.nonNullFilter(field);
+            });
+        } else {
+            if (argField.nonNull) {
+                return argField.nonNull && argField.isSet !== true;
+            } else {
+                return true;
+            }
+        }
+        return isNull;
     }
 
     /**
@@ -462,7 +480,7 @@ class ArgumentItem implements vscode.QuickPickItem {
         private _key: string,
         private _value: string,
         private _ofType: string,
-        private _nullable: boolean,
+        private _nonNull: boolean,
         public description?: string | undefined,
         detail?: string | undefined,
         picked?: boolean | undefined,
@@ -479,19 +497,41 @@ class ArgumentItem implements vscode.QuickPickItem {
         if (this._value !== '' && this._value !== undefined) {
             return true;
         } else if (this._fields) {
-            let isFieldSet = false;
-            this.fields?.forEach(field => {
-                if (field.nonNull) {
-                    if (field.isSet) {
-                        isFieldSet = true;
-                    } else if (!field.isSet && field.ofType !== 'EnumValue') {
-                        isFieldSet = false;
+            if (this._nonNull) {
+                let isFieldSet = true;
+                this._fields.forEach(field => {
+                    if (field.nonNull) {
+                        if (field.isSet) {
+                            isFieldSet = isFieldSet && true;
+                        } else if (
+                            !field.isSet &&
+                            field.ofType !== 'EnumValue'
+                        ) {
+                            isFieldSet = isFieldSet && false;
+                        }
+                    } else {
+                        isFieldSet = isFieldSet && true;
                     }
-                } else {
-                    isFieldSet = true;
-                }
-            });
-            return isFieldSet;
+                });
+                return isFieldSet;
+            } else {
+                let isFieldSet = false;
+                this._fields.forEach(field => {
+                    if (field.nonNull) {
+                        if (field.isSet) {
+                            isFieldSet = isFieldSet || true;
+                        } else if (
+                            !field.isSet &&
+                            field.ofType !== 'EnumValue'
+                        ) {
+                            isFieldSet = isFieldSet || false;
+                        }
+                    } else {
+                        isFieldSet = isFieldSet || true;
+                    }
+                });
+                return isFieldSet;
+            }
         }
         return false;
     }
@@ -505,7 +545,7 @@ class ArgumentItem implements vscode.QuickPickItem {
     }
 
     get nonNull(): boolean {
-        return this._nullable;
+        return this._nonNull;
     }
 
     get name(): string {
