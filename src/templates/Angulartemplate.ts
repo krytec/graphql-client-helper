@@ -36,3 +36,45 @@ export class $myNameTitelComponent implements OnInit {
 
 }
 `;
+
+export const angularTestTemplate = `
+import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
+import { async, ComponentFixture, TestBed,inject } from '@angular/core/testing';
+import { %serviceName% } from './Pokemon.service';
+import * as schemaTypes from 'src/graphqlschema/schemaTypes';
+
+%test_data%
+
+%test_requests%
+
+describe('%serviceName% test', () => {
+    let backend: ApolloTestingController;
+    let %serviceNameToLowerCase%: %serviceName%;
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+        imports: [
+            ApolloTestingModule,
+        ],
+        providers:[%serviceName%]
+        });
+        %serviceNameToLowerCase% = TestBed.get(%serviceName%);
+        backend = TestBed.get(ApolloTestingController);
+    });
+
+    it('should create', () => {
+        expect(backend).toBeTruthy();
+      });
+
+    %request_test%
+});
+`;
+
+export const angularTestRequestTemplate = `
+  it("should test %request% ", (done) =>{
+    %serviceNameToLowerCase%.%request%(null).subscribe(result => {
+      expect(result.data.%returnType%).toEqual(%test_dataName%);
+      done();
+    })
+    backend.expectOne(%request%).flush(%test_requestName%);
+  })
+`;

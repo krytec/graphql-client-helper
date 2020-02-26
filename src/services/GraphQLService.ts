@@ -31,7 +31,9 @@ import { ConfigurationService, Framework } from './ConfigurationService';
 import { resolve } from 'dns';
 import {
     angularServiceTemplate,
-    angularComponentTemplate
+    angularComponentTemplate,
+    angularTestRequestTemplate,
+    angularTestTemplate
 } from '../templates/Angulartemplate';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import request, { GraphQLClient } from 'graphql-request';
@@ -415,6 +417,14 @@ export class GraphQLService {
                             ).then(file => {
                                 files.push(file);
                             });
+
+                            await this.createAngularTests(
+                                serviceName,
+                                requests
+                            ).then(file => {
+                                files.push(file);
+                            });
+
                             // Create service tree item from requests
                             const service = new ServiceNode(
                                 serviceName,
@@ -595,27 +605,82 @@ export class GraphQLService {
             .replace(/\$myService/g, componentName + 'Service')
             .replace('$myFunctions', functions)
             .replace('$myVariables', variables);
+        let filePath = path.join(
+            this._folder,
+            '..',
+            'app',
+            `${componentName}-component`,
+            `${componentName}.component.ts`
+        );
+        await fs.writeFile(filePath, content, 'utf-8');
+        return Promise.resolve(filePath);
+    }
 
-        await fs.writeFile(
-            path.join(
-                this._folder,
-                '..',
-                'app',
-                `${componentName}-component`,
-                `${componentName}.component.ts`
-            ),
-            content,
-            'utf-8'
+    /**
+     * Async method to generate code for service tests
+     * @param serviceName name of the service that should be tested
+     * @param requests requests that should be tested
+     */
+    private async createAngularTests(
+        serviceName: string,
+        requests: CustomRequest[]
+    ) {
+        let imports = `import { ${requests
+            .map(request => request.label)
+            .join(', ')} } from './${toTitleCase(serviceName)}Requests'`;
+        let test_data = '';
+        let test_requests = '';
+        let tests: string = '';
+        requests.forEach(request => {
+            let mockData = this.getMockingData(request);
+            test_data = test_data.concat(`
+const test_${request.requestName}data: ${request.type} = {
+    ${mockData}
+}
+            `);
+            test_requests = test_requests.concat(`
+const test_${request.label} = {
+    "data":{
+        "${request.requestName}": test_${request.label}data,
+    }
+};
+            `);
+
+            var requestTest = angularTestRequestTemplate
+                .split('%request%')
+                .join(request.label)
+                .split('%serviceNameToLowerCase%')
+                .join(serviceName.toLowerCase() + 'Service')
+                .split('%returnType%')
+                .join(request.requestName)
+                .split('%test_dataName%')
+                .join(`test_${request.label}data`)
+                .split('%test_requestName%')
+                .join(`test_${request.label}`);
+            tests = tests.concat(requestTest);
+        });
+        let content = angularTestTemplate
+            .split('%imports%')
+            .join(imports)
+            .split('%serviceNameToLowerCase%')
+            .join(serviceName.toLowerCase() + 'Service')
+            .split('%serviceName%')
+            .join(toTitleCase(serviceName) + 'Service')
+            .split('%test_data%')
+            .join(test_data)
+            .split('%test_requests%')
+            .join(test_requests)
+            .replace(/%request_test%/, tests);
+        console.log(content);
+        let filePath = path.join(
+            this._folder,
+            '..',
+            'app',
+            `${serviceName}-component`,
+            `${serviceName}.spec.ts`
         );
-        return Promise.resolve(
-            path.join(
-                this._folder,
-                '..',
-                'app',
-                `${componentName}-component`,
-                `${componentName}.component.ts`
-            )
-        );
+        //await fs.writeFile(filePath, content, 'utf-8');
+        return Promise.resolve(filePath);
     }
 
     //#region From code creation
@@ -801,6 +866,32 @@ export class GraphQLService {
     //#endregion
 
     //#region Helperfunctions
+
+    /**
+     * Private async method to create mocking data for tests
+     * @param request CustomRequests
+     */
+    private async getMockingData(request: CustomRequest): Promise<string> {
+        let mockingData = '';
+        await this.executeRequest(request.request, null)
+            .then(data => {
+                mockingData = data;
+            })
+            .catch(err => {
+                return Promise.resolve(this.createMockingData(request));
+            });
+        return Promise.resolve(mockingData);
+    }
+
+    /**
+     * Method to create random mocking data for tests
+     * @param request the request the mocking data is created for
+     */
+    private createMockingData(request: CustomRequest): string {
+        let mockingData = '';
+        return mockingData;
+    }
+
     /**
      * Validates a request as string
      * @param selection Current selected text / request

@@ -40,7 +40,8 @@ export async function showCreateServiceCommand(
                     .showInputBox({
                         prompt: 'Please provide a name for your service',
                         validateInput: text => {
-                            return text !== undefined
+                            return text !== undefined &&
+                                text.match(/^[a-zA-Z]+[a-zA-Z0-9]*[a-zA-Z]+$/)
                                 ? null
                                 : 'Please provide a name for your service';
                         }
