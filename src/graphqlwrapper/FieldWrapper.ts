@@ -12,6 +12,7 @@ export class FieldWrapper implements GraphQLWrapper {
      * @param nonNull is field requiered
      * @param isScalar is field a graphql scalar
      * @param isList is field a list
+     * @param listNonNull is type in list requiered
      * @param ofType the type of the field
      * @param description description of the field if the field has any
      */
@@ -20,6 +21,7 @@ export class FieldWrapper implements GraphQLWrapper {
         private _nonNull: boolean,
         private _isScalar: boolean,
         private _isList: boolean,
+        private _listNonNull: boolean,
         private _ofType: string,
         private _description?: string
     ) {
@@ -98,7 +100,11 @@ export class FieldWrapper implements GraphQLWrapper {
      * Method to represent the field as an GraphQL argument
      */
     toArgs(): string {
-        return `$${this._name}:${this._ofType}${this._nonNull ? `!` : ``}`;
+        return `$${this._name}:${
+            this._isList
+                ? `[${this._ofType}${this._listNonNull ? `!` : ``}]`
+                : `${this._ofType}`
+        }${this._nonNull ? `!` : ``}`;
     }
 
     //#region getter and setter

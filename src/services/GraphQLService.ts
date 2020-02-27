@@ -1050,6 +1050,7 @@ const test_${request.label} = {
         let isScalar = false;
         let ofType = '';
         let isList = false;
+        let listNonNull = false;
         let description = field.description;
         let args = field.args;
         if (field.type instanceof GraphQLNonNull) {
@@ -1069,6 +1070,7 @@ const test_${request.label} = {
                 if (field.type.ofType.ofType instanceof GraphQLNonNull) {
                     ofType = field.type.ofType.ofType.ofType.name;
                     isList = true;
+                    listNonNull = true;
                 } else {
                     ofType = field.type.ofType.ofType.name;
                     isList = true;
@@ -1083,18 +1085,20 @@ const test_${request.label} = {
             isList = true;
             if (field.type.ofType instanceof GraphQLNonNull) {
                 var listtype = field.type.ofType.ofType;
-                nonNull = true;
+                listNonNull = true;
                 if (
                     listtype instanceof GraphQLObjectType ||
                     listtype instanceof GraphQLInputObjectType
                 ) {
                     ofType = listtype.name;
-                    nonNull = true;
+                    listNonNull = true;
                 } else if (listtype instanceof GraphQLScalarType) {
                     isScalar = true;
+                    listNonNull = true;
                     ofType = listtype.name;
                 } else if (listtype instanceof GraphQLEnumType) {
                     ofType = listtype.name;
+                    listNonNull = true;
                 }
             } else {
                 ofType = field.type.ofType.name;
@@ -1110,6 +1114,7 @@ const test_${request.label} = {
             nonNull,
             isScalar,
             isList,
+            listNonNull,
             ofType,
             description
         );

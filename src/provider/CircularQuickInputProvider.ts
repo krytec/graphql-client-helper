@@ -219,7 +219,7 @@ export class CircularQuickInput {
                         if (!item.isSet) {
                             item.value = 'null';
                         } else {
-                            if (item.fields) {
+                            if (item.fields && !item.isEnum) {
                                 this.setArgumentsNull(item.fields);
                             }
                         }
@@ -257,12 +257,18 @@ export class CircularQuickInput {
      */
     private nonNullFilter(argField: ArgumentItem) {
         if (argField.isSet) {
+            if (argField.isEnum) {
+                return false;
+            }
             if (argField.fields) {
                 return this.hasNullFields(argField.fields);
             } else {
                 return false;
             }
         } else {
+            if (argField.nonNull) {
+                return true;
+            }
             return false;
         }
     }
