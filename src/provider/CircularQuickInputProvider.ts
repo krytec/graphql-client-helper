@@ -4,6 +4,7 @@ import { join } from 'path';
 import { resolve } from 'dns';
 import { StateService } from '../services/StateService';
 import { getVSCodeDownloadUrl } from 'vscode-test/out/util';
+import { isNull } from 'util';
 /**
  * CircularQuickInput class to create a quick input that provides input value for every argument
  */
@@ -59,7 +60,7 @@ export class CircularQuickInput {
                                 val.name,
                                 '',
                                 'EnumValue',
-                                true,
+                                argItem.nonNull,
                                 enums.description
                             )
                         )
@@ -203,10 +204,9 @@ export class CircularQuickInput {
             });
         } else {
             return new Promise<string>(async (resolve, reject) => {
-                const nonNullArgs = this._argumentGroup.filter(item => {
-                    console.log(item.isSet);
-                    this.nonNullFilter(item);
-                });
+                const nonNullArgs = this._argumentGroup.filter(item =>
+                    this.nonNullFilter(item)
+                );
                 if (nonNullArgs.length > 0) {
                     vscode.window.showErrorMessage(
                         `Non nullable argument(s) can't be null: ${nonNullArgs
@@ -218,6 +218,10 @@ export class CircularQuickInput {
                     this._argumentGroup.forEach(item => {
                         if (!item.isSet) {
                             item.value = 'null';
+                        } else {
+                            if (item.fields) {
+                                this.setArgumentsNull(item.fields);
+                            }
                         }
                     });
                     const args =
@@ -247,21 +251,57 @@ export class CircularQuickInput {
         }
     }
 
+    /**
+     * Filter method to check if an non nullable argument is null
+     * @param argField Field that should be filtered
+     */
     private nonNullFilter(argField: ArgumentItem) {
-        let isNull = true;
-
-        if (argField.fields) {
-            argField.fields.forEach(field => {
-                isNull = isNull && this.nonNullFilter(field);
-            });
-        } else {
-            if (argField.nonNull) {
-                return argField.nonNull && argField.isSet !== true;
+        if (argField.isSet) {
+            if (argField.fields) {
+                return this.hasNullFields(argField.fields);
             } else {
-                return true;
+                return false;
             }
+        } else {
+            return false;
         }
+    }
+
+    /**
+     * Method to check through the ArgumentItem list
+     * and check if a field is set and still has non nullable values that are null
+     * @param argItem ArgumentItem list
+     */
+    private hasNullFields(argItem: ArgumentItem[]) {
+        let isNull = false;
+        argItem.forEach(field => {
+            if (field.isSet) {
+                if (field.fields) {
+                    isNull = isNull || this.hasNullFields(field.fields);
+                } else {
+                    isNull = false;
+                }
+            } else {
+                if (field.nonNull) {
+                    isNull = true;
+                } else {
+                    isNull = false;
+                }
+            }
+        });
         return isNull;
+    }
+
+    private setArgumentsNull(argItem: ArgumentItem[]) {
+        argItem.forEach(item => {
+            if (item.fields && !item.isEnum) {
+                this.setArgumentsNull(item.fields);
+            } else {
+                if (item.value.trim() === '') {
+                    item.value = 'null';
+                }
+            }
+        });
     }
 
     /**
@@ -497,41 +537,13 @@ class ArgumentItem implements vscode.QuickPickItem {
         if (this._value !== '' && this._value !== undefined) {
             return true;
         } else if (this._fields) {
-            if (this._nonNull) {
-                let isFieldSet = true;
-                this._fields.forEach(field => {
-                    if (field.nonNull) {
-                        if (field.isSet) {
-                            isFieldSet = isFieldSet && true;
-                        } else if (
-                            !field.isSet &&
-                            field.ofType !== 'EnumValue'
-                        ) {
-                            isFieldSet = isFieldSet && false;
-                        }
-                    } else {
-                        isFieldSet = isFieldSet && true;
-                    }
-                });
-                return isFieldSet;
-            } else {
-                let isFieldSet = false;
-                this._fields.forEach(field => {
-                    if (field.nonNull) {
-                        if (field.isSet) {
-                            isFieldSet = isFieldSet || true;
-                        } else if (
-                            !field.isSet &&
-                            field.ofType !== 'EnumValue'
-                        ) {
-                            isFieldSet = isFieldSet || false;
-                        }
-                    } else {
-                        isFieldSet = isFieldSet || true;
-                    }
-                });
-                return isFieldSet;
-            }
+            let isFieldSet = false;
+            this._fields.forEach(field => {
+                if (field.isSet) {
+                    isFieldSet = true;
+                }
+            });
+            return isFieldSet;
         }
         return false;
     }
