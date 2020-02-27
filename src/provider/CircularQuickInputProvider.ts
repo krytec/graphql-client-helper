@@ -292,6 +292,10 @@ export class CircularQuickInput {
         return isNull;
     }
 
+    /**
+     * Method to set nullable arguments, that are not currently set to null
+     * @param argItem ArgumentItems that should be potentionally set to null
+     */
     private setArgumentsNull(argItem: ArgumentItem[]) {
         argItem.forEach(item => {
             if (item.fields && !item.isEnum) {
@@ -336,6 +340,8 @@ export class CircularQuickInput {
             } else {
                 return false;
             }
+        } else if (arg.ofType === 'String') {
+            return true;
         } else {
             if (arg.nonNull) {
                 try {
