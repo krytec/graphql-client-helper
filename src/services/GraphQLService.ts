@@ -46,6 +46,7 @@ import { ScalarFieldWrapper } from '../graphqlwrapper/ScalarWrapper';
 import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
 import { Interface } from 'readline';
+import { fieldsConflictMessage } from 'graphql/validation/rules/OverlappingFieldsCanBeMerged';
 const fetch = require('node-fetch');
 const {
     introspectionQuery,
@@ -397,33 +398,45 @@ export class GraphQLService {
                                 'app',
                                 `${serviceName}-component`
                             );
-                            fs.mkdir(folderPath);
-                            await this.createRequests(
-                                serviceName,
-                                requests,
-                                folderPath
-                            ).then(file => {
-                                files.push(file);
-                            });
-                            await this.createAngularService(
-                                serviceName,
-                                requests
-                            ).then(file => {
-                                files.push(file);
-                            });
-                            await this.createAngularComponent(
-                                serviceName,
-                                requests
-                            ).then(file => {
-                                files.push(file);
-                            });
+                            //fs.mkdir(folderPath);
+                            // await this.createRequests(
+                            //     serviceName,
+                            //     requests,
+                            //     folderPath
+                            // ).then(
+                            //     file => {
+                            //         files.push(file);
+                            //     },
+                            //     error => reject(error)
+                            // );
+                            // await this.createAngularService(
+                            //     serviceName,
+                            //     requests
+                            // ).then(
+                            //     file => {
+                            //         files.push(file);
+                            //     },
+                            //     error => reject(error)
+                            // );
+                            // await this.createAngularComponent(
+                            //     serviceName,
+                            //     requests
+                            // ).then(
+                            //     file => {
+                            //         files.push(file);
+                            //     },
+                            //     error => reject(error)
+                            // );
 
                             await this.createAngularTests(
                                 serviceName,
                                 requests
-                            ).then(file => {
-                                files.push(file);
-                            });
+                            ).then(
+                                file => {
+                                    files.push(file);
+                                },
+                                error => reject(error)
+                            );
 
                             // Create service tree item from requests
                             const service = new ServiceNode(
@@ -631,21 +644,23 @@ export class GraphQLService {
         let test_data = '';
         let test_requests = '';
         let tests: string = '';
-        requests.forEach(request => {
-            let mockData = this.getMockingData(request);
-            test_data = test_data.concat(`
+        for (const request of requests) {
+            await this.getMockingData(request).then(mockData => {
+                //TODO: remove comma after last entry!
+                console.log(JSON.parse(mockData));
+                test_data = test_data.concat(`
 const test_${request.requestName}data: ${request.type} = {
-    ${mockData}
+    ${JSON.stringify(JSON.parse(mockData))}
 }
-            `);
-            test_requests = test_requests.concat(`
+`);
+                test_requests = test_requests.concat(`
 const test_${request.label} = {
     "data":{
         "${request.requestName}": test_${request.label}data,
     }
 };
-            `);
-
+                `);
+            });
             var requestTest = angularTestRequestTemplate
                 .split('%request%')
                 .join(request.label)
@@ -658,7 +673,7 @@ const test_${request.label} = {
                 .split('%test_requestName%')
                 .join(`test_${request.label}`);
             tests = tests.concat(requestTest);
-        });
+        }
         let content = angularTestTemplate
             .split('%imports%')
             .join(imports)
@@ -873,23 +888,74 @@ const test_${request.label} = {
      */
     private async getMockingData(request: CustomRequest): Promise<string> {
         let mockingData = '';
-        await this.executeRequest(request.request, null)
-            .then(data => {
-                mockingData = data;
-            })
-            .catch(err => {
-                return Promise.resolve(this.createMockingData(request));
-            });
-        return Promise.resolve(mockingData);
+        // await this.executeRequest(request.request, null).then(
+        //     data => {
+        //         mockingData = data;
+        //     },
+        //     error => {
+        //         return Promise.resolve(this.createMockingData(request));
+        //     }
+        // );
+        // return Promise.resolve(mockingData.slice(mockingData.indexOf(':') + 1, mockingData.lastIndexOf('}')));
+        return Promise.resolve(this.createMockingData(request));
     }
 
     /**
      * Method to create random mocking data for tests
      * @param request the request the mocking data is created for
      */
-    private createMockingData(request: CustomRequest): string {
+    private async createMockingData(request: CustomRequest): Promise<string> {
         let mockingData = '';
-        return mockingData;
+        let mockRequest = this._state.currentTree.filter(
+            item => item.label === request.requestName
+        )[0];
+        await this.setRequestVariables(
+            stringToGraphQLObject(request.request),
+            mockRequest
+        ).then(request => (mockRequest = request));
+        mockRequest.fields.forEach(field => {
+            if (field.selected) {
+                mockingData = mockingData.concat(
+                    `${this.createMockForField(field)},\n`
+                );
+            }
+        });
+        return `{\n ${mockingData} \n}`;
+    }
+
+    private createMockForField(request: Request): string {
+        let mockField = '';
+        let fields = ``;
+        if (request.fields.length > 0) {
+            for (const req of request.fields) {
+                if (req.selected) {
+                    fields = fields.concat(this.createMockForField(req));
+                }
+            }
+            mockField = `"${request.label}":{${fields}}`;
+        } else {
+            let mock = '';
+            if (request.type === 'String') {
+                mock = Math.random()
+                    .toString(36)
+                    .replace(/[^a-z]+/g, '')
+                    .substr(0, Math.random() * 10);
+            } else if (request.type === 'Int') {
+                mock = Math.floor(Math.random() * 10).toString();
+            } else if (request.type === 'Float') {
+                mock = (Math.random() * 10).toString();
+            } else if (request.type === 'Boolean') {
+                var i = Math.random();
+                mock = i <= 0.5 ? 'true' : 'false';
+            } else {
+                mock = Math.random()
+                    .toString(36)
+                    .replace(/[^a-z]+/g, '')
+                    .substr(0, Math.random() * 10);
+            }
+            mockField = `"${request.label}":"${mock}"`;
+        }
+        return mockField;
     }
 
     /**
@@ -971,7 +1037,7 @@ const test_${request.label} = {
         requestFields: Request[]
     ): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-            if (field.selectionSet) {
+            if (field.selectionSet !== undefined) {
                 field.selectionSet.selections.forEach(selection => {
                     requestFields.forEach(req => {
                         if (req.label === field.name.value) {
@@ -984,10 +1050,11 @@ const test_${request.label} = {
                     if (req.label === field.name.value) {
                         req.selected = true;
                         resolve(true);
+                        return;
                     }
                 });
             }
-            reject(false);
+            resolve(true);
         });
     }
 
