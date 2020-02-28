@@ -6,7 +6,6 @@ import { GraphQLService } from '../services/GraphQLService';
 import { Framework } from '../services/ConfigurationService';
 import { join, basename, dirname } from 'path';
 import { sleep } from '../utils/Utils';
-
 /**
  * Provides a CreateServiceCommand which executes the createService
  * method of the GraphQLService
@@ -191,16 +190,21 @@ async function removeFromService(
     doc: vscode.TextDocument,
     request: ServiceNode
 ) {
+    var regex = new RegExp(request.label);
+    var pos = doc.positionAt(doc.getText().indexOf(request.label));
+    let importRange = doc.getWordRangeAtPosition(pos, regex);
     let range: vscode.Range;
     let fullrange = getTextRange(doc, `${request.label}(args`, '(args');
     if (fullrange.start.line === 0) {
         fullrange = getTextRange(doc, `${request.label}(args`, '}');
     }
     range = new vscode.Range(fullrange.start, fullrange.end.with(undefined, 0));
-
     await vscode.window.showTextDocument(doc).then(te => {
         te.edit(editBuilder => {
             editBuilder.replace(range, '');
+            if (importRange !== undefined) {
+                editBuilder.delete(importRange);
+            }
         });
     });
 }
