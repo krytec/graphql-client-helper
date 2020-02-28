@@ -47,6 +47,7 @@ import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
 import { Interface } from 'readline';
 import { fieldsConflictMessage } from 'graphql/validation/rules/OverlappingFieldsCanBeMerged';
+import { rejects } from 'assert';
 const fetch = require('node-fetch');
 const {
     introspectionQuery,
@@ -524,6 +525,7 @@ export class GraphQLService {
         );
     }
 
+    //#region angular
     /**
      * * Method to create a angular service for the given requests
      * @param serviceName Name of the service
@@ -701,7 +703,25 @@ const test_${request.label} = {
         await fs.writeFile(filePath, content, 'utf-8');
         return Promise.resolve(filePath);
     }
+    //#endregion angular
 
+    //#region react
+    /**
+     *  Async method to create a react component with given requests
+     * @param serviceName Name of the service that should be created
+     * @param requests requests of the service
+     * @param folderPath path to service folder
+     */
+    private async createReactComponent(
+        serviceName: string,
+        requests: CustomRequest,
+        folderPath: string
+    ): Promise<string> {
+        return new Promise<string>(async (resolve, reject) => {
+            resolve(folderPath);
+        });
+    }
+    //#endregion react
     //#region From code creation
     /**
      * Async method to create a service from a given folder
