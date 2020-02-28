@@ -330,7 +330,7 @@ export class GraphQLService {
                     const args =
                         element.args.length > 0
                             ? `(${element.args
-                                  .map(arg => arg.toArgs())
+                                  .map(arg => arg.toArgs(element.label))
                                   .join(' ')})`
                             : '';
                     const customRequest = new CustomRequest(
@@ -351,7 +351,7 @@ export class GraphQLService {
                 } else if (element.contextValue?.match(/mutation/)) {
                     const root = element.toString();
                     const args = element.args
-                        .map(ele => ele.toArgs())
+                        .map(ele => ele.toArgs(element.label))
                         .join(' ');
                     const customRequest = new CustomRequest(
                         name,
@@ -963,6 +963,10 @@ const test_${request.label} = {
         return mockingData;
     }
 
+    /**
+     * Method to create mocking data for each field of the request
+     * @param request Request that should be mocked
+     */
     private createMockForField(request: Request): string {
         let mockField = '';
         let fields = ``;

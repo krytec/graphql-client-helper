@@ -55,17 +55,17 @@ export async function showCreateServiceCommand(
                                     });
 
                                     // ! TODO: Provide way to show created files and correctly implementation
-                                    files.forEach(file => {
-                                        vscode.workspace
-                                            .openTextDocument(
-                                                vscode.Uri.file(file)
-                                            )
-                                            .then(doc =>
-                                                vscode.window.showTextDocument(
-                                                    doc
-                                                )
-                                            );
-                                    });
+                                    // files.forEach(file => {
+                                    //     vscode.workspace
+                                    //         .openTextDocument(
+                                    //             vscode.Uri.file(file)
+                                    //         )
+                                    //         .then(doc =>
+                                    //             vscode.window.showTextDocument(
+                                    //                 doc
+                                    //             )
+                                    //         );
+                                    // });
                                     progress.report({
                                         increment: 100,
                                         message: 'Finished creating service!'

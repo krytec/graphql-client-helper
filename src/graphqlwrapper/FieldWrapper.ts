@@ -99,8 +99,8 @@ export class FieldWrapper implements GraphQLWrapper {
     /**
      * Method to represent the field as an GraphQL argument
      */
-    toArgs(): string {
-        return `$${this._name}:${
+    toArgs(parent: string): string {
+        return `$${parent}${this._name}:${
             this._isList
                 ? `[${this._ofType}${this._listNonNull ? `!` : ``}]`
                 : `${this._ofType}`

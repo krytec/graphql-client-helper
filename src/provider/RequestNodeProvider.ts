@@ -111,7 +111,7 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
                             .includes(true)
                             ? vscode.TreeItemCollapsibleState.None
                             : vscode.TreeItemCollapsibleState.Collapsed;
-                    return new Request(
+                    var req = new Request(
                         field.name,
                         field.ofType,
                         field.isList,
@@ -122,6 +122,10 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
                             ? { command: 'tree.selectField', title: 'Select' }
                             : undefined
                     );
+                    field.args.forEach(arg => {
+                        req.addArgument(arg);
+                    });
+                    return req;
                 });
                 requests.forEach(
                     request =>
@@ -212,7 +216,7 @@ export class Request extends vscode.TreeItem {
             }`
                 : ``;
         const args = this._args
-            .map(ele => `${ele.name}:$${ele.name}`)
+            .map(ele => `${ele.name}:$${this.label}${ele.name}`)
             .join(' ');
         return `${this.label} ${
             this._args.length > 0 ? `(${args})` : ``
