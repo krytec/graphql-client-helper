@@ -73,6 +73,7 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
             let node = new Request(
                 request.Name,
                 request.Type,
+                request.returnsList,
                 vscode.TreeItemCollapsibleState.Collapsed,
                 request instanceof QueryWrapper,
                 request.Description
@@ -113,6 +114,7 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
                     return new Request(
                         field.name,
                         field.ofType,
+                        field.isList,
                         collapsibleState,
                         undefined,
                         field.description,
@@ -156,6 +158,7 @@ export class Request extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         private _type: string,
+        private _isList: boolean,
         public collapsibleState: vscode.TreeItemCollapsibleState,
         private _isQuery?: boolean,
         private _description?: string,
@@ -297,11 +300,15 @@ export class Request extends vscode.TreeItem {
         return this._args;
     }
     get tooltip(): string {
-        return `Type : ${this._type}`;
+        return `Type : ${this._isList ? `[${this._type}]` : `${this._type}`}`;
     }
 
     get type(): string {
         return this._type;
+    }
+
+    get returnsList(): boolean {
+        return this._isList;
     }
 
     get query(): boolean {

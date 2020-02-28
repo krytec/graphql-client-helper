@@ -337,6 +337,7 @@ export class GraphQLService {
                         name,
                         element.label,
                         element.type,
+                        element.returnsList,
                         stringToGraphQLFormat(
                             `query ${name}${args}{ ${root} }`
                         ),
@@ -356,6 +357,7 @@ export class GraphQLService {
                         name,
                         element.label,
                         element.type,
+                        element.returnsList,
                         stringToGraphQLFormat(
                             `mutation ${name}(${args}){ ${root} }`
                         ),
@@ -398,36 +400,35 @@ export class GraphQLService {
                                 'app',
                                 `${serviceName}-component`
                             );
-                            //fs.mkdir(folderPath);
-                            // await this.createRequests(
-                            //     serviceName,
-                            //     requests,
-                            //     folderPath
-                            // ).then(
-                            //     file => {
-                            //         files.push(file);
-                            //     },
-                            //     error => reject(error)
-                            // );
-                            // await this.createAngularService(
-                            //     serviceName,
-                            //     requests
-                            // ).then(
-                            //     file => {
-                            //         files.push(file);
-                            //     },
-                            //     error => reject(error)
-                            // );
-                            // await this.createAngularComponent(
-                            //     serviceName,
-                            //     requests
-                            // ).then(
-                            //     file => {
-                            //         files.push(file);
-                            //     },
-                            //     error => reject(error)
-                            // );
-
+                            fs.mkdir(folderPath);
+                            await this.createRequests(
+                                serviceName,
+                                requests,
+                                folderPath
+                            ).then(
+                                file => {
+                                    files.push(file);
+                                },
+                                error => reject(error)
+                            );
+                            await this.createAngularService(
+                                serviceName,
+                                requests
+                            ).then(
+                                file => {
+                                    files.push(file);
+                                },
+                                error => reject(error)
+                            );
+                            await this.createAngularComponent(
+                                serviceName,
+                                requests
+                            ).then(
+                                file => {
+                                    files.push(file);
+                                },
+                                error => reject(error)
+                            );
                             await this.createAngularTests(
                                 serviceName,
                                 requests
@@ -646,17 +647,21 @@ export class GraphQLService {
         let tests: string = '';
         for (const request of requests) {
             await this.getMockingData(request).then(mockData => {
-                //TODO: remove comma after last entry!
-                console.log(JSON.parse(mockData));
                 test_data = test_data.concat(`
-const test_${request.requestName}data: ${request.type} = {
-    ${JSON.stringify(JSON.parse(mockData))}
-}
+const test_${request.requestName}data: ${request.type} ${
+                    request.returnsList ? '[]' : ''
+                } = 
+                    ${
+                        request.returnsList
+                            ? `${JSON.stringify(JSON.parse(mockData))}`
+                            : `{${JSON.stringify(JSON.parse(mockData))}}`
+                    }
+
 `);
                 test_requests = test_requests.concat(`
 const test_${request.label} = {
     "data":{
-        "${request.requestName}": test_${request.label}data,
+        "${request.requestName}": ${`test_${request.requestName}data`},
     }
 };
                 `);
@@ -686,7 +691,6 @@ const test_${request.label} = {
             .split('%test_requests%')
             .join(test_requests)
             .replace(/%request_test%/, tests);
-        console.log(content);
         let filePath = path.join(
             this._folder,
             '..',
@@ -694,7 +698,7 @@ const test_${request.label} = {
             `${serviceName}-component`,
             `${serviceName}.spec.ts`
         );
-        //await fs.writeFile(filePath, content, 'utf-8');
+        await fs.writeFile(filePath, content, 'utf-8');
         return Promise.resolve(filePath);
     }
 
@@ -887,17 +891,23 @@ const test_${request.label} = {
      * @param request CustomRequests
      */
     private async getMockingData(request: CustomRequest): Promise<string> {
-        let mockingData = '';
-        // await this.executeRequest(request.request, null).then(
-        //     data => {
-        //         mockingData = data;
-        //     },
-        //     error => {
-        //         return Promise.resolve(this.createMockingData(request));
-        //     }
-        // );
-        // return Promise.resolve(mockingData.slice(mockingData.indexOf(':') + 1, mockingData.lastIndexOf('}')));
-        return Promise.resolve(this.createMockingData(request));
+        return new Promise<string>(async (resolve, reject) => {
+            let mockingData = '';
+            await this.executeRequest(request.request, null).then(
+                data => {
+                    mockingData = data;
+                    resolve(
+                        mockingData.slice(
+                            mockingData.indexOf(':') + 1,
+                            mockingData.lastIndexOf('}')
+                        )
+                    );
+                },
+                error => {
+                    resolve(this.createMockingData(request));
+                }
+            );
+        });
     }
 
     /**
@@ -913,14 +923,44 @@ const test_${request.label} = {
             stringToGraphQLObject(request.request),
             mockRequest
         ).then(request => (mockRequest = request));
-        mockRequest.fields.forEach(field => {
-            if (field.selected) {
-                mockingData = mockingData.concat(
-                    `${this.createMockForField(field)},\n`
-                );
+
+        let length = 1;
+        if (mockRequest.returnsList) {
+            length = Math.random() + 1 * 20;
+            for (let index = 0; index < length; index++) {
+                let fieldAsString = '';
+                mockRequest.fields.forEach(field => {
+                    if (field.selected) {
+                        if (fieldAsString.trim() !== '') {
+                            fieldAsString = fieldAsString.concat(`,\n`);
+                        }
+                        fieldAsString = fieldAsString.concat(
+                            `${this.createMockForField(field)}`
+                        );
+                    }
+                });
+                if (index + 1 < length) {
+                    mockingData = mockingData.concat(`{${fieldAsString}},`);
+                } else {
+                    mockingData = mockingData.concat(`{${fieldAsString}}`);
+                }
             }
-        });
-        return `{\n ${mockingData} \n}`;
+            mockingData = `[${mockingData}]`;
+        } else {
+            mockRequest.fields.forEach(field => {
+                if (field.selected) {
+                    if (mockingData.trim() !== '') {
+                        mockingData = mockingData.concat(`,\n`);
+                    }
+                    mockingData = mockingData.concat(
+                        `${this.createMockForField(field)}`
+                    );
+                }
+            });
+            mockingData = `{${mockingData}}`;
+        }
+        mockRequest.deselect();
+        return mockingData;
     }
 
     private createMockForField(request: Request): string {
@@ -929,21 +969,24 @@ const test_${request.label} = {
         if (request.fields.length > 0) {
             for (const req of request.fields) {
                 if (req.selected) {
-                    fields = fields.concat(this.createMockForField(req));
+                    fields = fields.concat(this.createMockForField(req) + ',');
                 }
             }
-            mockField = `"${request.label}":{${fields}}`;
+            mockField = `"${request.label}":{${fields.slice(
+                0,
+                fields.lastIndexOf(`,`)
+            )}}`;
         } else {
             let mock = '';
             if (request.type === 'String') {
                 mock = Math.random()
                     .toString(36)
                     .replace(/[^a-z]+/g, '')
-                    .substr(0, Math.random() * 10);
+                    .substr(1, (Math.random() + 1) * 15);
             } else if (request.type === 'Int') {
-                mock = Math.floor(Math.random() * 10).toString();
+                mock = Math.floor(Math.random() * 15).toString();
             } else if (request.type === 'Float') {
-                mock = (Math.random() * 10).toString();
+                mock = (Math.random() * 15).toString();
             } else if (request.type === 'Boolean') {
                 var i = Math.random();
                 mock = i <= 0.5 ? 'true' : 'false';
@@ -951,7 +994,7 @@ const test_${request.label} = {
                 mock = Math.random()
                     .toString(36)
                     .replace(/[^a-z]+/g, '')
-                    .substr(0, Math.random() * 10);
+                    .substr(1, (Math.random() + 1) * 15);
             }
             mockField = `"${request.label}":"${mock}"`;
         }

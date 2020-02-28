@@ -377,7 +377,7 @@ export class CircularQuickInput {
         } else if (arg.ofType === 'Float') {
             return `"${arg.name}": ${Number.parseFloat(arg.value)}`;
         } else if (arg.ofType === 'String') {
-            return `"${arg.name}": ${arg.value}`;
+            return `"${arg.name}": "${arg.value}"`;
         } else if (arg.ofType === 'EnumValue') {
             if (arg.isSet) {
                 return `"${arg.name}"`;

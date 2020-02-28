@@ -48,6 +48,7 @@ export class CustomRequest extends vscode.TreeItem {
         public readonly label: string,
         private _grapqhlrequest: string,
         private _type: string,
+        private _isList: boolean,
         private _requestAsString: string,
         private _inputType: string,
         private _args: Array<FieldWrapper>,
@@ -143,6 +144,10 @@ export class CustomRequest extends vscode.TreeItem {
 
     get type(): string {
         return this._type;
+    }
+
+    get returnsList(): boolean {
+        return this._isList;
     }
 
     get tooltip(): string {
