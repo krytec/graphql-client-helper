@@ -216,7 +216,7 @@ export class Request extends vscode.TreeItem {
             }`
                 : ``;
         const args = this._args
-            .map(ele => `${ele.name}:$${this.label}${ele.name}`)
+            .map(ele => `${ele.name}:$${ele.name}`)
             .join(' ');
         return `${this.label} ${
             this._args.length > 0 ? `(${args})` : ``

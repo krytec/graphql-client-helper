@@ -6,7 +6,7 @@ import { GraphQLService } from '../services/GraphQLService';
 import { ConfigurationService } from '../services/ConfigurationService';
 
 // Runs an introspection query on given endpoint and creates a schema file
-export async function showCreateSchemaInput(
+export async function createSchema(
     service: GraphQLService,
     config: ConfigurationService
 ) {
@@ -34,11 +34,7 @@ export async function showCreateSchemaInput(
                         .then(() => {
                             config.endpoint = value;
                             var openPath = Uri.file(
-                                join(
-                                    pathToFolder,
-                                    'graphqlschema',
-                                    'schema.gql'
-                                )
+                                join(service.folder, 'schema.gql')
                             );
                             workspace
                                 .openTextDocument(openPath)

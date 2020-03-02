@@ -23,8 +23,8 @@
         "Schema"
     ],
     "activationEvents": [
-        "onCommand:extension.showLog",
-        "onCommand:extension.createSchema",
+        "onCommand:graphax.showLog",
+        "onCommand:graphax.createSchema",
         "workspaceContains:**/schema.gql",
         "onView:schemaExplorer"
     ],

@@ -30,6 +30,10 @@ export function stringToGraphQLFormat(request: string): string {
     return print(parse(request));
 }
 
+/**
+ * Function to create a graphqlobject from graphql.js from a request given as string
+ * @param request request as string
+ */
 export function stringToGraphQLObject(request: string): DocumentNode {
     return parse(request);
 }
@@ -63,12 +67,20 @@ export function dedent(callSite, ...args) {
     return format(output);
 }
 
+/**
+ * Function to return a given string in title case
+ * @param str Input string
+ */
 export function toTitleCase(str: string) {
     return str.replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
 
+/**
+ * Function to cast a string to the correct enum value
+ * @param framework enum value as string
+ */
 export function toFramework(framework: string): Framework {
     switch (framework) {
         case 'ANGULAR':

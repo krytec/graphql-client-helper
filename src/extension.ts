@@ -1,21 +1,16 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { showCreateSchemaInput } from './commands/SchemaInputCommand';
 import { GraphQLService } from './services/GraphQLService';
 import { CommandService } from './services/CommandService';
 import { LoggingService } from './services/LoggingService';
 import { StateService } from './services/StateService';
 import { RequestNodeProvider } from './provider/RequestNodeProvider';
-import { stringToGraphQLFormat } from './utils/Utils';
-import {
-    SavedRequestNodeProvider,
-    CustomRequest
-} from './provider/SavedRequestNodeProvider';
+import { SavedRequestNodeProvider } from './provider/SavedRequestNodeProvider';
 import { ConfigurationService } from './services/ConfigurationService';
 import { RequestDocumentProvider } from './provider/RequestDocumentProvider';
 import { ServiceNodeProvider } from './provider/ServiceNodeProvider';
-const path = require('path');
+import { GraphQLClientService } from './services/GraphQLClientService';
 // this method is called when your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -32,6 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
         stateService,
         configurationService
     );
+    const clientService = new GraphQLClientService(configurationService);
     // Create a node provider and adds a new TreeView to vscode
     const requestNodeProvider = new RequestNodeProvider(stateService);
     const savedRequestNodeProvider = new SavedRequestNodeProvider(stateService);
@@ -55,6 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
         stateService,
         configurationService,
         graphQLService,
+        clientService,
         requestNodeProvider,
         serviceNodeProvider,
         savedRequestNodeProvider

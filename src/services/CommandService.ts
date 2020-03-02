@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { showCreateSchemaInput } from '../commands/SchemaInputCommand';
+import { createSchema } from '../commands/SchemaInputCommand';
 import { GraphQLService } from './GraphQLService';
 import { LoggingService } from './LoggingService';
 import { showLogingWindowCommand } from '../commands/ShowLogCommand';
@@ -29,11 +29,17 @@ import {
     executeRequestCommand
 } from '../commands/RequestCommands';
 import * as del from 'del';
+import { AbstractServiceGenerator } from '../generators/AbstractServiceGenerator';
+import { AngularServiceGenerator } from '../generators/AngularServiceGenerator';
+import { ReactServiceGenerator } from '../generators/ReactServiceGenerator';
+import { ServiceGenerator } from '../generators/ServiceGenerator';
+import { GraphQLClientService } from './GraphQLClientService';
 const path = require('path');
 /**
  * Service class to create vscode commands and register them to vscode
  */
 export class CommandService {
+    private _generator: AbstractServiceGenerator;
     private _logger: LoggingService;
     private _ctx: vscode.ExtensionContext;
     private _fsWatcher: fs.FSWatcher;
@@ -46,12 +52,20 @@ export class CommandService {
         private _stateService: StateService,
         private _config: ConfigurationService,
         private _graphQLService: GraphQLService,
+        private _clientService: GraphQLClientService,
         private _requestNodeProvider: RequestNodeProvider,
         private _serviceNodeProvider: ServiceNodeProvider,
         private _savedRequestNodeProvider: SavedRequestNodeProvider
     ) {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
+        this._generator = new ServiceGenerator(
+            _stateService,
+            _config,
+            _clientService,
+            _graphQLService
+        );
+        this.onDidFrameworkChangeCallback(_config.framework);
         this.workspaceFolderChanged();
         try {
             this._fsWatcher = fs.watch(
@@ -64,7 +78,7 @@ export class CommandService {
                 join(_graphQLService.folder, '..'),
                 'utf-8',
                 trigger =>
-                    trigger === 'graphqlschema'
+                    trigger === _config.generatedFolder
                         ? this.workspaceFolderChanged()
                         : null
             );
@@ -102,6 +116,7 @@ export class CommandService {
         });
 
         _config.onDidChangeFramework(e => {
+            this.onDidFrameworkChangeCallback(e);
             this.workspaceFolderChanged();
         });
 
@@ -155,24 +170,32 @@ export class CommandService {
                         this._graphQLService.folder,
                         '/schema.gql'
                     );
-                    progress.report({ message: 'Loading schema' });
-                    this._graphQLService
-                        .getSchemaFromFile(schemaFile)
-                        .then(schema => {
-                            progress.report({ message: 'Creating types' });
-                            this._graphQLService.createTypesFromSchema(schema);
-                            progress.report({
-                                message: 'Creating Requests'
-                            });
-                            this._graphQLService.getRequestsFromSchema(schema);
-                            progress.report({ message: 'Refreshing view' });
-                            this._requestNodeProvider.refresh();
-                            this._savedRequestNodeProvider.refresh();
-                            this._serviceNodeProvider.refresh();
-                        })
-                        .catch((err: Error) =>
-                            vscode.window.showErrorMessage(err.message)
-                        );
+                    if (fs.existsSync(this._graphQLService.folder)) {
+                        progress.report({ message: 'Loading schema' });
+                        this._graphQLService
+                            .getSchemaFromFile(schemaFile)
+                            .then(schema => {
+                                progress.report({ message: 'Creating types' });
+                                this._graphQLService.createTypesFromSchema(
+                                    schema
+                                );
+                                progress.report({
+                                    message: 'Creating Requests'
+                                });
+                                this._graphQLService.getRequestsFromSchema(
+                                    schema
+                                );
+                                progress.report({ message: 'Refreshing view' });
+                                this._requestNodeProvider.refresh();
+                                this._savedRequestNodeProvider.refresh();
+                                this._serviceNodeProvider.refresh();
+                            })
+                            .catch((err: Error) =>
+                                vscode.window.showErrorMessage(err.message)
+                            );
+                    } else {
+                        progress.report({ message: 'No schema available' });
+                    }
                 }
                 var p = sleep(1000);
                 return p;
@@ -180,6 +203,45 @@ export class CommandService {
         );
     }
 
+    /**
+     * Callback method which is called when the user changes the framework setting
+     * @param framework New selected framework
+     */
+    private onDidFrameworkChangeCallback(framework) {
+        switch (+framework) {
+            case Framework.ANGULAR:
+                this._generator = new AngularServiceGenerator(
+                    this._stateService,
+                    this._config,
+                    this._clientService,
+                    this._graphQLService
+                );
+                break;
+            case Framework.REACT:
+                this._generator = new ReactServiceGenerator(
+                    this._stateService,
+                    this._config,
+                    this._clientService,
+                    this._graphQLService
+                );
+                break;
+            case Framework.NONE:
+                this._generator = new ServiceGenerator(
+                    this._stateService,
+                    this._config,
+                    this._clientService,
+                    this._graphQLService
+                );
+                break;
+            default:
+                this._generator = new ServiceGenerator(
+                    this._stateService,
+                    this._config,
+                    this._clientService,
+                    this._graphQLService
+                );
+        }
+    }
     private fileSystemCallback(event, trigger) {
         if (trigger === 'schema.gql') {
             if (
@@ -209,7 +271,7 @@ export class CommandService {
         const createSchemaCommand = vscode.commands.registerCommand(
             'graphax.createSchema',
             () => {
-                showCreateSchemaInput(this._graphQLService, this._config);
+                createSchema(this._graphQLService, this._config);
             }
         );
 

@@ -7,8 +7,6 @@ import {
     GraphQLEnumType,
     buildSchema,
     GraphQLInputObjectType,
-    parse,
-    print,
     OperationDefinitionNode,
     FieldNode,
     GraphQLNonNull,
@@ -28,26 +26,28 @@ import {
 } from '../utils/Utils';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
-import { resolve } from 'dns';
 import {
     angularServiceTemplate,
     angularComponentTemplate,
     angularTestRequestTemplate,
     angularTestTemplate
-} from '../templates/Angulartemplate';
+} from '../templates/AngularTemplate';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
-import request, { GraphQLClient } from 'graphql-request';
+import { GraphQLClient } from 'graphql-request';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
-import { mkdir, readdirSync, statSync } from 'fs';
+import { readdirSync, statSync } from 'fs';
 import { basename, join } from 'path';
 import { TypeWrapper } from '../graphqlwrapper/TypeWrapper';
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import { ScalarFieldWrapper } from '../graphqlwrapper/ScalarWrapper';
 import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
-import { Interface } from 'readline';
-import { fieldsConflictMessage } from 'graphql/validation/rules/OverlappingFieldsCanBeMerged';
-import { rejects } from 'assert';
+import {
+    reactComponent,
+    reactQueryFunction,
+    reactMutationFunction,
+    reactTest
+} from '../templates/Reacttemplate';
 const fetch = require('node-fetch');
 const {
     introspectionQuery,
@@ -331,7 +331,7 @@ export class GraphQLService {
                     const args =
                         element.args.length > 0
                             ? `(${element.args
-                                  .map(arg => arg.toArgs(element.label))
+                                  .map(arg => arg.toArgs())
                                   .join(' ')})`
                             : '';
                     const customRequest = new CustomRequest(
@@ -352,7 +352,7 @@ export class GraphQLService {
                 } else if (element.contextValue?.match(/mutation/)) {
                     const root = element.toString();
                     const args = element.args
-                        .map(ele => ele.toArgs(element.label))
+                        .map(ele => ele.toArgs())
                         .join(' ');
                     const customRequest = new CustomRequest(
                         name,
@@ -457,7 +457,53 @@ export class GraphQLService {
                             );
                         }
                         break;
+                    case Framework.REACT:
+                        try {
+                            const folderPath = path.join(
+                                this._folder,
+                                '..',
+                                `${serviceName}-component`
+                            );
+                            fs.mkdir(folderPath);
+                            await this.createReactComponent(
+                                serviceName,
+                                requests
+                            ).then(
+                                file => {
+                                    files.push(file);
+                                },
+                                error => reject(error)
+                            );
 
+                            for (const request of requests) {
+                                await this.createReactTest(
+                                    serviceName,
+                                    request
+                                ).then(
+                                    file => {
+                                        files.push(file);
+                                    },
+                                    error => reject(error)
+                                );
+                            }
+
+                            // Create service tree item from requests
+                            const service = new ServiceNode(
+                                serviceName,
+                                'React Service',
+                                folderPath,
+                                2,
+                                'service'
+                            );
+                            requests.forEach(req => service.addRequest(req));
+                            this._state.saveService(service);
+                        } catch (e) {
+                            throw new Error(
+                                'Could not create React component ' +
+                                    serviceName
+                            );
+                        }
+                        break;
                     case Framework.NONE:
                         const folderPath = path.join(
                             this._folder,
@@ -714,11 +760,131 @@ const test_${request.label} = {
      */
     private async createReactComponent(
         serviceName: string,
-        requests: CustomRequest,
-        folderPath: string
+        requests: CustomRequest[]
     ): Promise<string> {
         return new Promise<string>(async (resolve, reject) => {
-            resolve(folderPath);
+            let requestsAsString = '';
+            let functions = '';
+            requests.forEach(request => {
+                requestsAsString = requestsAsString.concat(
+                    `export const ${request.label} = gql\`${request.request}\`;\n`
+                );
+                if (request.kindOf === 'Query') {
+                    functions = functions.concat(
+                        this._config.typescript
+                            ? reactQueryFunction
+                                  .split('%serviceName%')
+                                  .join(toTitleCase(request.name) + 'Component')
+                                  .split('%query%')
+                                  .join('schemaTypes.Query')
+                                  .split('%args%')
+                                  .join(',schemaTypes.' + request.inputType)
+                                  .split('%requestName%')
+                                  .join(request.label)
+                                  .split('%request%')
+                                  .join(request.requestName)
+                                  .concat('\n')
+                            : reactQueryFunction
+                                  .split('%serviceName%')
+                                  .join(toTitleCase(request.name) + 'Component')
+                                  .split('%query%')
+                                  .join('')
+                                  .split('%args%')
+                                  .join('')
+                                  .split('%requestName%')
+                                  .join(request.label)
+                                  .split('%request%')
+                                  .join(request.requestName)
+                                  .concat('\n')
+                    );
+                } else if (request.kindOf === 'Mutation') {
+                    functions = functions.concat(
+                        this._config.typescript
+                            ? reactMutationFunction
+                                  .split('%serviceName%')
+                                  .join(toTitleCase(request.name) + 'Component')
+                                  .split('%mutation%')
+                                  .join('schemaTypes.Mutation')
+                                  .split('%args%')
+                                  .join(',schemaTypes' + request.inputType)
+                                  .split('%requestName%')
+                                  .join(request.label)
+                                  .split('%request%')
+                                  .join(request.requestName)
+                                  .concat('\n')
+                            : reactMutationFunction
+                                  .split('%serviceName%')
+                                  .join(toTitleCase(request.name) + 'Component')
+                                  .split('%mutation%')
+                                  .join('')
+                                  .split('%args%')
+                                  .join('')
+                                  .split('%requestName%')
+                                  .join(request.label)
+                                  .split('%request%')
+                                  .join(request.requestName)
+                                  .concat('\n')
+                    );
+                }
+            });
+            let content = this._config.typescript
+                ? reactComponent
+                      .split('%imports%')
+                      .join(
+                          `import * as schemaTypes from '../${this._config.generatedFolder}/schemaTypes'`
+                      )
+                      .split('%requests%')
+                      .join(requestsAsString)
+                      .split('%functions%')
+                      .join(functions)
+                : reactComponent
+                      .split('%imports%')
+                      .join(``)
+                      .split('%requests%')
+                      .join(requestsAsString)
+                      .split('%functions%')
+                      .join(functions);
+
+            let filePath = path.join(
+                this._folder,
+                '..',
+                `${serviceName}-component`,
+                `${toTitleCase(serviceName)}Component.tsx`
+            );
+            await fs.writeFile(filePath, content, 'utf-8');
+            resolve(filePath);
+        });
+    }
+
+    private async createReactTest(serviceName: string, request: CustomRequest) {
+        return new Promise<string>(async (resolve, reject) => {
+            let mockData = await this.createMockingData(request);
+            let content = '';
+            content = reactTest
+                .split('%imports%')
+                .join(
+                    `import { ${toTitleCase(request.name)}Component, ${
+                        request.label
+                    } } from './${toTitleCase(serviceName)}Component'`
+                )
+                .split('%mockingData%')
+                .join(JSON.stringify(JSON.parse(mockData)))
+                .split('%request%')
+                .join(request.kindOf.toLowerCase())
+                .split('%requestName%')
+                .join(request.label)
+                .split('%requestType%')
+                .join(request.type)
+                .split('%componentName%')
+                .join(toTitleCase(request.name) + 'Component');
+            let filePath = path.join(
+                this._folder,
+                '..',
+                `${serviceName}-component`,
+                `${toTitleCase(request.name)}Component.test.tsx`
+            );
+            await fs.writeFile(filePath, content, 'utf-8');
+            resolve(filePath);
         });
     }
     //#endregion react
@@ -1078,10 +1244,7 @@ const test_${request.label} = {
      * @param documentAST Request as DocumentAST
      * @param request Request object that is used to select the fields
      */
-    private async setRequestVariables(
-        documentAST,
-        request: Request
-    ): Promise<Request> {
+    async setRequestVariables(documentAST, request: Request): Promise<Request> {
         return new Promise<Request>((resolve, reject) => {
             var def = documentAST.definitions[0];
             var fields = def.selectionSet.selections[0].selectionSet;
@@ -1361,6 +1524,13 @@ const test_${request.label} = {
     set folder(folder: string) {
         switch (this._config.framework) {
             case Framework.ANGULAR:
+                this._folder = path.join(
+                    folder,
+                    'src',
+                    this._config.generatedFolder
+                );
+                break;
+            case Framework.REACT:
                 this._folder = path.join(
                     folder,
                     'src',
