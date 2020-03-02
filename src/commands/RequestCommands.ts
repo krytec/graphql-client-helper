@@ -6,6 +6,7 @@ import { Request } from '../provider/RequestNodeProvider';
 import { stringToGraphQLObject, sleep } from '../utils/Utils';
 import { GraphQLService } from '../services/GraphQLService';
 import { OperationDefinitionNode, FieldNode, graphql } from 'graphql';
+import { GraphQLClientService } from '../services/GraphQLClientService';
 
 /**
  * Executes a request with the internal graphqlclient,
@@ -15,7 +16,7 @@ import { OperationDefinitionNode, FieldNode, graphql } from 'graphql';
  */
 export async function executeRequestCommand(
     node: CustomRequest,
-    client: GraphQLService,
+    client: GraphQLClientService,
     state: StateService
 ) {
     const quickInput = new CircularQuickInput(state, node.label, node.args);

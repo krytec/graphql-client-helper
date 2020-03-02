@@ -17,7 +17,7 @@ export class $serviceName {
 
 export const angularComponentTemplate: string = `
 import { Component, OnInit } from '@angular/core';
-import * as schemaTypes from 'src/graphqlschema/schemaTypes';
+import * as schemaTypes from '../../graphqlschema/schemaTypes';
 import { $myServiceTitel } from './$myNameTitel.service';
 
 
@@ -40,8 +40,8 @@ export class $myNameTitelComponent implements OnInit {
 export const angularTestTemplate = `
 import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
 import { async, ComponentFixture, TestBed,inject } from '@angular/core/testing';
-import { %serviceName% } from './Pokemon.service';
-import * as schemaTypes from 'src/graphqlschema/schemaTypes';
+import { %serviceName% } from './%service%.service';
+import * as schemaTypes from '../../graphqlschema/schemaTypes';
 
 %test_data%
 

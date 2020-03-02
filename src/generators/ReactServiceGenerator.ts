@@ -33,7 +33,11 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                     );
                     fs.mkdir(folderPath);
 
-                    await this.createRequests(serviceName, requests).then(
+                    await this.createRequests(
+                        serviceName,
+                        requests,
+                        folderPath
+                    ).then(
                         file => {
                             files.push(file);
                         },

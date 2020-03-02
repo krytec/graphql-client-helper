@@ -6,6 +6,8 @@ import { GraphQLService } from '../services/GraphQLService';
 import { Framework } from '../services/ConfigurationService';
 import { join, basename, dirname } from 'path';
 import { sleep } from '../utils/Utils';
+import { AbstractServiceGenerator } from '../generators/AbstractServiceGenerator';
+import { LoggingService } from '../services/LoggingService';
 /**
  * Provides a CreateServiceCommand which executes the createService
  * method of the GraphQLService
@@ -13,8 +15,8 @@ import { sleep } from '../utils/Utils';
  * @param requests Selected request
  */
 export async function showCreateServiceCommand(
-    state: StateService,
-    service: GraphQLService,
+    logger: LoggingService,
+    generator: AbstractServiceGenerator,
     requests: CustomRequest[]
 ) {
     await vscode.window.withProgress(
@@ -47,39 +49,44 @@ export async function showCreateServiceCommand(
                     })
                     .then(async value => {
                         if (value !== undefined) {
-                            await service.createService(value, requests).then(
-                                async files => {
-                                    progress.report({
-                                        increment: 66,
-                                        message: 'Creating service...'
-                                    });
-
-                                    // ! TODO: Provide way to show created files and correctly implementation
-                                    // files.forEach(file => {
-                                    //     vscode.workspace
-                                    //         .openTextDocument(
-                                    //             vscode.Uri.file(file)
-                                    //         )
-                                    //         .then(doc =>
-                                    //             vscode.window.showTextDocument(
-                                    //                 doc
-                                    //             )
-                                    //         );
-                                    // });
-                                    progress.report({
-                                        increment: 100,
-                                        message: 'Finished creating service!'
-                                    });
-                                    await sleep(1000);
-                                    done = true;
-                                },
-                                () => {
-                                    progress.report({
-                                        increment: 33,
-                                        message: `Service ${value} already exists! Please provide a unique name!`
-                                    });
-                                }
-                            );
+                            await generator
+                                .generateService(value, requests)
+                                .then(
+                                    async files => {
+                                        progress.report({
+                                            increment: 66,
+                                            message: 'Creating service...'
+                                        });
+                                        files.forEach(file =>
+                                            logger.logDebug('Created ' + file)
+                                        );
+                                        // ! TODO: Provide way to show created files and correctly implementation
+                                        // files.forEach(file => {
+                                        //     vscode.workspace
+                                        //         .openTextDocument(
+                                        //             vscode.Uri.file(file)
+                                        //         )
+                                        //         .then(doc =>
+                                        //             vscode.window.showTextDocument(
+                                        //                 doc
+                                        //             )
+                                        //         );
+                                        // });
+                                        progress.report({
+                                            increment: 100,
+                                            message:
+                                                'Finished creating service!'
+                                        });
+                                        await sleep(1000);
+                                        done = true;
+                                    },
+                                    () => {
+                                        progress.report({
+                                            increment: 33,
+                                            message: `Service ${value} already exists! Please provide a unique name!`
+                                        });
+                                    }
+                                );
                         } else {
                             done = true;
                             vscode.window.showInformationMessage(

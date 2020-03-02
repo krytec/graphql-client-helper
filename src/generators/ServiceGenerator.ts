@@ -24,11 +24,13 @@ export class ServiceGenerator extends AbstractServiceGenerator {
                 );
                 try {
                     fs.mkdir(folderPath);
-                    await this.createRequests(serviceName, requests).then(
-                        file => {
-                            files.push(file);
-                        }
-                    );
+                    await this.createRequests(
+                        serviceName,
+                        requests,
+                        folderPath
+                    ).then(file => {
+                        files.push(file);
+                    });
                     // Create service tree item from requests
                     const service = new ServiceNode(
                         serviceName,

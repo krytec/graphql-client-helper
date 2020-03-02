@@ -28,7 +28,8 @@ export abstract class AbstractServiceGenerator {
      */
     protected async createRequests(
         serviceName: string,
-        requests: CustomRequest[]
+        requests: CustomRequest[],
+        folderPath: string
     ): Promise<string> {
         let content = `import gql from 'graphql-tag';\n`;
         var gqlrequests = requests
@@ -39,12 +40,12 @@ export abstract class AbstractServiceGenerator {
             .join('\n');
         content = content.concat(gqlrequests);
         await fs.writeFile(
-            path.join(this._folderPath, `${serviceName}Requests.ts`),
+            path.join(folderPath, `${serviceName}Requests.ts`),
             content,
             'utf-8'
         );
         return Promise.resolve(
-            path.join(this._folderPath, `${serviceName}Requests.ts`)
+            path.join(folderPath, `${serviceName}Requests.ts`)
         );
     }
 
@@ -170,6 +171,6 @@ export abstract class AbstractServiceGenerator {
     }
 
     set folderPath(value: string) {
-        this._folderPath = this.folderPath;
+        this._folderPath = value;
     }
 }

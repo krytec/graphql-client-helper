@@ -65,8 +65,8 @@ export class CommandService {
             _clientService,
             _graphQLService
         );
-        this.onDidFrameworkChangeCallback(_config.framework);
         this.workspaceFolderChanged();
+        this.onDidFrameworkChangeCallback(_config.framework);
         try {
             this._fsWatcher = fs.watch(
                 _graphQLService.folder,
@@ -117,7 +117,7 @@ export class CommandService {
 
         _config.onDidChangeFramework(e => {
             this.onDidFrameworkChangeCallback(e);
-            this.workspaceFolderChanged();
+            // this.workspaceFolderChanged();
         });
 
         /**
@@ -241,6 +241,7 @@ export class CommandService {
                     this._graphQLService
                 );
         }
+        this._generator.folderPath = this._graphQLService.folder;
     }
     private fileSystemCallback(event, trigger) {
         if (trigger === 'schema.gql') {
@@ -342,7 +343,7 @@ export class CommandService {
             (element: CustomRequest) =>
                 executeRequestCommand(
                     element,
-                    this._graphQLService,
+                    this._clientService,
                     this._stateService
                 )
         );
@@ -378,8 +379,8 @@ export class CommandService {
                     request => request.selected === true
                 );
                 await showCreateServiceCommand(
-                    this._stateService,
-                    this._graphQLService,
+                    this._logger,
+                    this._generator,
                     myRequests
                 );
                 this._stateService.myRequests.forEach(

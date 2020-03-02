@@ -28,13 +28,17 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
             if (!alreadyUsed) {
                 try {
                     const folderPath = path.join(
-                        this.folderPath,
+                        this._folderPath,
                         '..',
                         'app',
                         `${serviceName}-component`
                     );
                     fs.mkdir(folderPath);
-                    await this.createRequests(serviceName, requests).then(
+                    await this.createRequests(
+                        serviceName,
+                        requests,
+                        folderPath
+                    ).then(
                         file => {
                             files.push(file);
                         },
@@ -206,14 +210,10 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
         for (const request of requests) {
             await this.getMockingData(request).then(mockData => {
                 test_data = test_data.concat(`
-const test_${request.requestName}data: ${request.type} ${
+const test_${request.requestName}data: schemaTypes.${request.type} ${
                     request.returnsList ? '[]' : ''
                 } = 
-                    ${
-                        request.returnsList
-                            ? `${JSON.stringify(JSON.parse(mockData))}`
-                            : `{${JSON.stringify(JSON.parse(mockData))}}`
-                    }
+                    ${JSON.stringify(JSON.parse(mockData))}
 
 `);
                 test_requests = test_requests.concat(`
@@ -232,7 +232,7 @@ const test_${request.label} = {
                 .split('%returnType%')
                 .join(request.requestName)
                 .split('%test_dataName%')
-                .join(`test_${request.label}data`)
+                .join(`test_${request.requestName}data`)
                 .split('%test_requestName%')
                 .join(`test_${request.label}`);
             tests = tests.concat(requestTest);
@@ -240,6 +240,8 @@ const test_${request.label} = {
         let content = angularTestTemplate
             .split('%imports%')
             .join(imports)
+            .split('%service%')
+            .join(serviceName)
             .split('%serviceNameToLowerCase%')
             .join(serviceName.toLowerCase() + 'Service')
             .split('%serviceName%')
