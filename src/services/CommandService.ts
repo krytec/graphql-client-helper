@@ -10,7 +10,7 @@ import {
     SavedRequestNodeProvider
 } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
-import { dedent, sleep } from '../utils/Utils';
+import { dedent, sleep, toTitleCase } from '../utils/Utils';
 import * as fs from 'fs';
 import { join } from 'path';
 import {
@@ -93,7 +93,7 @@ export class CommandService {
             );
         });
 
-        _graphQLService.onDidExecuteRequest(ms =>
+        _clientService.onDidExecuteRequest(ms =>
             vscode.window.showInformationMessage(
                 'Request finished after ' + ms + 'ms.'
             )
@@ -163,8 +163,19 @@ export class CommandService {
                     false
                 );
                 if (vscode.workspace.workspaceFolders !== undefined) {
-                    this._graphQLService.folder =
+                    const currentFolder =
                         vscode.workspace.workspaceFolders[0].uri.fsPath;
+                    const packageJsonPath = path.join(
+                        currentFolder,
+                        'package.json'
+                    );
+                    if (fs.existsSync(packageJsonPath)) {
+                        this.readPackageJSON(packageJsonPath);
+                    } else {
+                        this._config.framework = Framework.NONE;
+                    }
+
+                    this._graphQLService.folder = currentFolder;
 
                     const schemaFile = path.join(
                         this._graphQLService.folder,
@@ -204,10 +215,46 @@ export class CommandService {
     }
 
     /**
+     * Method to get the current used framework out of the packagejson
+     * @param packageJsonPath File path of the package.json file
+     */
+    private readPackageJSON(packageJsonPath: string) {
+        const packageJson = JSON.parse(
+            fs.readFileSync(packageJsonPath, 'utf-8')
+        );
+        let currentFramework = Framework.NONE;
+        Object.keys(packageJson.dependencies).forEach(dep => {
+            if (dep.includes('react')) {
+                currentFramework = Framework.REACT;
+                return;
+            } else if (dep.includes('angular')) {
+                currentFramework = Framework.ANGULAR;
+                return;
+            }
+        });
+        if (currentFramework === Framework.NONE) {
+            Object.keys(packageJson.devDependencies).forEach(dep => {
+                if (dep.includes('react')) {
+                    currentFramework = Framework.REACT;
+                    return;
+                } else if (dep.includes('angular')) {
+                    currentFramework = Framework.ANGULAR;
+                    return;
+                }
+            });
+        }
+        this._config.framework = currentFramework;
+    }
+    /**
      * Callback method which is called when the user changes the framework setting
      * @param framework New selected framework
      */
     private onDidFrameworkChangeCallback(framework) {
+        vscode.window.showWarningMessage(
+            'WARNING: Framework was changed to: ' +
+                toTitleCase(Framework[framework]) +
+                '!'
+        );
         switch (+framework) {
             case Framework.ANGULAR:
                 this._generator = new AngularServiceGenerator(

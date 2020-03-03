@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { toFramework } from '../utils/Utils';
 
-export const enum Framework {
+export enum Framework {
     NONE = 0,
     ANGULAR = 1,
     REACT = 2
@@ -74,11 +74,14 @@ export class ConfigurationService {
                 .getConfiguration('graphax')
                 .get('service.framework') as string
         );
-        this._headers = vscode.workspace.getConfiguration('graphax').get('client.headers') as Array<object>;
+        this._headers = vscode.workspace
+            .getConfiguration('graphax')
+            .get('client.headers') as Array<object>;
         vscode.workspace.onDidChangeConfiguration(e =>
             this.configurationChangedCallback(e)
         );
     }
+
     private configurationChangedCallback(
         event: vscode.ConfigurationChangeEvent
     ) {
@@ -107,11 +110,12 @@ export class ConfigurationService {
                         .get('service.framework') as string
                 );
                 this._onDidChangeFramework.fire(this.framework);
-            } else if(
-                event.affectsConfiguration('graphax.client.headers')){
-                    this._headers = vscode.workspace.getConfiguration('graphax').get('client.headers') as Array<object>;
-                    this._onDidChangeHeaders.fire(this.headers);
-                }
+            } else if (event.affectsConfiguration('graphax.client.headers')) {
+                this._headers = vscode.workspace
+                    .getConfiguration('graphax')
+                    .get('client.headers') as Array<object>;
+                this._onDidChangeHeaders.fire(this.headers);
+            }
         } else {
             if (event.affectsConfiguration('graphax.schema.endpoint')) {
                 this._endpoint = vscode.workspace
@@ -155,6 +159,12 @@ export class ConfigurationService {
         this._typescript = value;
     }
 
+    set framework(value: Framework) {
+        vscode.workspace
+            .getConfiguration('graphax')
+            .update('service.framework', Framework[value], true);
+        this._framework = value;
+    }
     get typescript(): boolean {
         if (this._typescript !== undefined) {
             return this._typescript;
@@ -194,9 +204,9 @@ export class ConfigurationService {
     }
 
     get headers(): Array<object> {
-        if(this._headers){
+        if (this._headers) {
             return this._headers;
-        }else{
+        } else {
             return [];
         }
     }

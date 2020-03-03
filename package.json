@@ -20,10 +20,10 @@
         "Generator",
         "Helper",
         "GQL",
-        "Schema"
+        "Schema",
+        "Code"
     ],
     "activationEvents": [
-        "onCommand:graphax.showLog",
         "onCommand:graphax.createSchema",
         "workspaceContains:**/schema.gql",
         "onView:schemaExplorer"
