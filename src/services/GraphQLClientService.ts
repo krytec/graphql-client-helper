@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ConfigurationService } from './ConfigurationService';
 import { GraphQLClient } from 'graphql-request';
-
+const { performance } = require('perf_hooks');
 export class GraphQLClientService {
     private _graphQLClient: GraphQLClient;
     private _onDidExecuteRequest: vscode.EventEmitter<
