@@ -42,6 +42,7 @@ import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/tes
 import { async, ComponentFixture, TestBed,inject } from '@angular/core/testing';
 import { %serviceName% } from './%service%.service';
 import * as schemaTypes from '../../graphqlschema/schemaTypes';
+%imports%
 
 %test_data%
 
@@ -74,7 +75,7 @@ export const angularTestRequestTemplate = `
     %serviceNameToLowerCase%.%request%(null).subscribe(result => {
       expect(result.data.%returnType%).toEqual(%test_dataName%);
       done();
-    })
+    });
     backend.expectOne(%request%).flush(%test_requestName%);
-  })
+  });
 `;

@@ -1,5 +1,6 @@
 import { AbstractServiceGenerator } from './AbstractServiceGenerator';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
+import * as vscode from 'vscode';
 const { promises: fs } = require('fs');
 const path = require('path');
 export class ServiceGenerator extends AbstractServiceGenerator {
@@ -49,5 +50,16 @@ export class ServiceGenerator extends AbstractServiceGenerator {
                 resolve(files);
             }
         });
+    }
+
+    /**
+     * Method to delete a request from a service
+     * @param request The request that should be deleted from the service
+     */
+    public async deleteRequestFromService(request: ServiceNode) {
+        const doc = await vscode.workspace.openTextDocument(
+            vscode.Uri.file(request.path)
+        );
+        this.removeRequestFromFile(doc, request);
     }
 }

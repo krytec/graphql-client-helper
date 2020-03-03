@@ -1,6 +1,8 @@
 import { URL } from 'url';
 import { print, parse, DocumentNode, typeFromAST } from 'graphql';
 import { Framework } from '../services/ConfigurationService';
+import * as vscode from 'vscode';
+
 /**
  * * Function to validate a given url as string
  * @param value
@@ -90,4 +92,38 @@ export function toFramework(framework: string): Framework {
         default:
             return Framework.NONE;
     }
+}
+
+/**
+ * Function to select a range from a vscode.TextDocument from textStart to textEnd
+ * @param doc vscode.TextDocument
+ * @param textStart Start string
+ * @param textEnd End string
+ */
+export function getTextRange(
+    doc: vscode.TextDocument,
+    textStart: string,
+    textEnd: string
+): vscode.Range {
+    let start = 0;
+    let startChar = 0;
+    let end = 0;
+    let endChar = 0;
+    for (let index = 0; index < doc.lineCount; index++) {
+        const text = doc.lineAt(index).text;
+        if (text.includes(textStart)) {
+            start = index;
+            startChar = text.indexOf(textStart);
+        } else if (start !== 0) {
+            if (text.includes(textEnd)) {
+                end = index;
+                endChar = text.length;
+                break;
+            }
+        }
+    }
+    return new vscode.Range(
+        new vscode.Position(start, startChar),
+        new vscode.Position(end, endChar)
+    );
 }

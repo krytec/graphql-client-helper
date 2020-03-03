@@ -20,7 +20,6 @@ import {
 import {
     showServiceRequestInCodeCommand,
     showCreateServiceCommand,
-    deleteRequestFromService,
     addServiceCommand
 } from '../commands/ServiceCommands';
 import {
@@ -506,16 +505,7 @@ export class CommandService {
                     )
                     .then(button => {
                         if (button === 'Yes') {
-                            let service = this._serviceNodeProvider.getParent(
-                                request
-                            );
-                            deleteRequestFromService(
-                                this._serviceNodeProvider.getParent(
-                                    request
-                                ) as ServiceNode,
-                                request,
-                                this._config.framework
-                            );
+                            this._generator.deleteRequestFromService(request);
                             let currentService: ServiceNode | undefined;
                             this._stateService.services.forEach(service => {
                                 if (service.requests.includes(request)) {

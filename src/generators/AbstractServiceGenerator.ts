@@ -1,10 +1,12 @@
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { StateService } from '../services/StateService';
 import { ConfigurationService } from '../services/ConfigurationService';
-import { stringToGraphQLObject } from '../utils/Utils';
+import { stringToGraphQLObject, getTextRange } from '../utils/Utils';
 import { Request } from '../provider/RequestNodeProvider';
 import { GraphQLClientService } from '../services/GraphQLClientService';
 import { GraphQLService } from '../services/GraphQLService';
+import { ServiceNode } from '../provider/ServiceNodeProvider';
+import * as vscode from 'vscode';
 const { promises: fs } = require('fs');
 const path = require('path');
 
@@ -21,6 +23,7 @@ export abstract class AbstractServiceGenerator {
         requests: CustomRequest[]
     ): Promise<string[]>;
 
+    public abstract async deleteRequestFromService(service: ServiceNode);
     /**
      * Method to write requests to file
      * @param serviceName Name of the service
@@ -47,6 +50,23 @@ export abstract class AbstractServiceGenerator {
         return Promise.resolve(
             path.join(folderPath, `${serviceName}Requests.ts`)
         );
+    }
+
+    /**
+     * Async fucntion to delete a request from a RequestFile
+     * @param doc Document in which the request is written
+     * @param request Request that should be deleted
+     */
+    protected async removeRequestFromFile(
+        doc: vscode.TextDocument,
+        request: ServiceNode
+    ) {
+        let range = getTextRange(doc, `export const ${request.label}`, '`;');
+        await vscode.window.showTextDocument(doc).then(te => {
+            te.edit(editBuilder => {
+                editBuilder.replace(range, '');
+            });
+        });
     }
 
     /**

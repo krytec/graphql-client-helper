@@ -6,11 +6,12 @@ import {
     angularTestTemplate,
     angularTestRequestTemplate
 } from '../templates/AngularTemplate';
-import { toTitleCase } from '../utils/Utils';
+import { toTitleCase, getTextRange } from '../utils/Utils';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { dirname, basename, join } from 'path';
 const { promises: fs } = require('fs');
 const path = require('path');
-
+import * as vscode from 'vscode';
 export class AngularServiceGenerator extends AbstractServiceGenerator {
     public generateService(
         serviceName: string,
@@ -84,6 +85,32 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
                 resolve(files);
             }
         });
+    }
+
+    /**
+     * Method to delete a request from the service
+     * @param request The request that should be deleted from the service
+     */
+    public async deleteRequestFromService(request: ServiceNode) {
+        const serviceDir = dirname(request.path);
+        var serviceName = basename(serviceDir).split('-')[0];
+        const requestDoc = await vscode.workspace.openTextDocument(
+            vscode.Uri.file(request.path)
+        );
+        const serviceDoc = await vscode.workspace.openTextDocument(
+            vscode.Uri.file(join(serviceDir, `${serviceName}.service.ts`))
+        );
+        const componentDoc = await vscode.workspace.openTextDocument(
+            vscode.Uri.file(join(serviceDir, `${serviceName}.component.ts`))
+        );
+        const testDoc = await vscode.workspace.openTextDocument(
+            vscode.Uri.file(join(serviceDir, `${serviceName}.spec.ts`))
+        );
+
+        await this.removeRequestFromFile(requestDoc, request);
+        await this.removeFromService(serviceDoc, request);
+        await this.removeFromComponent(componentDoc, request);
+        await this.removeFromTest(testDoc, request);
     }
 
     /**
@@ -210,16 +237,16 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
         for (const request of requests) {
             await this.getMockingData(request).then(mockData => {
                 test_data = test_data.concat(`
-const test_${request.requestName}data: schemaTypes.${request.type} ${
+const test_${request.label}data: schemaTypes.${request.type} ${
                     request.returnsList ? '[]' : ''
                 } = 
-                    ${JSON.stringify(JSON.parse(mockData))}
+                    ${JSON.stringify(JSON.parse(mockData))};
 
 `);
                 test_requests = test_requests.concat(`
 const test_${request.label} = {
     "data":{
-        "${request.requestName}": ${`test_${request.requestName}data`},
+        "${request.requestName}": ${`test_${request.label}data`},
     }
 };
                 `);
@@ -232,7 +259,7 @@ const test_${request.label} = {
                 .split('%returnType%')
                 .join(request.requestName)
                 .split('%test_dataName%')
-                .join(`test_${request.requestName}data`)
+                .join(`test_${request.label}data`)
                 .split('%test_requestName%')
                 .join(`test_${request.label}`);
             tests = tests.concat(requestTest);
@@ -260,5 +287,123 @@ const test_${request.label} = {
         );
         await fs.writeFile(filePath, content, 'utf-8');
         return Promise.resolve(filePath);
+    }
+
+    /**
+     * Removes a request from a service
+     * @param doc Servicedocument
+     * @param request Request which should be removed
+     */
+    private async removeFromService(
+        doc: vscode.TextDocument,
+        request: ServiceNode
+    ) {
+        var regex = new RegExp(request.label);
+        var pos = doc.positionAt(doc.getText().indexOf(request.label));
+        let importRange = doc.getWordRangeAtPosition(pos, regex);
+        let range: vscode.Range;
+        let fullrange = getTextRange(doc, `${request.label}(args`, '(args');
+        if (fullrange.start.line === 0) {
+            fullrange = getTextRange(doc, `${request.label}(args`, '}');
+        }
+        range = new vscode.Range(
+            fullrange.start,
+            fullrange.end.with(undefined, 0)
+        );
+        await vscode.window.showTextDocument(doc).then(te => {
+            te.edit(editBuilder => {
+                editBuilder.replace(range, '');
+                if (importRange !== undefined) {
+                    editBuilder.delete(importRange);
+                }
+            });
+        });
+    }
+
+    /**
+     * Async fucntion to remove a request from a component
+     * @param doc Component document
+     * @param request Request which should be removed
+     */
+    private async removeFromComponent(
+        doc: vscode.TextDocument,
+        request: ServiceNode
+    ) {
+        let propRange: vscode.Range;
+        for (let index = 0; index < doc.lineCount; index++) {
+            const text = doc.lineAt(index).text;
+            if (
+                text.includes(
+                    request.label.split('Query')[0].split('Mutation')[0] + ':'
+                )
+            ) {
+                propRange = doc.lineAt(index).rangeIncludingLineBreak;
+                break;
+            }
+        }
+        let serviceRange: vscode.Range;
+        let fullRange: vscode.Range = getTextRange(
+            doc,
+            `this.service.${request.label}(`,
+            `this.service.`
+        );
+        if (fullRange.start.line === 0) {
+            serviceRange = getTextRange(
+                doc,
+                `this.service.${request.label}(`,
+                '}'
+            );
+        } else {
+            serviceRange = new vscode.Range(
+                fullRange.start,
+                fullRange.end.with(undefined, 0)
+            );
+        }
+
+        await vscode.window.showTextDocument(doc).then(te => {
+            te.edit(editBuilder => {
+                editBuilder.delete(propRange);
+                editBuilder.delete(serviceRange);
+            });
+        });
+    }
+
+    /**
+     * Method to remove a request from the test file
+     * @param doc Test document
+     * @param request Request that should be removed from the test
+     */
+    private async removeFromTest(
+        doc: vscode.TextDocument,
+        request: ServiceNode
+    ) {
+        var regex = new RegExp(request.label);
+        var pos = doc.positionAt(doc.getText().indexOf(request.label));
+        let importRange = doc.getWordRangeAtPosition(pos, regex);
+        let testDataRange = getTextRange(
+            doc,
+            `const test_${request.label}data`,
+            ''
+        );
+        let testRange = getTextRange(doc, `const test_${request.label}`, '};');
+        let itRange = getTextRange(
+            doc,
+            `it("should test ${request.label}`,
+            `});`
+        );
+        itRange = new vscode.Range(
+            itRange.start,
+            itRange.end.with(undefined, 0)
+        );
+        await vscode.window.showTextDocument(doc).then(te => {
+            te.edit(editBuilder => {
+                if (importRange) {
+                    editBuilder.delete(importRange);
+                }
+                editBuilder.delete(testDataRange);
+                editBuilder.delete(testRange);
+                editBuilder.delete(itRange);
+            });
+        });
     }
 }

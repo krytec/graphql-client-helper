@@ -80,6 +80,8 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         });
     }
 
+    public async deleteRequestFromService(service: ServiceNode) {}
+
     /**
      *  Async method to create a react component with given requests
      * @param serviceName Name of the service that should be created

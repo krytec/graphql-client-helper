@@ -134,6 +134,10 @@ export class CustomRequest extends vscode.TreeItem {
         this._isSelected = value;
     }
 
+    get description(): string {
+        return `: ${this._isList ? `[${this._type}]` : `${this._type}`}`;
+    }
+
     /**
      * @returns the name of the requests NOT the name of the created request
      */
@@ -163,7 +167,7 @@ export class CustomRequest extends vscode.TreeItem {
     }
 
     get tooltip(): string {
-        return `${this._kindOf} ${this._grapqhlrequest} - Returns Type:${this._type}`;
+        return `${this._kindOf} ${this._grapqhlrequest}`;
     }
 
     get args(): Array<FieldWrapper> {

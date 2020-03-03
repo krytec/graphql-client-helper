@@ -324,7 +324,10 @@ export class Request extends vscode.TreeItem {
      * Tooltip of the request
      */
     get tooltip(): string {
-        return `Type : ${this._isList ? `[${this._type}]` : `${this._type}`}`;
+        if (this._description !== undefined) {
+            return this._description;
+        }
+        return '';
     }
 
     /**
@@ -355,10 +358,7 @@ export class Request extends vscode.TreeItem {
      * @returns the desription of the request
      */
     get description(): string {
-        if (this._description !== undefined) {
-            return this._description;
-        }
-        return '';
+        return ` : ${this._isList ? `[${this._type}]` : `${this._type}`}`;
     }
 
     /**
