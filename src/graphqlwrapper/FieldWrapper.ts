@@ -112,18 +112,30 @@ export class FieldWrapper implements GraphQLWrapper {
         return this._name;
     }
 
+    /**
+     * @returns true if the field is NOT nullable
+     */
     get nonNull(): boolean {
         return this._nonNull;
     }
 
+    /**
+     * @returns true if the return type of the field is a scalar
+     */
     get isScalar(): boolean {
         return this._isScalar;
     }
 
+    /**
+     * @returns true if the return type of the field is a list
+     */
     get isList(): boolean {
         return this._isList;
     }
 
+    /**
+     * @returns the returntype as string
+     */
     get ofType(): string {
         return this._ofType;
     }

@@ -91,12 +91,12 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         requests: CustomRequest[]
     ): Promise<string> {
         return new Promise<string>(async (resolve, reject) => {
+            let imports = `import { ${requests
+                .map(request => request.label)
+                .join(', ')} } from './${toTitleCase(serviceName)}Requests'`;
             let requestsAsString = '';
             let functions = '';
             requests.forEach(request => {
-                requestsAsString = requestsAsString.concat(
-                    `export const ${request.label} = gql\`${request.request}\`;\n`
-                );
                 if (request.kindOf === 'Query') {
                     functions = functions.concat(
                         this._config.typescript
@@ -159,7 +159,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                 ? reactComponent
                       .split('%imports%')
                       .join(
-                          `import * as schemaTypes from '../${this._config.generatedFolder}/schemaTypes'`
+                          `import * as schemaTypes from '../${this._config.generatedFolder}/schemaTypes'\n${imports}`
                       )
                       .split('%requests%')
                       .join(requestsAsString)
@@ -167,7 +167,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                       .join(functions)
                 : reactComponent
                       .split('%imports%')
-                      .join(``)
+                      .join(imports)
                       .split('%requests%')
                       .join(requestsAsString)
                       .split('%functions%')
@@ -186,14 +186,17 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
 
     private async createReactTest(serviceName: string, request: CustomRequest) {
         return new Promise<string>(async (resolve, reject) => {
+            let imports = `import { ${request.label} } from './${serviceName}Requests'`;
             let mockData = await this.getMockingData(request);
             let content = '';
             content = reactTest
                 .split('%imports%')
                 .join(
-                    `import { ${toTitleCase(request.name)}Component, ${
-                        request.label
-                    } } from './${toTitleCase(serviceName)}Component'`
+                    `import { ${toTitleCase(
+                        request.name
+                    )}Component} from './${toTitleCase(
+                        serviceName
+                    )}Component'\n${imports}`
                 )
                 .split('%mockingData%')
                 .join(JSON.stringify(JSON.parse(mockData)))

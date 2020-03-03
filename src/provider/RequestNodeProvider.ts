@@ -223,6 +223,9 @@ export class Request extends vscode.TreeItem {
         } ${fields}`;
     }
 
+    /**
+     * Deselects the current request and all its children
+     */
     deselect() {
         this.selected = false;
         this._fields.forEach(element => {
@@ -239,6 +242,10 @@ export class Request extends vscode.TreeItem {
     }
 
     //#region getter & setter
+    /**
+     * Returns if the current treeitem is selected
+     * @returns true if either the item it self can be selected or its children
+     */
     get selected(): boolean {
         if (this.contextValue === 'field') {
             return this._isSelected;
@@ -247,6 +254,9 @@ export class Request extends vscode.TreeItem {
         }
     }
 
+    /**
+     * Method to select the current item
+     */
     set selected(selected: boolean) {
         if (this.collapsibleState === 0) {
             if (selected) {
@@ -296,25 +306,44 @@ export class Request extends vscode.TreeItem {
         this._isSelected = selected;
     }
 
+    /**
+     * Returns the current request
+     */
     get selectedRequest(): Request {
         return this;
     }
 
+    /**
+     * Arguments of the request
+     */
     get args(): Array<FieldWrapper> {
         return this._args;
     }
+
+    /**
+     * Tooltip of the request
+     */
     get tooltip(): string {
         return `Type : ${this._isList ? `[${this._type}]` : `${this._type}`}`;
     }
 
+    /**
+     * Return type of the request
+     */
     get type(): string {
         return this._type;
     }
 
+    /**
+     * @returns true if the request returns a list
+     */
     get returnsList(): boolean {
         return this._isList;
     }
 
+    /**
+     * @returns true if the request is a query
+     */
     get query(): boolean {
         if (this._isQuery !== undefined) {
             return this._isQuery;
@@ -322,6 +351,9 @@ export class Request extends vscode.TreeItem {
         return false;
     }
 
+    /**
+     * @returns the desription of the request
+     */
     get description(): string {
         if (this._description !== undefined) {
             return this._description;
@@ -329,6 +361,9 @@ export class Request extends vscode.TreeItem {
         return '';
     }
 
+    /**
+     * @returns the children of the current request
+     */
     get fields(): Array<Request> {
         return this._fields;
     }

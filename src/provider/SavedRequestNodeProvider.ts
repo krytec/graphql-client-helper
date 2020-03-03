@@ -134,18 +134,30 @@ export class CustomRequest extends vscode.TreeItem {
         this._isSelected = value;
     }
 
+    /**
+     * @returns the name of the requests NOT the name of the created request
+     */
     get requestName(): string {
         return this._grapqhlrequest;
     }
 
+    /**
+     * @returns the request as string
+     */
     get request(): string {
         return this._requestAsString;
     }
 
+    /**
+     * @returns the returntype of the request
+     */
     get type(): string {
         return this._type;
     }
 
+    /**
+     * @returns true if the request returns a list
+     */
     get returnsList(): boolean {
         return this._isList;
     }
@@ -158,14 +170,23 @@ export class CustomRequest extends vscode.TreeItem {
         return this._args;
     }
 
+    /**
+     * @returns the inputtype of the requests
+     */
     get inputType(): string {
         return this._inputType;
     }
 
+    /**
+     * @returns query or mutation depends on the type of the request
+     */
     get kindOf(): string {
         return this._kindOf;
     }
 
+    /**
+     * @returns the name of the request
+     */
     get name(): string {
         return this.label.replace('Mutation', '').replace('Query', '');
     }
