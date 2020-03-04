@@ -12,6 +12,7 @@ import { dirname, basename, join } from 'path';
 const { promises: fs } = require('fs');
 const path = require('path');
 import * as vscode from 'vscode';
+import { existsSync } from 'fs';
 export class AngularServiceGenerator extends AbstractServiceGenerator {
     public generateService(
         serviceName: string,
@@ -93,24 +94,43 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
      */
     public async deleteRequestFromService(request: ServiceNode) {
         const serviceDir = dirname(request.path);
-        var serviceName = basename(serviceDir).split('-')[0];
-        const requestDoc = await vscode.workspace.openTextDocument(
-            vscode.Uri.file(request.path)
-        );
-        const serviceDoc = await vscode.workspace.openTextDocument(
-            vscode.Uri.file(join(serviceDir, `${serviceName}.service.ts`))
-        );
-        const componentDoc = await vscode.workspace.openTextDocument(
-            vscode.Uri.file(join(serviceDir, `${serviceName}.component.ts`))
-        );
-        const testDoc = await vscode.workspace.openTextDocument(
-            vscode.Uri.file(join(serviceDir, `${serviceName}.spec.ts`))
-        );
-
-        await this.removeRequestFromFile(requestDoc, request);
-        await this.removeFromService(serviceDoc, request);
-        await this.removeFromComponent(componentDoc, request);
-        await this.removeFromTest(testDoc, request);
+        const serviceName = basename(serviceDir).split('-')[0];
+        const servicePath = join(serviceDir, `${serviceName}.service.ts`);
+        const componentPath = join(serviceDir, `${serviceName}.component.ts`);
+        const testPath = join(serviceDir, `${serviceName}.spec.ts`);
+        if (
+            existsSync(request.path) &&
+            this.checkGraphaXSignature(request.path)
+        ) {
+            const requestDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(request.path)
+            );
+            await this.removeRequestFromFile(requestDoc, request);
+        }
+        if (
+            existsSync(servicePath) &&
+            this.checkGraphaXSignature(servicePath)
+        ) {
+            const serviceDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(servicePath)
+            );
+            await this.removeFromService(serviceDoc, request);
+        }
+        if (
+            existsSync(componentPath) &&
+            this.checkGraphaXSignature(componentPath)
+        ) {
+            const componentDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(componentPath)
+            );
+            await this.removeFromComponent(componentDoc, request);
+        }
+        if (existsSync(testPath) && this.checkGraphaXSignature(testPath)) {
+            const testDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(testPath)
+            );
+            await this.removeFromTest(testDoc, request);
+        }
     }
 
     /**
@@ -308,11 +328,11 @@ const test_${request.label} = {
         }
         range = new vscode.Range(
             fullrange.start,
-            fullrange.end.with(undefined, 0)
+            fullrange.end.with(fullrange.end.line + 2, 0)
         );
         await vscode.window.showTextDocument(doc).then(te => {
             te.edit(editBuilder => {
-                editBuilder.replace(range, '');
+                editBuilder.delete(range);
                 if (importRange !== undefined) {
                     editBuilder.delete(importRange);
                 }
@@ -380,12 +400,22 @@ const test_${request.label} = {
         var regex = new RegExp(request.label);
         var pos = doc.positionAt(doc.getText().indexOf(request.label));
         let importRange = doc.getWordRangeAtPosition(pos, regex);
+        if (importRange) {
+            importRange = new vscode.Range(
+                importRange.start,
+                importRange.end.with(undefined, importRange.end.character + 1)
+            );
+        }
         let testDataRange = getTextRange(
             doc,
             `const test_${request.label}data`,
             ''
         );
-        let testRange = getTextRange(doc, `const test_${request.label}`, '};');
+        let testRange = getTextRange(
+            doc,
+            `const test_${request.label} =`,
+            '};'
+        );
         let itRange = getTextRange(
             doc,
             `it("should test ${request.label}`,
@@ -393,7 +423,7 @@ const test_${request.label} = {
         );
         itRange = new vscode.Range(
             itRange.start,
-            itRange.end.with(undefined, 0)
+            itRange.end.with(itRange.end.line + 2, undefined)
         );
         await vscode.window.showTextDocument(doc).then(te => {
             te.edit(editBuilder => {
