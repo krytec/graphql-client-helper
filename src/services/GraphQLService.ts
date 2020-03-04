@@ -25,13 +25,14 @@ import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
-import { readdirSync, statSync } from 'fs';
+import { readdirSync, statSync, existsSync, readFileSync } from 'fs';
 import { basename, join } from 'path';
 import { TypeWrapper } from '../graphqlwrapper/TypeWrapper';
 import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import { ScalarFieldWrapper } from '../graphqlwrapper/ScalarWrapper';
 import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
+import { graphaxjsonTemplate } from '../constants';
 const fetch = require('node-fetch');
 const {
     introspectionQuery,
@@ -127,6 +128,12 @@ export class GraphQLService {
             await fs.writeFile(
                 path.join(this._folder, 'schema.gql'),
                 printSchema(this._schema),
+                'utf-8'
+            );
+
+            await fs.writeFile(
+                path.join(this._folder, 'graphax.json'),
+                graphaxjsonTemplate,
                 'utf-8'
             );
 
@@ -338,6 +345,55 @@ export class GraphQLService {
             }
         });
     }
+
+    //#region graphax.json
+    /**
+     * Async method to load services from graphax.json file
+     */
+    async loadGraphaxJSON() {
+        return new Promise<any>((resolve, reject) => {
+            const jsonPath = join(this._folder, 'graphax.json');
+            if (existsSync(jsonPath)) {
+                const graphaxJSON = JSON.parse(readFileSync(jsonPath, 'utf-8'));
+                graphaxJSON.service.forEach(service => {
+                    this.createServiceFromFolder(service.path);
+                    this._logger.logDebug(
+                        'Loaded service ' + service.name + ' from graphax.json'
+                    );
+                });
+                resolve('Successfully loaded services.');
+            } else {
+                reject(
+                    'GraphaX.json does not exists in directory: ' + this._folder
+                );
+            }
+        });
+    }
+
+    public async writeServiceToGraphaxJSON(service: ServiceNode) {
+        return new Promise<any>(async (resolve, reject) => {
+            const jsonPath = join(this._folder, 'graphax.json');
+            if (existsSync(jsonPath)) {
+                const graphaxJSON = JSON.parse(readFileSync(jsonPath, 'utf-8'));
+                graphaxJSON.service.push({
+                    name: service.label,
+                    path: service.path
+                });
+                await fs.writeFile(
+                    jsonPath,
+                    JSON.stringify(graphaxJSON),
+                    'utf-8'
+                );
+                resolve('Successfully saved service.');
+            } else {
+                reject(
+                    'GraphaX.json does not exists in directory: ' + this._folder
+                );
+            }
+        });
+    }
+    private removeServiceFromGraphaxJSON(service: ServiceNode) {}
+    //#endregion
 
     //#region From code creation
     /**

@@ -27,6 +27,7 @@ export class RequestNodeProvider implements vscode.TreeDataProvider<Request> {
      * Method to refresh the treeview
      */
     refresh(): void {
+        this.getChildren();
         this._onDidChangeTreeData.fire();
     }
 

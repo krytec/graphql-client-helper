@@ -74,6 +74,9 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                     );
                     requests.forEach(req => service.addRequest(req));
                     this._state.saveService(service);
+                    await this._graphqlService.writeServiceToGraphaxJSON(
+                        service
+                    );
                 } catch (e) {
                     throw new Error(
                         'Could not create React component ' + serviceName

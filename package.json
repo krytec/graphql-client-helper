@@ -41,7 +41,7 @@
                     },
                     "graphax.schema.folder": {
                         "type": "string",
-                        "default": "graphqlschema",
+                        "default": "graphax-generated",
                         "description": "Specificies the name of the folder, where generated files will be saved"
                     },
                     "graphax.schema.endpoint": {

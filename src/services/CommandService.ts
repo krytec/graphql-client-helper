@@ -109,16 +109,15 @@ export class CommandService {
                     'Yes',
                     'No'
                 )
-                .then(button => {
+                .then(async button => {
                     if (button === 'Yes') {
-                        this.workspaceFolderChanged();
+                        await this.workspaceFolderChanged();
                     }
                 });
         });
 
         _config.onDidChangeFramework(e => {
             this.onDidFrameworkChangeCallback(e);
-            // this.workspaceFolderChanged();
         });
 
         /**
@@ -157,7 +156,7 @@ export class CommandService {
                 cancellable: false,
                 title: 'Loading Schema'
             },
-            (progress, token) => {
+            async (progress, token) => {
                 vscode.commands.executeCommand(
                     'setContext',
                     'schemaLoaded',
@@ -184,9 +183,9 @@ export class CommandService {
                     );
                     if (fs.existsSync(this._graphQLService.folder)) {
                         progress.report({ message: 'Loading schema' });
-                        this._graphQLService
+                        await this._graphQLService
                             .getSchemaFromFile(schemaFile)
-                            .then(schema => {
+                            .then(async schema => {
                                 progress.report({ message: 'Creating types' });
                                 this._graphQLService.createTypesFromSchema(
                                     schema
@@ -199,6 +198,7 @@ export class CommandService {
                                 );
                                 progress.report({ message: 'Refreshing view' });
                                 this._requestNodeProvider.refresh();
+                                this._graphQLService.loadGraphaxJSON();
                                 this._savedRequestNodeProvider.refresh();
                                 this._serviceNodeProvider.refresh();
                             })
@@ -471,9 +471,13 @@ export class CommandService {
                     .then(async button => {
                         if (button === 'Yes') {
                             if (this._stateService.services.includes(service)) {
-                                const dir = del.sync('*.ts', {
-                                    cwd: service.path
+                                const dir = del.sync(['*.ts', '*.tsx'], {
+                                    cwd: service.path,
+                                    force: true
                                 });
+                                try {
+                                    fs.rmdirSync(service.path);
+                                } catch (err) {}
                                 vscode.window.showInformationMessage(
                                     `Deleted service ${service.label}!`
                                 );
