@@ -356,10 +356,16 @@ export class GraphQLService {
             if (existsSync(jsonPath)) {
                 const graphaxJSON = JSON.parse(readFileSync(jsonPath, 'utf-8'));
                 graphaxJSON.service.forEach(service => {
-                    this.createServiceFromFolder(service.path);
-                    this._logger.logDebug(
-                        'Loaded service ' + service.name + ' from graphax.json'
-                    );
+                    if (existsSync(service.path)) {
+                        this.createServiceFromFolder(service.path);
+                        this._logger.logDebug(
+                            'Loaded service ' +
+                                service.name +
+                                ' from graphax.json'
+                        );
+                    } else {
+                        reject('Invalid path. Service was not found.');
+                    }
                 });
                 resolve('Successfully loaded services.');
             } else {
@@ -392,7 +398,32 @@ export class GraphQLService {
             }
         });
     }
-    private removeServiceFromGraphaxJSON(service: ServiceNode) {}
+    public async removeServiceFromGraphaxJSON(service: ServiceNode) {
+        return new Promise<any>(async (resolve, reject) => {
+            const jsonPath = join(this._folder, 'graphax.json');
+            if (existsSync(jsonPath)) {
+                const graphaxJSON = JSON.parse(readFileSync(jsonPath, 'utf-8'));
+                const serviceToDelete = graphaxJSON.service.find(
+                    obj =>
+                        obj.name === service.label && obj.path === service.path
+                );
+                const idx = graphaxJSON.service.indexOf(serviceToDelete, 0);
+                if (idx > -1) {
+                    graphaxJSON.service.splice(idx, 1);
+                }
+                await fs.writeFile(
+                    jsonPath,
+                    JSON.stringify(graphaxJSON),
+                    'utf-8'
+                );
+                resolve('Successfully removed service.');
+            } else {
+                reject(
+                    'GraphaX.json does not exists in directory: ' + this._folder
+                );
+            }
+        });
+    }
     //#endregion
 
     //#region From code creation

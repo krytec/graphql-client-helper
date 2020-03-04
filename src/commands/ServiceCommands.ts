@@ -98,10 +98,11 @@ export async function addServiceCommand(
     fsPath: string
 ) {
     graphqlService.createServiceFromFolder(fsPath).then(
-        () => {
+        service => {
             vscode.commands.executeCommand(
                 'workbench.view.extension.schema-explorer'
             );
+            graphqlService.writeServiceToGraphaxJSON(service);
         },
         err => vscode.window.showErrorMessage(err.message)
     );

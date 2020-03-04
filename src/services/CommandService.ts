@@ -198,7 +198,16 @@ export class CommandService {
                                 );
                                 progress.report({ message: 'Refreshing view' });
                                 this._requestNodeProvider.refresh();
-                                this._graphQLService.loadGraphaxJSON();
+                                this._graphQLService.loadGraphaxJSON().then(
+                                    resolved =>
+                                        vscode.window.showInformationMessage(
+                                            resolved
+                                        ),
+                                    rejected =>
+                                        vscode.window.showWarningMessage(
+                                            rejected
+                                        )
+                                );
                                 this._savedRequestNodeProvider.refresh();
                                 this._serviceNodeProvider.refresh();
                             })
@@ -482,6 +491,9 @@ export class CommandService {
                                     `Deleted service ${service.label}!`
                                 );
                                 this._stateService.removeService(service);
+                                this._graphQLService.removeServiceFromGraphaxJSON(
+                                    service
+                                );
                             }
                             this._serviceNodeProvider.refresh();
                         }
