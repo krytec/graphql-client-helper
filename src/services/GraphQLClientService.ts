@@ -50,14 +50,13 @@ export class GraphQLClientService {
                 requestPromise = Promise.resolve(
                     JSON.stringify(data, undefined, 2)
                 );
+                end = performance.now();
+                this._onDidExecuteRequest.fire(end - start);
             })
             .catch(error => {
                 requestPromise = Promise.reject(error);
-            })
-            .finally(() => {
-                end = performance.now();
-                this._onDidExecuteRequest.fire(end - start);
             });
+
         if (requestPromise !== undefined) {
             return requestPromise;
         } else {

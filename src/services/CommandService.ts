@@ -94,7 +94,9 @@ export class CommandService {
 
         _clientService.onDidExecuteRequest(ms =>
             vscode.window.showInformationMessage(
-                'Request finished after ' + ms + 'ms.'
+                'GraphaX: Request finished after ' +
+                    (ms / 1000).toFixed(3) +
+                    ' seconds.'
             )
         );
 
@@ -249,10 +251,8 @@ export class CommandService {
      * @param framework New selected framework
      */
     private onDidFrameworkChangeCallback(framework) {
-        vscode.window.showWarningMessage(
-            'WARNING: Framework was changed to: ' +
-                toTitleCase(Framework[framework]) +
-                '!'
+        vscode.window.showInformationMessage(
+            'GraphaX: Framework set to ' + toTitleCase(Framework[framework])
         );
         switch (+framework) {
             case Framework.ANGULAR:

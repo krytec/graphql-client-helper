@@ -11,7 +11,8 @@ import {
     FieldNode,
     GraphQLNonNull,
     GraphQLList,
-    GraphQLInterfaceType
+    GraphQLInterfaceType,
+    validate
 } from 'graphql';
 import { LoggingService } from './LoggingService';
 import * as vscode from 'vscode';
@@ -19,21 +20,10 @@ import { StateService } from './StateService';
 import { Request } from '../provider/RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
-import {
-    stringToGraphQLFormat,
-    toTitleCase,
-    stringToGraphQLObject
-} from '../utils/Utils';
+import { stringToGraphQLFormat, stringToGraphQLObject } from '../utils/Utils';
 import { CustomRequest } from '../provider/SavedRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
-import {
-    angularServiceTemplate,
-    angularComponentTemplate,
-    angularTestRequestTemplate,
-    angularTestTemplate
-} from '../templates/AngularTemplate';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
-import { GraphQLClient } from 'graphql-request';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
 import { readdirSync, statSync } from 'fs';
 import { basename, join } from 'path';
@@ -42,19 +32,12 @@ import { FieldWrapper } from '../graphqlwrapper/FieldWrapper';
 import { ScalarFieldWrapper } from '../graphqlwrapper/ScalarWrapper';
 import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
-import {
-    reactComponent,
-    reactQueryFunction,
-    reactMutationFunction,
-    reactTest
-} from '../templates/Reacttemplate';
 const fetch = require('node-fetch');
 const {
     introspectionQuery,
     buildClientSchema,
     printSchema
 } = require('graphql');
-const { performance } = require('perf_hooks');
 const { promises: fs } = require('fs');
 const path = require('path');
 
@@ -62,6 +45,7 @@ const path = require('path');
  * A GraphQL service class to retriev information about a GraphQL endpoint
  */
 export class GraphQLService {
+    private _schema: GraphQLSchema | undefined;
     private _folder: string;
     private _logger: LoggingService;
     /**
@@ -138,24 +122,24 @@ export class GraphQLService {
 
         try {
             //Create schema from data
-            let schema: GraphQLSchema = buildClientSchema(
-                body.data as IntrospectionQuery
-            );
+            this._schema = buildClientSchema(body.data as IntrospectionQuery);
             //Save schema as gql file
             await fs.writeFile(
                 path.join(this._folder, 'schema.gql'),
-                printSchema(schema),
+                printSchema(this._schema),
                 'utf-8'
             );
 
-            this.createTypesFromSchema(schema);
-            this.getRequestsFromSchema(schema);
+            if (this._schema) {
+                this.createTypesFromSchema(this._schema);
+                this.getRequestsFromSchema(this._schema);
+            }
 
             if (this._config.typescript) {
                 this.writeTypesToFile();
             }
             //Return schema object
-            return schema;
+            return this._schema;
         } catch (e) {
             throw new Error("Couldn't create schema from response");
         }
@@ -176,8 +160,8 @@ export class GraphQLService {
                     console.log(err);
                     throw new Error('Could not read file');
                 });
-            let graphqlschema = buildSchema(schema);
-            return Promise.resolve(graphqlschema);
+            this._schema = buildSchema(schema);
+            return Promise.resolve(this._schema);
         } catch (e) {
             throw new Error('Could not create schema object from given schema');
         }
@@ -433,7 +417,7 @@ export class GraphQLService {
                             }
                         },
                         err => {
-                            reject(err);
+                            reject('Invalid request provided!');
                         }
                     );
                 }
@@ -454,40 +438,55 @@ export class GraphQLService {
     ): Promise<CustomRequest> {
         return new Promise<CustomRequest>(async (resolve, reject) => {
             let request: Request | undefined = undefined;
-            try {
-                request = await this.selectionValidation(requestAsString);
-                if (request) {
-                    const nameMatch: any = requestAsString.match(
-                        /(?!(query$|mutation$)\s*)[a-zA-Z]+[a-zA-Z0-9]*/g
-                    );
-                    const name = nameMatch[1];
 
-                    this._state.myRequests.forEach(myReq => {
-                        if (name === myReq.label) {
-                            resolve(myReq);
-                        }
-                    });
+            if (this._schema) {
+                const validationArray = validate(
+                    this._schema,
+                    stringToGraphQLObject(requestAsString)
+                );
+                if (validationArray.length > 0) {
+                    reject(validationArray);
+                } else {
+                    try {
+                        request = await this.selectionValidation(
+                            requestAsString
+                        );
+                        if (request) {
+                            const nameMatch: any = requestAsString.match(
+                                /(?!(query$|mutation$)\s*)[a-zA-Z]+[a-zA-Z0-9]*/g
+                            );
+                            const name = nameMatch[1];
 
-                    let result = await this.setRequestVariables(
-                        stringToGraphQLObject(requestAsString),
-                        request
-                    );
-                    this.saveRequest(name, result).then(
-                        onfullfilled => {
-                            if (onfullfilled) {
-                                request?.deselect();
-                                resolve(onfullfilled);
-                            }
-                        },
-                        onreject => {
-                            request?.deselect();
-                            reject(onreject);
+                            this._state.myRequests.forEach(myReq => {
+                                if (name === myReq.label) {
+                                    resolve(myReq);
+                                }
+                            });
+
+                            let result = await this.setRequestVariables(
+                                stringToGraphQLObject(requestAsString),
+                                request
+                            );
+                            this.saveRequest(name, result).then(
+                                onfullfilled => {
+                                    if (onfullfilled) {
+                                        request?.deselect();
+                                        resolve(onfullfilled);
+                                    }
+                                },
+                                onreject => {
+                                    request?.deselect();
+                                    reject(onreject);
+                                }
+                            );
                         }
-                    );
+                    } catch (error) {
+                        request?.deselect();
+                        reject(error);
+                    }
                 }
-            } catch (error) {
-                request?.deselect();
-                reject(error);
+            } else {
+                reject('No schema found!');
             }
         });
     }

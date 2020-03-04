@@ -88,7 +88,7 @@
             },
             {
                 "command": "graphax.createRequest",
-                "title": "GraphaX: Create Request"
+                "title": "GraphaX: Add Request"
             },
             {
                 "command": "tree.refresh",
@@ -164,7 +164,7 @@
             },
             {
                 "command": "service.add",
-                "title": "GraphaX: Add to services"
+                "title": "GraphaX: Add Service"
             },
             {
                 "command": "service.delete",

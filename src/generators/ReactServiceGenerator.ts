@@ -7,7 +7,11 @@ import {
     reactComponent,
     reactTest
 } from '../templates/Reacttemplate';
-import { toTitleCase } from '../utils/Utils';
+import { toTitleCase, getTextRange } from '../utils/Utils';
+import { dirname, basename, join } from 'path';
+import { existsSync, unlinkSync } from 'fs';
+import del = require('del');
+import * as vscode from 'vscode';
 const { promises: fs } = require('fs');
 const path = require('path');
 export class ReactServiceGenerator extends AbstractServiceGenerator {
@@ -80,7 +84,106 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         });
     }
 
-    public async deleteRequestFromService(service: ServiceNode) {}
+    public async deleteRequestFromService(request: ServiceNode) {
+        const serviceDir = dirname(request.path);
+        const serviceName = basename(serviceDir).split('-')[0];
+        const componentPath = join(
+            serviceDir,
+            `${toTitleCase(serviceName)}Component.tsx`
+        );
+        const requestTestPath = join(
+            serviceDir,
+            `${toTitleCase(request.label)
+                .split('query')
+                .join('')
+                .split('mutation')
+                .join('')}Component.test.tsx`
+        );
+
+        if (
+            existsSync(request.path) &&
+            this.checkGraphaXSignature(request.path)
+        ) {
+            const requestDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(request.path)
+            );
+            await this.removeRequestFromFile(requestDoc, request);
+        }
+        if (
+            existsSync(componentPath) &&
+            this.checkGraphaXSignature(componentPath)
+        ) {
+            const componentDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(componentPath)
+            );
+            await this.removeRequestFromComponent(componentDoc, request);
+        }
+        if (
+            existsSync(requestTestPath) &&
+            this.checkGraphaXSignature(requestTestPath)
+        ) {
+            unlinkSync(requestTestPath);
+        }
+    }
+
+    /**
+     * Remove the given request from the document
+     * @param componentDoc The component document
+     * @param request Request that should be deleted from the component
+     */
+    private async removeRequestFromComponent(
+        componentDoc: vscode.TextDocument,
+        request: ServiceNode
+    ) {
+        var regex = new RegExp(request.label);
+        var pos = componentDoc.positionAt(
+            componentDoc.getText().indexOf(request.label)
+        );
+        let importRange = componentDoc.getWordRangeAtPosition(pos, regex);
+        if (importRange) {
+            importRange = new vscode.Range(
+                importRange.start,
+                importRange.end.with(undefined, importRange.end.character + 1)
+            );
+        }
+
+        let functionRange = getTextRange(
+            componentDoc,
+            `export function ${toTitleCase(request.label)
+                .split('query')
+                .join('')
+                .split('mutation')
+                .join('')}`,
+            'export function'
+        );
+        if (functionRange.start.line === 0) {
+            functionRange = getTextRange(
+                componentDoc,
+                `export function ${toTitleCase(request.label)
+                    .split('query')
+                    .join('')
+                    .split('mutation')
+                    .join('')}`,
+                '}'
+            );
+            functionRange = functionRange.with(
+                undefined,
+                functionRange.end.with(functionRange.start.line + 17, 0)
+            );
+        }
+        functionRange = new vscode.Range(
+            functionRange.start,
+            functionRange.end.with(undefined, 0)
+        );
+        await vscode.window.showTextDocument(componentDoc).then(te => {
+            te.edit(editBuilder => {
+                if (importRange) {
+                    editBuilder.delete(importRange);
+                }
+                editBuilder.delete(functionRange);
+            });
+        });
+    }
 
     /**
      *  Async method to create a react component with given requests
@@ -188,7 +291,9 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
 
     private async createReactTest(serviceName: string, request: CustomRequest) {
         return new Promise<string>(async (resolve, reject) => {
-            let imports = `import { ${request.label} } from './${serviceName}Requests'`;
+            let imports = `import { ${request.label} } from './${toTitleCase(
+                serviceName
+            )}Requests'`;
             let mockData = await this.getMockingData(request);
             let content = '';
             content = reactTest
