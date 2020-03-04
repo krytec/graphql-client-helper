@@ -48,6 +48,20 @@ export class StateService implements vscode.Memento {
         vscode.commands.executeCommand('setContext', 'hasRequests', true);
     }
 
+    removeRequest(customRequest: CustomRequest) {
+        const idx = this.myRequests.indexOf(customRequest, 0);
+        if (idx > -1) {
+            this.myRequests.splice(idx, 1);
+        }
+    }
+
+    removeService(service: ServiceNode) {
+        const idx = this.services.indexOf(service, 0);
+        if (idx > -1) {
+            this.services.splice(idx, 1);
+        }
+    }
+
     saveService(service: ServiceNode) {
         this.services.push(service);
         vscode.commands.executeCommand('setContext', 'hasServices', true);

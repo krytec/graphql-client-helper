@@ -350,7 +350,7 @@ export class GraphQLService {
             let serviceName = basename(fsPath);
             let dir = readdirSync(fsPath);
 
-            const service = new ServiceNode(
+            let service = new ServiceNode(
                 serviceName,
                 'Custom Service',
                 fsPath,
@@ -358,32 +358,39 @@ export class GraphQLService {
                 'service'
             );
 
-            const promised = await Promise.all(
-                dir.map(async file => {
-                    if (file.endsWith('.ts') || file.endsWith('.js')) {
-                        const filePath = join(fsPath, file);
-                        return this.getCustomRequestsFromFile(
-                            filePath,
-                            service
-                        );
-                    }
-                })
-            );
-            if (promised) {
+            const promised = new Array<ServiceNode | String>();
+            for (const file of dir) {
+                if (file.endsWith('.ts') || file.endsWith('.js')) {
+                    const filePath = join(fsPath, file);
+                    await this.getCustomRequestsFromFile(
+                        filePath,
+                        service
+                    ).then(
+                        resolved => {},
+                        rejected => {
+                            if (rejected) {
+                                promised.push(rejected);
+                            }
+                        }
+                    );
+                }
+            }
+
+            if (promised.length === 0) {
                 if (service.requests.length > 0) {
                     this._state.saveService(service);
                     resolve(service);
                 } else {
                     reject(
                         new Error(
-                            'Could not create Service, because there were no requests found in directory'
+                            'Could not create Service, because there were no requests found in directory.'
                         )
                     );
                 }
             } else {
                 reject(
                     new Error(
-                        'Could not create Service, because there were no requests found in directory'
+                        'Could not create Service, because there were invalid requests provided in service.'
                     )
                 );
             }
@@ -400,8 +407,8 @@ export class GraphQLService {
     private async getCustomRequestsFromFile(
         filePath: string,
         service: ServiceNode
-    ): Promise<ServiceNode> {
-        return new Promise<ServiceNode>(async (resolve, reject) => {
+    ): Promise<ServiceNode | String> {
+        return new Promise<ServiceNode | String>(async (resolve, reject) => {
             if (statSync(filePath).isFile()) {
                 var doc = await vscode.workspace.openTextDocument(filePath);
                 var idx = 0;

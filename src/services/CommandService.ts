@@ -405,14 +405,8 @@ export class CommandService {
                     )
                     .then(value => {
                         if (value === 'Yes') {
-                            const index = this._stateService.myRequests.indexOf(
-                                element,
-                                0
-                            );
-                            if (index > -1) {
-                                this._stateService.myRequests.splice(index, 1);
-                                this._savedRequestNodeProvider.refresh();
-                            }
+                            this._stateService.removeRequest(element);
+                            this._savedRequestNodeProvider.refresh();
                         }
                     });
             }
@@ -483,10 +477,7 @@ export class CommandService {
                                 vscode.window.showInformationMessage(
                                     `Deleted service ${service.label}!`
                                 );
-                                var idx = this._stateService.services.indexOf(
-                                    service
-                                );
-                                this._stateService.services.splice(idx, 1);
+                                this._stateService.removeService(service);
                             }
                             this._serviceNodeProvider.refresh();
                         }
