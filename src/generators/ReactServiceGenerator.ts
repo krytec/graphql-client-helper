@@ -2,10 +2,10 @@ import { AbstractServiceGenerator } from './AbstractServiceGenerator';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
 import {
-    reactQueryFunction,
-    reactMutationFunction,
-    reactComponent,
-    reactTest
+    reactQueryFunctionTemplate,
+    reactMutationFunctionTemplate,
+    reactComponentTemplate,
+    reactTestTemplate
 } from '../templates/Reacttemplate';
 import { toTitleCase, getTextRange } from '../utils/Utils';
 import { dirname, basename, join } from 'path';
@@ -208,7 +208,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                 if (request.kindOf === 'Query') {
                     functions = functions.concat(
                         this._config.typescript
-                            ? reactQueryFunction
+                            ? reactQueryFunctionTemplate
                                   .split('%serviceName%')
                                   .join(toTitleCase(request.name) + 'Component')
                                   .split('%query%')
@@ -220,7 +220,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                                   .split('%request%')
                                   .join(request.requestName)
                                   .concat('\n')
-                            : reactQueryFunction
+                            : reactQueryFunctionTemplate
                                   .split('%serviceName%')
                                   .join(toTitleCase(request.name) + 'Component')
                                   .split('%query%')
@@ -236,7 +236,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                 } else if (request.kindOf === 'Mutation') {
                     functions = functions.concat(
                         this._config.typescript
-                            ? reactMutationFunction
+                            ? reactMutationFunctionTemplate
                                   .split('%serviceName%')
                                   .join(toTitleCase(request.name) + 'Component')
                                   .split('%mutation%')
@@ -248,7 +248,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                                   .split('%request%')
                                   .join(request.requestName)
                                   .concat('\n')
-                            : reactMutationFunction
+                            : reactMutationFunctionTemplate
                                   .split('%serviceName%')
                                   .join(toTitleCase(request.name) + 'Component')
                                   .split('%mutation%')
@@ -264,7 +264,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                 }
             });
             let content = this._config.typescript
-                ? reactComponent
+                ? reactComponentTemplate
                       .split('%imports%')
                       .join(
                           `import * as schemaTypes from '../${this._config.generatedFolder}/schemaTypes'\n${imports}`
@@ -273,7 +273,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                       .join(requestsAsString)
                       .split('%functions%')
                       .join(functions)
-                : reactComponent
+                : reactComponentTemplate
                       .split('%imports%')
                       .join(imports)
                       .split('%requests%')
@@ -299,7 +299,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
             )}Requests'`;
             let mockData = await this.getMockingData(request);
             let content = '';
-            content = reactTest
+            content = reactTestTemplate
                 .split('%imports%')
                 .join(
                     `import { ${toTitleCase(

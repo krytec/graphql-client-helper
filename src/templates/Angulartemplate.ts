@@ -6,16 +6,16 @@ import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { Observable } from 'rxjs';
 import * as schemaTypes from '../../graphqlschema/schemaTypes';
-$myImports
+%myImports%
 
 @Injectable({
   providedIn: 'root'
 })
-export class $serviceName {
+export class %serviceName% {
 
   constructor(private apollo: Apollo) { }
 
-  $myFunctions
+  %myFunctions%
 }`;
 
 export const angularComponentTemplate: string = `
@@ -24,20 +24,20 @@ export const angularComponentTemplate: string = `
  */
 import { Component, OnInit } from '@angular/core';
 import * as schemaTypes from '../../graphqlschema/schemaTypes';
-import { $myServiceTitel } from './$myNameTitel.service';
+import { %myServiceTitel% } from './%myNameTitel%.service';
 
 
 @Component({
-  selector: 'app-$myName-component',
+  selector: 'app-%myName%-component',
 })
-export class $myNameTitelComponent implements OnInit {
-  $myVariables
+export class %myNameTitel%Component implements OnInit {
+  %myVariables%
 
-  constructor(private service: $myServiceTitel) { }
+  constructor(private service: %myServiceTitel%) { }
 
   ngOnInit() {
     //TODO: insert arguments for requests
-    $myFunctions
+    %myFunctions%
   }
 
 }

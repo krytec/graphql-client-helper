@@ -160,9 +160,13 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
             );
         });
         content = content
-            .replace('$myImports', imports)
-            .replace('$serviceName', toTitleCase(serviceName) + 'Service')
-            .replace('$myFunctions', functions);
+            .split('%myImports%')
+            .join(imports)
+            .split('%serviceName%')
+            .join(toTitleCase(serviceName) + 'Service')
+            .split('%myFunctions%')
+            .join(functions);
+
         await fs.writeFile(
             path.join(
                 this._folderPath,
@@ -219,15 +223,18 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
             })
             .join('');
         let content = angularComponentTemplate
-            .replace(/\$myNameTitel/g, toTitleCase(componentName))
-            .replace(
-                /\$myServiceTitel/g,
-                toTitleCase(componentName) + 'Service'
-            )
-            .replace(/\$myName/g, componentName)
-            .replace(/\$myService/g, componentName + 'Service')
-            .replace('$myFunctions', functions)
-            .replace('$myVariables', variables);
+            .split('%myNameTitel%')
+            .join(toTitleCase(componentName))
+            .split('%myServiceTitel%')
+            .join(toTitleCase(componentName) + 'Service')
+            .split('%myName%')
+            .join(componentName)
+            .split('%myService%')
+            .join(componentName + 'Service')
+            .split('%myFunctions%')
+            .join(functions)
+            .split('%myVariables%')
+            .join(variables);
         let filePath = path.join(
             this._folderPath,
             '..',
