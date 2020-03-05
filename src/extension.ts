@@ -6,7 +6,7 @@ import { CommandService } from './services/CommandService';
 import { LoggingService } from './services/LoggingService';
 import { StateService } from './services/StateService';
 import { RequestNodeProvider } from './provider/RequestNodeProvider';
-import { SavedRequestNodeProvider } from './provider/SavedRequestNodeProvider';
+import { CustomRequestNodeProvider } from './provider/CustomRequestNodeProvider';
 import { ConfigurationService } from './services/ConfigurationService';
 import { RequestDocumentProvider } from './provider/RequestDocumentProvider';
 import { ServiceNodeProvider } from './provider/ServiceNodeProvider';
@@ -30,11 +30,13 @@ export function activate(context: vscode.ExtensionContext) {
     const clientService = new GraphQLClientService(configurationService);
     // Create a node provider and adds a new TreeView to vscode
     const requestNodeProvider = new RequestNodeProvider(stateService);
-    const savedRequestNodeProvider = new SavedRequestNodeProvider(stateService);
+    const customRequestNodeProvider = new CustomRequestNodeProvider(
+        stateService
+    );
     const serviceNodeProvider = new ServiceNodeProvider(stateService);
     vscode.window.registerTreeDataProvider(
         'requestView',
-        savedRequestNodeProvider
+        customRequestNodeProvider
     );
     vscode.window.registerTreeDataProvider('serviceView', serviceNodeProvider);
     vscode.window.registerTreeDataProvider(
@@ -54,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
         clientService,
         requestNodeProvider,
         serviceNodeProvider,
-        savedRequestNodeProvider
+        customRequestNodeProvider
     );
     commandService.registerCommands();
 }

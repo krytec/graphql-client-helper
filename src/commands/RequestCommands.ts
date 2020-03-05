@@ -1,4 +1,4 @@
-import { CustomRequest } from '../provider/SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import * as vscode from 'vscode';
 import { CircularQuickInput } from '../provider/CircularQuickInputProvider';
 import { StateService } from '../services/StateService';

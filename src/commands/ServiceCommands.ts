@@ -1,7 +1,7 @@
 import { ServiceNode } from '../provider/ServiceNodeProvider';
 import * as vscode from 'vscode';
 import { StateService } from '../services/StateService';
-import { CustomRequest } from '../provider/SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { GraphQLService } from '../services/GraphQLService';
 import { Framework } from '../services/ConfigurationService';
 import { join, basename, dirname } from 'path';

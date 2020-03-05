@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { StateService } from '../services/StateService';
-import { CustomRequest } from './SavedRequestNodeProvider';
+import { CustomRequest } from './CustomRequestNodeProvider';
 import { join } from 'path';
 
 /**

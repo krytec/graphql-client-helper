@@ -1,5 +1,5 @@
 import { AbstractServiceGenerator } from './AbstractServiceGenerator';
-import { CustomRequest } from '../provider/SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
 import {
     reactQueryFunction,

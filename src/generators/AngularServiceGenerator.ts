@@ -1,5 +1,5 @@
 import { AbstractServiceGenerator } from './AbstractServiceGenerator';
-import { CustomRequest } from '../provider/SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import {
     angularServiceTemplate,
     angularComponentTemplate,
@@ -16,7 +16,7 @@ import { existsSync } from 'fs';
 export class AngularServiceGenerator extends AbstractServiceGenerator {
     public generateService(
         serviceName: string,
-        requests: import('../provider/SavedRequestNodeProvider').CustomRequest[]
+        requests: import('../provider/CustomRequestNodeProvider').CustomRequest[]
     ): Promise<string[]> {
         return new Promise<string[]>(async (resolve, reject) => {
             let files: string[] = new Array<string>();

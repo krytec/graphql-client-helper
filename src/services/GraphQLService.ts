@@ -21,7 +21,7 @@ import { Request } from '../provider/RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 import { stringToGraphQLFormat, stringToGraphQLObject } from '../utils/Utils';
-import { CustomRequest } from '../provider/SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import { ServiceNode } from '../provider/ServiceNodeProvider';

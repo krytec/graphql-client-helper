@@ -7,8 +7,8 @@ import { StateService } from './StateService';
 import { Request, RequestNodeProvider } from '../provider/RequestNodeProvider';
 import {
     CustomRequest,
-    SavedRequestNodeProvider
-} from '../provider/SavedRequestNodeProvider';
+    CustomRequestNodeProvider
+} from '../provider/CustomRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { dedent, sleep, toTitleCase } from '../utils/Utils';
 import * as fs from 'fs';
@@ -54,7 +54,7 @@ export class CommandService {
         private _clientService: GraphQLClientService,
         private _requestNodeProvider: RequestNodeProvider,
         private _serviceNodeProvider: ServiceNodeProvider,
-        private _savedRequestNodeProvider: SavedRequestNodeProvider
+        private _customRequestNodeProvider: CustomRequestNodeProvider
     ) {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
@@ -208,7 +208,7 @@ export class CommandService {
                                             rejected
                                         )
                                 );
-                                this._savedRequestNodeProvider.refresh();
+                                this._customRequestNodeProvider.refresh();
                                 this._serviceNodeProvider.refresh();
                             })
                             .catch((err: Error) =>
@@ -338,7 +338,7 @@ export class CommandService {
                     .executeCommand('workbench.view.extension.schema-explorer')
                     .then(() => {
                         createRequestFromCode(this._graphQLService).then(() =>
-                            this._savedRequestNodeProvider.refresh()
+                            this._customRequestNodeProvider.refresh()
                         );
                     });
             }
@@ -353,7 +353,7 @@ export class CommandService {
                     await showSaveRequestCommand(element, this._graphQLService);
                     element.deselect();
                     this._requestNodeProvider.refresh();
-                    this._savedRequestNodeProvider.refresh();
+                    this._customRequestNodeProvider.refresh();
                 } else {
                     vscode.window.showErrorMessage(
                         'You must select at least one field of the request!'
@@ -382,14 +382,14 @@ export class CommandService {
         //#region requestView
         const refreshListCommand = vscode.commands.registerCommand(
             'list.refresh',
-            () => this._savedRequestNodeProvider.refresh()
+            () => this._customRequestNodeProvider.refresh()
         );
 
         const selectRequestCommand = vscode.commands.registerCommand(
             'list.selectRequest',
             (element: CustomRequest) => {
                 element.selected = !element.selected;
-                this._savedRequestNodeProvider.refresh();
+                this._customRequestNodeProvider.refresh();
             }
         );
 
@@ -415,7 +415,7 @@ export class CommandService {
                     .then(value => {
                         if (value === 'Yes') {
                             this._stateService.removeRequest(element);
-                            this._savedRequestNodeProvider.refresh();
+                            this._customRequestNodeProvider.refresh();
                         }
                     });
             }
@@ -435,7 +435,7 @@ export class CommandService {
                 this._stateService.myRequests.forEach(
                     request => (request.selected = false)
                 );
-                this._savedRequestNodeProvider.refresh();
+                this._customRequestNodeProvider.refresh();
                 this._serviceNodeProvider.refresh();
             }
         );

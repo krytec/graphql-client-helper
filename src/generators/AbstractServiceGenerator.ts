@@ -1,4 +1,4 @@
-import { CustomRequest } from '../provider/SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { StateService } from '../services/StateService';
 import { ConfigurationService } from '../services/ConfigurationService';
 import { stringToGraphQLObject, getTextRange } from '../utils/Utils';

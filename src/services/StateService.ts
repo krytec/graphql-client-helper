@@ -6,7 +6,7 @@ import { EnumWrapper } from '../graphqlwrapper/EnumWrapper';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
 import { Request } from '../provider/RequestNodeProvider';
-import { CustomRequest } from '../provider/SavedRequestNodeProvider';
+import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { ServiceNode } from '../provider/ServiceNodeProvider';
 import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
 /**

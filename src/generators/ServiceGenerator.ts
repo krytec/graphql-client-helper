@@ -7,7 +7,7 @@ const path = require('path');
 export class ServiceGenerator extends AbstractServiceGenerator {
     public generateService(
         serviceName: string,
-        requests: import('../provider/SavedRequestNodeProvider').CustomRequest[]
+        requests: import('../provider/CustomRequestNodeProvider').CustomRequest[]
     ): Promise<string[]> {
         return new Promise<string[]>(async (resolve, reject) => {
             let files: string[] = new Array<string>();

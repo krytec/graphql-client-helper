@@ -4,9 +4,9 @@ import { StateService } from '../services/StateService';
 import { join } from 'path';
 
 /**
- * SavedRequestNodeProvider which provides treedate of savedqueries
+ * CustomRequestNodeProvider which provides treedate of savedqueries
  */
-export class SavedRequestNodeProvider
+export class CustomRequestNodeProvider
     implements vscode.TreeDataProvider<CustomRequest> {
     private _onDidChangeTreeData = new vscode.EventEmitter<
         CustomRequest | undefined
