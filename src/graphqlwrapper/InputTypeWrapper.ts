@@ -47,7 +47,6 @@ export class InputTypeWrapper implements GraphQLWrapper {
             .map(x => dedent`\n${x.toTypescriptType()},\n`)
             .map(x => x.replace(/\n/g, '\n    '))
             .join('');
-        //? FIXME: Find a way to make this code look cleaner
         let typeAsString: string = `
 ${this._description !== undefined ? `/**${this._description}*/` : ``}
 export type ${this._name} = {

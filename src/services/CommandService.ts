@@ -198,16 +198,18 @@ export class CommandService {
                                 );
                                 progress.report({ message: 'Refreshing view' });
                                 this._requestNodeProvider.refresh();
-                                this._graphQLService.loadGraphaxJSON().then(
-                                    resolved =>
-                                        vscode.window.showInformationMessage(
-                                            resolved
-                                        ),
-                                    rejected =>
-                                        vscode.window.showWarningMessage(
-                                            rejected
-                                        )
-                                );
+                                if (this._stateService.currentTree.length > 0) {
+                                    this._graphQLService.loadGraphaxJSON().then(
+                                        resolved =>
+                                            vscode.window.showInformationMessage(
+                                                resolved
+                                            ),
+                                        rejected =>
+                                            vscode.window.showWarningMessage(
+                                                rejected
+                                            )
+                                    );
+                                }
                                 this._customRequestNodeProvider.refresh();
                                 this._serviceNodeProvider.refresh();
                             })

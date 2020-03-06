@@ -64,7 +64,6 @@ export class TypeWrapper implements GraphQLWrapper {
                 .map(i => `${i.name} & `)
                 .join('');
         }
-        //? FIXME: Find a way to make this code look cleaner
         let typeAsString: string = `
 ${this._description !== undefined ? `/**${this._description}*/` : ``}
 export type ${this._name} = ${interfacesAsString} {

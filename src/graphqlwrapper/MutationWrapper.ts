@@ -29,7 +29,6 @@ export class MutationWrapper extends RequestWrapper implements GraphQLWrapper {
             .map(x => dedent`\n${x.toTypescriptType()},\n`)
             .map(x => x.replace(/\n/g, '\n    '))
             .join('');
-        //? FIXME: Find a way to make this code look cleaner
         let typeAsString: string = `
 ${this.Description !== undefined ? `/**${this.Description}*/` : ``}
 query ${this.Name}Query{
