@@ -13,10 +13,7 @@ import { ConfigurationService, Framework } from './ConfigurationService';
 import { dedent, sleep, toTitleCase } from '../utils/Utils';
 import * as fs from 'fs';
 import { join } from 'path';
-import {
-    ServiceNodeProvider,
-    ServiceNode
-} from '../provider/ServiceNodeProvider';
+import { ServiceNodeProvider, Service } from '../provider/ServiceNodeProvider';
 import {
     showServiceRequestInCodeCommand,
     showCreateServiceCommand,
@@ -472,7 +469,7 @@ export class CommandService {
 
         const deleteServiceCommand = vscode.commands.registerCommand(
             'service.delete',
-            (service: ServiceNode) => {
+            (service: Service) => {
                 vscode.window
                     .showWarningMessage(
                         `Do you really want to delete service ${service.label} from your file system?`,
@@ -505,7 +502,7 @@ export class CommandService {
 
         const deleteRequestFromServiceCommand = vscode.commands.registerCommand(
             'service.request.delete',
-            (request: ServiceNode) => {
+            (request: Service) => {
                 vscode.window
                     .showWarningMessage(
                         `Do you really want to delete request ${request.label} from your service?`,
@@ -515,7 +512,7 @@ export class CommandService {
                     .then(button => {
                         if (button === 'Yes') {
                             this._generator.deleteRequestFromService(request);
-                            let currentService: ServiceNode | undefined;
+                            let currentService: Service | undefined;
                             this._stateService.services.forEach(service => {
                                 if (service.requests.includes(request)) {
                                     currentService = service;
@@ -539,7 +536,7 @@ export class CommandService {
 
         const serviceCodeCommand = vscode.commands.registerCommand(
             'service.request.code',
-            (request: ServiceNode) => {
+            (request: Service) => {
                 showServiceRequestInCodeCommand(request);
             }
         );

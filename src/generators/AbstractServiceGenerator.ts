@@ -5,7 +5,7 @@ import { stringToGraphQLObject, getTextRange } from '../utils/Utils';
 import { Request } from '../provider/RequestNodeProvider';
 import { GraphQLClientService } from '../services/GraphQLClientService';
 import { GraphQLService } from '../services/GraphQLService';
-import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { Service } from '../provider/ServiceNodeProvider';
 import * as vscode from 'vscode';
 import { readFileSync } from 'fs';
 const { promises: fs } = require('fs');
@@ -24,7 +24,7 @@ export abstract class AbstractServiceGenerator {
         requests: CustomRequest[]
     ): Promise<string[]>;
 
-    public abstract async deleteRequestFromService(service: ServiceNode);
+    public abstract async deleteRequestFromService(service: Service);
 
     /**
      * Method to write requests to file
@@ -82,7 +82,7 @@ import gql from 'graphql-tag';\n`;
      */
     protected async removeRequestFromFile(
         doc: vscode.TextDocument,
-        request: ServiceNode
+        request: Service
     ) {
         let range = getTextRange(doc, `export const ${request.label}`, '`;');
         await vscode.window.showTextDocument(doc).then(te => {

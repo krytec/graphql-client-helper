@@ -7,7 +7,7 @@ import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
 import { RequestWrapper } from '../graphqlwrapper/RequestWrapper';
 import { Request } from '../provider/RequestNodeProvider';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
-import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { Service } from '../provider/ServiceNodeProvider';
 import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
 /**
  * Service for a global extension state,
@@ -55,14 +55,14 @@ export class StateService implements vscode.Memento {
         }
     }
 
-    removeService(service: ServiceNode) {
+    removeService(service: Service) {
         const idx = this.services.indexOf(service, 0);
         if (idx > -1) {
             this.services.splice(idx, 1);
         }
     }
 
-    saveService(service: ServiceNode) {
+    saveService(service: Service) {
         this.services.push(service);
         vscode.commands.executeCommand('setContext', 'hasServices', true);
     }
@@ -111,8 +111,8 @@ export class StateService implements vscode.Memento {
         return this.get('myRequests') as Array<CustomRequest>;
     }
 
-    get services(): Array<ServiceNode> {
-        return this.get('services') as Array<ServiceNode>;
+    get services(): Array<Service> {
+        return this.get('services') as Array<Service>;
     }
 
     //#endregion
@@ -135,6 +135,6 @@ export class StateService implements vscode.Memento {
         this.update('currentTree', new Array<Request>());
         this.update('requests', new Array<RequestWrapper>());
         this.update('myRequests', new Array<CustomRequest>());
-        this.update('services', new Array<ServiceNode>());
+        this.update('services', new Array<Service>());
     }
 }

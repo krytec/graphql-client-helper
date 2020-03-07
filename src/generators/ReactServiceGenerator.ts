@@ -1,6 +1,6 @@
 import { AbstractServiceGenerator } from './AbstractServiceGenerator';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
-import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { Service } from '../provider/ServiceNodeProvider';
 import {
     reactQueryFunctionTemplate,
     reactMutationFunctionTemplate,
@@ -65,7 +65,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                     }
 
                     // Create service tree item from requests
-                    const service = new ServiceNode(
+                    const service = new Service(
                         serviceName,
                         'React Service',
                         folderPath,
@@ -87,7 +87,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         });
     }
 
-    public async deleteRequestFromService(request: ServiceNode) {
+    public async deleteRequestFromService(request: Service) {
         const serviceDir = dirname(request.path);
         const serviceName = basename(serviceDir).split('-')[0];
         const componentPath = join(
@@ -136,7 +136,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
      */
     private async removeRequestFromComponent(
         componentDoc: vscode.TextDocument,
-        request: ServiceNode
+        request: Service
     ) {
         var regex = new RegExp(request.label);
         var pos = componentDoc.positionAt(

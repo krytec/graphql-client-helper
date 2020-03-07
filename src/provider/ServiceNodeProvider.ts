@@ -6,13 +6,12 @@ import { join } from 'path';
 /**
  * Provider class which provides ServiceNodes as TreeItem for the service TreeView
  */
-export class ServiceNodeProvider
-    implements vscode.TreeDataProvider<ServiceNode> {
+export class ServiceNodeProvider implements vscode.TreeDataProvider<Service> {
     private _onDidChangeTreeData = new vscode.EventEmitter<
-        ServiceNode | undefined
+        Service | undefined
     >();
 
-    readonly onDidChangeTreeData: vscode.Event<ServiceNode | undefined> = this
+    readonly onDidChangeTreeData: vscode.Event<Service | undefined> = this
         ._onDidChangeTreeData.event;
 
     constructor(private _state: StateService) {}
@@ -28,9 +27,7 @@ export class ServiceNodeProvider
      * Returns the selected element of the treeview
      * @param element Element which should be returned
      */
-    getTreeItem(
-        element: ServiceNode
-    ): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(element: Service): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
     }
 
@@ -39,8 +36,8 @@ export class ServiceNodeProvider
      * @param element Parent element or undefined if its the root
      */
     getChildren(
-        element?: ServiceNode | undefined
-    ): vscode.ProviderResult<ServiceNode[]> {
+        element?: Service | undefined
+    ): vscode.ProviderResult<Service[]> {
         if (element) {
             return element.requests;
         } else {
@@ -48,7 +45,7 @@ export class ServiceNodeProvider
         }
     }
 
-    getParent(element: ServiceNode): vscode.ProviderResult<ServiceNode> {
+    getParent(element: Service): vscode.ProviderResult<Service> {
         this._state.services.forEach(service => {
             if (service.requests.includes(element)) {
                 return service;
@@ -59,10 +56,10 @@ export class ServiceNodeProvider
 }
 
 /**
- * ServiceNode class which extends TreeItem from vscode to represent a service as a TreeItem
+ * Service class which extends TreeItem from vscode to represent a service as a TreeItem
  */
-export class ServiceNode extends vscode.TreeItem {
-    private _serviceRequests = new Array<ServiceNode>();
+export class Service extends vscode.TreeItem {
+    private _serviceRequests = new Array<Service>();
     constructor(
         public readonly label: string,
         private _tooltip: string,
@@ -87,7 +84,7 @@ export class ServiceNode extends vscode.TreeItem {
         return this._tooltip;
     }
 
-    get requests(): Array<ServiceNode> {
+    get requests(): Array<Service> {
         return this._serviceRequests;
     }
     //#endregion
@@ -99,7 +96,7 @@ export class ServiceNode extends vscode.TreeItem {
     addRequest(request: CustomRequest, customPath?: string) {
         if (customPath) {
             this._serviceRequests.push(
-                new ServiceNode(
+                new Service(
                     request.label,
                     request.tooltip,
                     customPath,
@@ -110,7 +107,7 @@ export class ServiceNode extends vscode.TreeItem {
             );
         } else {
             this._serviceRequests.push(
-                new ServiceNode(
+                new Service(
                     request.label,
                     request.tooltip,
                     join(this._path, `${this.label}Requests.ts`),

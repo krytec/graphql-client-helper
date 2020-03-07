@@ -7,7 +7,7 @@ import {
     angularTestRequestTemplate
 } from '../templates/AngularTemplate';
 import { toTitleCase, getTextRange } from '../utils/Utils';
-import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { Service } from '../provider/ServiceNodeProvider';
 import { dirname, basename, join } from 'path';
 const { promises: fs } = require('fs');
 const path = require('path');
@@ -69,7 +69,7 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
                     );
 
                     // Create service tree item from requests
-                    const service = new ServiceNode(
+                    const service = new Service(
                         serviceName,
                         'Angular Service',
                         folderPath,
@@ -92,7 +92,7 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
      * Method to delete a request from the service
      * @param request The request that should be deleted from the service
      */
-    public async deleteRequestFromService(request: ServiceNode) {
+    public async deleteRequestFromService(request: Service) {
         const serviceDir = dirname(request.path);
         const serviceName = basename(serviceDir).split('-')[0];
         const servicePath = join(serviceDir, `${serviceName}.service.ts`);
@@ -323,7 +323,7 @@ const test_${request.label} = {
      */
     private async removeFromService(
         doc: vscode.TextDocument,
-        request: ServiceNode
+        request: Service
     ) {
         var regex = new RegExp(request.label);
         var pos = doc.positionAt(doc.getText().indexOf(request.label));
@@ -354,7 +354,7 @@ const test_${request.label} = {
      */
     private async removeFromComponent(
         doc: vscode.TextDocument,
-        request: ServiceNode
+        request: Service
     ) {
         let propRange: vscode.Range;
         for (let index = 0; index < doc.lineCount; index++) {
@@ -400,10 +400,7 @@ const test_${request.label} = {
      * @param doc Test document
      * @param request Request that should be removed from the test
      */
-    private async removeFromTest(
-        doc: vscode.TextDocument,
-        request: ServiceNode
-    ) {
+    private async removeFromTest(doc: vscode.TextDocument, request: Service) {
         var regex = new RegExp(request.label);
         var pos = doc.positionAt(doc.getText().indexOf(request.label));
         let importRange = doc.getWordRangeAtPosition(pos, regex);

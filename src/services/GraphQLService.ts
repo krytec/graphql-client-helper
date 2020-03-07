@@ -24,7 +24,7 @@ import { stringToGraphQLFormat, stringToGraphQLObject } from '../utils/Utils';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
-import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { Service } from '../provider/ServiceNodeProvider';
 import { readdirSync, statSync, existsSync, readFileSync } from 'fs';
 import { basename, join } from 'path';
 import { TypeWrapper } from '../graphqlwrapper/TypeWrapper';
@@ -375,7 +375,7 @@ export class GraphQLService {
         });
     }
 
-    public async writeServiceToGraphaxJSON(service: ServiceNode) {
+    public async writeServiceToGraphaxJSON(service: Service) {
         return new Promise<any>(async (resolve, reject) => {
             const jsonPath = join(this._folder, 'graphax.json');
             if (existsSync(jsonPath)) {
@@ -397,7 +397,7 @@ export class GraphQLService {
             }
         });
     }
-    public async removeServiceFromGraphaxJSON(service: ServiceNode) {
+    public async removeServiceFromGraphaxJSON(service: Service) {
         return new Promise<any>(async (resolve, reject) => {
             const jsonPath = join(this._folder, 'graphax.json');
             if (existsSync(jsonPath)) {
@@ -431,12 +431,12 @@ export class GraphQLService {
      * If the folder has any .ts or .js file the getCustomRequestFromFile method will be called
      * @param fsPath Path to folder
      */
-    async createServiceFromFolder(fsPath: string): Promise<ServiceNode> {
-        return new Promise<ServiceNode>(async (resolve, reject) => {
+    async createServiceFromFolder(fsPath: string): Promise<Service> {
+        return new Promise<Service>(async (resolve, reject) => {
             let serviceName = basename(fsPath);
             let dir = readdirSync(fsPath);
 
-            let service = new ServiceNode(
+            let service = new Service(
                 serviceName,
                 'Custom Service',
                 fsPath,
@@ -444,7 +444,7 @@ export class GraphQLService {
                 'service'
             );
 
-            const promised = new Array<ServiceNode | String>();
+            const promised = new Array<Service | String>();
             for (const file of dir) {
                 if (file.endsWith('.ts') || file.endsWith('.js')) {
                     const filePath = join(fsPath, file);
@@ -492,9 +492,9 @@ export class GraphQLService {
      */
     private async getCustomRequestsFromFile(
         filePath: string,
-        service: ServiceNode
-    ): Promise<ServiceNode | String> {
-        return new Promise<ServiceNode | String>(async (resolve, reject) => {
+        service: Service
+    ): Promise<Service | String> {
+        return new Promise<Service | String>(async (resolve, reject) => {
             if (statSync(filePath).isFile()) {
                 var doc = await vscode.workspace.openTextDocument(filePath);
                 var idx = 0;

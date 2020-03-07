@@ -1,4 +1,4 @@
-import { ServiceNode } from '../provider/ServiceNodeProvider';
+import { Service } from '../provider/ServiceNodeProvider';
 import * as vscode from 'vscode';
 import { StateService } from '../services/StateService';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
@@ -112,7 +112,7 @@ export async function addServiceCommand(
  * Async function to show a selected request in code
  * @param request Request that should be shown in code
  */
-export async function showServiceRequestInCodeCommand(request: ServiceNode) {
+export async function showServiceRequestInCodeCommand(request: Service) {
     if (request.request) {
         const doc = await vscode.workspace.openTextDocument(
             vscode.Uri.file(request.path)
