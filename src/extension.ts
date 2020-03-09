@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     commandService.registerCommands();
     vscode.languages.registerCompletionItemProvider(
-        'plaintext',
+        { pattern: '**/**.gql' },
         new RequestCompletionProvider(stateService)
     );
 }

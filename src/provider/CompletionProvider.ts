@@ -41,7 +41,7 @@ export class RequestCompletionProvider
         }
         if (lastQueryIdx < lastMutationIdx) {
             //mutation selected
-            let querySelected = false;
+            querySelected = false;
         }
         let lastRequestSelection = document.getText(
             new vscode.Range(document.positionAt(lastRequestIdx), position)
@@ -191,6 +191,15 @@ export class RequestCompletionProvider
                     }
                 }
             }
+            return items;
+        } else {
+            this._state.currentTree.forEach(req => {
+                if (req.query === querySelected) {
+                    let reqItem = new vscode.CompletionItem(req.label);
+                    reqItem.insertText = req.toString() + '{}';
+                    items.push(reqItem);
+                }
+            });
             return items;
         }
     }
