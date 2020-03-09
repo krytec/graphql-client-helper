@@ -11,7 +11,7 @@ import { ConfigurationService } from './services/ConfigurationService';
 import { RequestDocumentProvider } from './provider/RequestDocumentProvider';
 import { ServiceNodeProvider } from './provider/ServiceNodeProvider';
 import { GraphQLClientService } from './services/GraphQLClientService';
-import { CompletionProvider } from './provider/CompletionProvider';
+import { RequestCompletionProvider } from './provider/CompletionProvider';
 // this method is called when your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -62,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
     commandService.registerCommands();
     vscode.languages.registerCompletionItemProvider(
         'plaintext',
-        new CompletionProvider(stateService)
+        new RequestCompletionProvider(stateService)
     );
 }
 

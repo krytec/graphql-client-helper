@@ -25,6 +25,21 @@ export function sleep(ms) {
 }
 
 /**
+ * Returns the last entry of an array
+ * @param array array that should be checked
+ * @param n number of entries that are returned
+ */
+export function lastEntryOfArray<T>(array: Array<T>, n?: number) {
+    if (array === null) {
+        return void 0;
+    }
+    if (n === undefined) {
+        return array[array.length - 1];
+    }
+    return array.slice(Math.max(array.length - n, 0));
+}
+
+/**
  * * Function to parse a string to graphql and return it as string
  * @param request Input string to pars
  */
