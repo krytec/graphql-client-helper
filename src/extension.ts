@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
         customRequestNodeProvider
     );
     commandService.registerCommands();
-    const decorator = new DecorationProvider(stateService);
+    const decorator = new DecorationProvider(stateService, graphQLService);
     vscode.languages.registerCompletionItemProvider(
         { pattern: '**/**.gql' },
         new RequestCompletionProvider(stateService)

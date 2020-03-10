@@ -1,65 +1,242 @@
 import { StateService } from '../services/StateService';
 import * as vscode from 'vscode';
+import { validate, GraphQLError } from 'graphql';
+import { stringToGraphQLObject } from '../utils/Utils';
+import { GraphQLService } from '../services/GraphQLService';
+
+const lineDecorator = vscode.window.createTextEditorDecorationType({
+    textDecoration: 'underline wavy lightcoral',
+    fontStyle: 'italic',
+    opacity: '75%',
+    overviewRulerColor: 'red',
+    overviewRulerLane: vscode.OverviewRulerLane.Full
+});
 
 export class DecorationProvider {
     private _timeout: NodeJS.Timer | undefined = undefined;
     private _activeEditor = vscode.window.activeTextEditor;
-
-    constructor(private _state: StateService) {
+    constructor(
+        private _state: StateService,
+        private _graphqlService: GraphQLService
+    ) {
         vscode.window.onDidChangeActiveTextEditor(editor => {
-            this._activeEditor = editor;
-            if (editor) {
-                this.triggerUpdateDecorations();
-            }
+            return new Promise((resolve, rejects) => {
+                this._activeEditor = editor;
+                if (editor) {
+                    this.triggerUpdateDecorations();
+                }
+            });
         }, null);
 
         vscode.workspace.onDidChangeTextDocument(event => {
-            if (
-                this._activeEditor &&
-                event.document === this._activeEditor.document
-            ) {
-                this.triggerUpdateDecorations();
-            }
+            return new Promise((resolve, rejects) => {
+                if (
+                    this._activeEditor &&
+                    event.document === this._activeEditor.document
+                ) {
+                    this.triggerUpdateDecorations();
+                }
+            });
         }, null);
-
-        this.triggerUpdateDecorations();
     }
 
     private async updateDecorations() {
-        return new Promise((resolve, reject) => {
-            if (!this._activeEditor) {
-                return;
-            }
-            if (this._activeEditor.document.uri.fsPath.endsWith('.gql')) {
-                const text = this._activeEditor.document.getText();
-                this.checkQueries(text);
-                this.checkMutations(text);
-            }
-            resolve(true);
-        });
-    }
-
-    private checkQueries(text: string) {
-        let idx: number = text.indexOf('query');
-        while (idx > -1) {
-            let content = this.getContentOfBrackets(text.slice(idx));
-            console.log(content);
-            idx = text.indexOf('query', idx);
+        if (!this._activeEditor) {
+            return;
+        }
+        if (this._activeEditor.document.uri.fsPath.endsWith('.gql')) {
+            const text = this._activeEditor.document.getText();
+            this.checkQueries(text);
+            this.checkMutations(text);
         }
     }
 
-    private checkMutations(text: string) {
-        throw new Error('NYI');
+    private async checkQueries(text: string) {
+        const bracketDecorations: vscode.DecorationOptions[] = [];
+        const invalidFieldDecorations: vscode.DecorationOptions[] = [];
+
+        let idx: number = text.indexOf('query');
+        if (this._activeEditor) {
+            while (idx > -1) {
+                let content = this.getContentOfBrackets(text.slice(idx));
+                if (!this.checkBrackets(content)) {
+                    const startPos = this._activeEditor.document.positionAt(
+                        idx
+                    );
+                    const endPos = this._activeEditor.document.positionAt(
+                        idx + content.length
+                    );
+                    const decoration = {
+                        range: new vscode.Range(startPos, endPos),
+                        hoverMessage: 'Missing }'
+                    };
+                    bracketDecorations.push(decoration);
+                }
+                try {
+                    let validate = await this._graphqlService.validateRequest(
+                        content
+                    );
+                    if (validate.length > 0) {
+                        validate.forEach(error => {
+                            if (error.nodes) {
+                                error.nodes.forEach(node => {
+                                    if (this._activeEditor && node.loc) {
+                                        const startPos = this._activeEditor.document.positionAt(
+                                            idx + node.loc.start
+                                        );
+                                        const endPos = this._activeEditor.document.positionAt(
+                                            idx + node.loc.end
+                                        );
+                                        const decoration = {
+                                            range: new vscode.Range(
+                                                startPos,
+                                                endPos
+                                            ),
+                                            hoverMessage: error.message
+                                        };
+                                        invalidFieldDecorations.push(
+                                            decoration
+                                        );
+                                    }
+                                });
+                            }
+                        });
+                    }
+                } catch (error) {
+                    if (error.positions) {
+                        error.positions.forEach(pos => {
+                            if (this._activeEditor) {
+                                const startPos = this._activeEditor.document.positionAt(
+                                    idx + pos
+                                );
+                                const endPos = startPos.with(
+                                    startPos.line,
+                                    this._activeEditor.document.lineAt(
+                                        startPos.line
+                                    ).text.length
+                                );
+                                const decoration = {
+                                    range: new vscode.Range(
+                                        startPos.with(undefined, 0),
+                                        endPos
+                                    ),
+                                    hoverMessage: error.message
+                                };
+                                invalidFieldDecorations.push(decoration);
+                            }
+                        });
+                    }
+                }
+
+                idx = text.indexOf('query', idx + 1);
+            }
+            this._activeEditor.setDecorations(
+                lineDecorator,
+                bracketDecorations
+            );
+            this._activeEditor.setDecorations(
+                lineDecorator,
+                invalidFieldDecorations
+            );
+        }
+    }
+
+    private async checkMutations(text: string) {
+        const bracketDecorations: vscode.DecorationOptions[] = [];
+        const invalidFieldDecorations: vscode.DecorationOptions[] = [];
+
+        let idx: number = text.indexOf('mutation');
+        if (this._activeEditor) {
+            while (idx > -1) {
+                let content = this.getContentOfBrackets(text.slice(idx));
+                if (!this.checkBrackets(content)) {
+                    const startPos = this._activeEditor.document.positionAt(
+                        idx
+                    );
+                    const endPos = this._activeEditor.document.positionAt(
+                        idx + content.length
+                    );
+                    const decoration = {
+                        range: new vscode.Range(startPos, endPos),
+                        hoverMessage: 'Missing }'
+                    };
+                    bracketDecorations.push(decoration);
+                }
+                try {
+                    let validate = await this._graphqlService.validateRequest(
+                        content
+                    );
+                    if (validate.length > 0) {
+                        validate.forEach(error => {
+                            if (error.nodes) {
+                                error.nodes.forEach(node => {
+                                    if (this._activeEditor && node.loc) {
+                                        const startPos = this._activeEditor.document.positionAt(
+                                            idx + node.loc.start
+                                        );
+                                        const endPos = this._activeEditor.document.positionAt(
+                                            idx + node.loc.end
+                                        );
+                                        const decoration = {
+                                            range: new vscode.Range(
+                                                startPos,
+                                                endPos
+                                            ),
+                                            hoverMessage: error.message
+                                        };
+                                        invalidFieldDecorations.push(
+                                            decoration
+                                        );
+                                    }
+                                });
+                            }
+                        });
+                    }
+                } catch (error) {
+                    if (error.positions) {
+                        error.positions.forEach(pos => {
+                            if (this._activeEditor) {
+                                const startPos = this._activeEditor.document.positionAt(
+                                    idx + pos
+                                );
+                                const endPos = startPos.with(
+                                    startPos.line,
+                                    this._activeEditor.document.lineAt(
+                                        startPos.line
+                                    ).text.length
+                                );
+                                const decoration = {
+                                    range: new vscode.Range(
+                                        startPos.with(undefined, 0),
+                                        endPos
+                                    ),
+                                    hoverMessage: error.message
+                                };
+                                invalidFieldDecorations.push(decoration);
+                            }
+                        });
+                    }
+                }
+
+                idx = text.indexOf('mutation', idx + 1);
+            }
+            this._activeEditor.setDecorations(
+                lineDecorator,
+                bracketDecorations
+            );
+            this._activeEditor.setDecorations(
+                lineDecorator,
+                invalidFieldDecorations
+            );
+        }
     }
 
     private async triggerUpdateDecorations() {
-        return new Promise((resolve, reject) => {
-            if (this._timeout) {
-                clearTimeout(this._timeout);
-                this._timeout = undefined;
-            }
-            this._timeout = setTimeout(() => this.updateDecorations(), 500);
-        });
+        if (this._timeout) {
+            clearTimeout(this._timeout);
+            this._timeout = undefined;
+        }
+        this._timeout = setTimeout(() => this.updateDecorations(), 500);
     }
 
     /**
@@ -83,7 +260,7 @@ export class DecorationProvider {
                     } else {
                         stack.pop();
                         if (stack.length === 0) {
-                            return text.slice(start, idx + 1);
+                            return text.slice(0, idx + 1);
                         }
                     }
                 }

@@ -12,7 +12,8 @@ import {
     GraphQLNonNull,
     GraphQLList,
     GraphQLInterfaceType,
-    validate
+    validate,
+    GraphQLError
 } from 'graphql';
 import { LoggingService } from './LoggingService';
 import * as vscode from 'vscode';
@@ -586,6 +587,20 @@ export class GraphQLService {
     //#endregion
 
     //#region helperfunctions
+    async validateRequest(request: string): Promise<readonly GraphQLError[]> {
+        return new Promise((resolve, reject) => {
+            if (this._schema) {
+                let validation = validate(
+                    this._schema,
+                    stringToGraphQLObject(request)
+                );
+                resolve(validation);
+            } else {
+                reject(new Error('No schema loaded'));
+            }
+        });
+    }
+
     /**
      * Validates a request as string
      * @param selection Current selected text / request
