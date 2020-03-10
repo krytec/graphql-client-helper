@@ -4,6 +4,9 @@ import { validate, GraphQLError } from 'graphql';
 import { stringToGraphQLObject } from '../utils/Utils';
 import { GraphQLService } from '../services/GraphQLService';
 
+/**
+ * lineDecorator
+ */
 const lineDecorator = vscode.window.createTextEditorDecorationType({
     textDecoration: 'underline wavy lightcoral',
     fontStyle: 'italic',
@@ -12,6 +15,10 @@ const lineDecorator = vscode.window.createTextEditorDecorationType({
     overviewRulerLane: vscode.OverviewRulerLane.Full
 });
 
+/**
+ * DecorationProvider class which provides decorations for queries and mutations
+ * to validate the query while writing
+ */
 export class DecorationProvider {
     private _timeout: NodeJS.Timer | undefined = undefined;
     private _activeEditor = vscode.window.activeTextEditor;
@@ -40,22 +47,36 @@ export class DecorationProvider {
         }, null);
     }
 
+    /**
+     * Updates the decorations if the active editor has a .gql file opened
+     */
     private async updateDecorations() {
         if (!this._activeEditor) {
             return;
         }
         if (this._activeEditor.document.uri.fsPath.endsWith('.gql')) {
             const text = this._activeEditor.document.getText();
-            this.checkQueries(text);
-            this.checkMutations(text);
+            this.checkRequests(text);
         }
     }
 
-    private async checkQueries(text: string) {
+    /**
+     * Validates all queries
+     * @param text text of the current document
+     */
+    private async checkRequests(text: string) {
         const bracketDecorations: vscode.DecorationOptions[] = [];
         const invalidFieldDecorations: vscode.DecorationOptions[] = [];
-
-        let idx: number = text.indexOf('query');
+        let queryIdx = text.indexOf('query');
+        let mutationIdx = text.indexOf('mutation');
+        let idx: number = 0;
+        if (queryIdx < 0) {
+            idx = mutationIdx;
+        } else if (mutationIdx < 0) {
+            idx = queryIdx;
+        } else {
+            idx = queryIdx < mutationIdx ? queryIdx : mutationIdx;
+        }
         if (this._activeEditor) {
             while (idx > -1) {
                 let content = this.getContentOfBrackets(text.slice(idx));
@@ -127,8 +148,18 @@ export class DecorationProvider {
                         });
                     }
                 }
-
-                idx = text.indexOf('query', idx + 1);
+                queryIdx = text.indexOf('query', idx + 1);
+                mutationIdx = text.indexOf('mutation', idx + 1);
+                if (queryIdx < 0 && mutationIdx < 0) {
+                    break;
+                }
+                if (queryIdx < 0) {
+                    idx = mutationIdx;
+                } else if (mutationIdx < 0) {
+                    idx = queryIdx;
+                } else {
+                    idx = queryIdx < mutationIdx ? queryIdx : mutationIdx;
+                }
             }
             this._activeEditor.setDecorations(
                 lineDecorator,
@@ -141,96 +172,9 @@ export class DecorationProvider {
         }
     }
 
-    private async checkMutations(text: string) {
-        const bracketDecorations: vscode.DecorationOptions[] = [];
-        const invalidFieldDecorations: vscode.DecorationOptions[] = [];
-
-        let idx: number = text.indexOf('mutation');
-        if (this._activeEditor) {
-            while (idx > -1) {
-                let content = this.getContentOfBrackets(text.slice(idx));
-                if (!this.checkBrackets(content)) {
-                    const startPos = this._activeEditor.document.positionAt(
-                        idx
-                    );
-                    const endPos = this._activeEditor.document.positionAt(
-                        idx + content.length
-                    );
-                    const decoration = {
-                        range: new vscode.Range(startPos, endPos),
-                        hoverMessage: 'Missing }'
-                    };
-                    bracketDecorations.push(decoration);
-                }
-                try {
-                    let validate = await this._graphqlService.validateRequest(
-                        content
-                    );
-                    if (validate.length > 0) {
-                        validate.forEach(error => {
-                            if (error.nodes) {
-                                error.nodes.forEach(node => {
-                                    if (this._activeEditor && node.loc) {
-                                        const startPos = this._activeEditor.document.positionAt(
-                                            idx + node.loc.start
-                                        );
-                                        const endPos = this._activeEditor.document.positionAt(
-                                            idx + node.loc.end
-                                        );
-                                        const decoration = {
-                                            range: new vscode.Range(
-                                                startPos,
-                                                endPos
-                                            ),
-                                            hoverMessage: error.message
-                                        };
-                                        invalidFieldDecorations.push(
-                                            decoration
-                                        );
-                                    }
-                                });
-                            }
-                        });
-                    }
-                } catch (error) {
-                    if (error.positions) {
-                        error.positions.forEach(pos => {
-                            if (this._activeEditor) {
-                                const startPos = this._activeEditor.document.positionAt(
-                                    idx + pos
-                                );
-                                const endPos = startPos.with(
-                                    startPos.line,
-                                    this._activeEditor.document.lineAt(
-                                        startPos.line
-                                    ).text.length
-                                );
-                                const decoration = {
-                                    range: new vscode.Range(
-                                        startPos.with(undefined, 0),
-                                        endPos
-                                    ),
-                                    hoverMessage: error.message
-                                };
-                                invalidFieldDecorations.push(decoration);
-                            }
-                        });
-                    }
-                }
-
-                idx = text.indexOf('mutation', idx + 1);
-            }
-            this._activeEditor.setDecorations(
-                lineDecorator,
-                bracketDecorations
-            );
-            this._activeEditor.setDecorations(
-                lineDecorator,
-                invalidFieldDecorations
-            );
-        }
-    }
-
+    /**
+     * Triggers the decorator to update the decorations -> every 500ms
+     */
     private async triggerUpdateDecorations() {
         if (this._timeout) {
             clearTimeout(this._timeout);

@@ -327,6 +327,7 @@ export class CommandService {
             'graphax.createSchema',
             () => {
                 createSchema(this._graphQLService, this._config);
+                this._requestNodeProvider.refresh();
             }
         );
 
