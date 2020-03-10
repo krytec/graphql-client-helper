@@ -56,7 +56,7 @@ export class RequestCompletionProvider
         const fields = lastRequestSelection.split('{');
 
         if (fields.length > 2) {
-            let counter = fields.length;
+            let depth = fields.length;
             //get query name
             var queryName = fields[1]
                 .split(' ')
@@ -80,12 +80,13 @@ export class RequestCompletionProvider
             });
             var curField: Request | undefined;
             var curSelection = '';
-            while (counter > 2) {
+            let fieldName: string | string[] | undefined;
+            while (depth > 2) {
                 if (curField !== undefined) {
                     curField.fields.forEach(field => {
                         //get the current fieldName out of the field array
-                        const fieldName = lastEntryOfArray(
-                            fields[fields.length + 2 - counter]
+                        fieldName = lastEntryOfArray(
+                            fields[fields.length + 2 - depth]
                                 .split('\n')
                                 .join('')
                                 .split('\r')
@@ -109,12 +110,12 @@ export class RequestCompletionProvider
                             }
                         }
                     });
-                    counter -= 1;
+                    depth -= 1;
                 } else if (currentRequest !== undefined) {
                     currentRequest.fields.forEach(field => {
                         //get current fieldName out of fields array
-                        const fieldName = lastEntryOfArray(
-                            fields[fields.length + 2 - counter]
+                        fieldName = lastEntryOfArray(
+                            fields[fields.length + 2 - depth]
                                 .split('\n')
                                 .join('')
                                 .split('\r')
@@ -160,11 +161,42 @@ export class RequestCompletionProvider
                             return;
                         }
                     });
-                    counter -= 1;
+                    depth -= 1;
                 }
                 //we reached the end
-                if (counter === 2) {
+                if (depth === 2) {
+                    //need to check some special cases with invalid input
+                    //check the last field and get the name of the field as well as the content of the field
+                    var lastField = lastRequestSelection.split('{');
+                    var nameOfLastField = lastEntryOfArray(
+                        lastField[lastField.length - 2]
+                            .split('\n')
+                            .join('')
+                            .split('\r')
+                            .join('')
+                            .trim()
+                            .split(' ')
+                    );
+                    var lastFieldBracketContent = this.getContentOfBrackets(
+                        lastRequestSelection.slice(
+                            lastRequestSelection.indexOf(
+                                nameOfLastField as string
+                            ),
+                            lastRequestSelection.lastIndexOf('}') + 1
+                        )
+                    );
+
                     if (curField !== undefined && curField.fields.length > 0) {
+                        //last field is neither current field, nor has it open brackets, nor is the name in names of the subfields
+                        if (
+                            curField.label !== nameOfLastField &&
+                            !this.checkBrackets(lastFieldBracketContent) &&
+                            !curField.fields
+                                .map(field => field.label)
+                                .includes(nameOfLastField as string)
+                        ) {
+                            return items;
+                        }
                         curField.fields.forEach(field => {
                             let fieldItem = new vscode.CompletionItem(
                                 field.label
@@ -175,6 +207,16 @@ export class RequestCompletionProvider
                             items.push(fieldItem);
                         });
                     } else {
+                        //last field is neither the request it self, nor has it open brackets, nor is it in the names of the request fields
+                        if (
+                            lastField.length > 3 &&
+                            !this.checkBrackets(lastFieldBracketContent) &&
+                            !currentRequest?.fields
+                                .map(field => field.label)
+                                .includes(nameOfLastField as string)
+                        ) {
+                            return items;
+                        }
                         if (!this.checkBrackets(lastRequestSelection)) {
                             currentRequest?.fields.forEach(field => {
                                 let fieldItem = new vscode.CompletionItem(
