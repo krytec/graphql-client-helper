@@ -26,12 +26,12 @@ export class RequestCompletionProvider
         const items = new Array<vscode.CompletionItem>();
         let query = new vscode.CompletionItem(
             'query',
-            vscode.CompletionItemKind.Function
+            vscode.CompletionItemKind.Module
         );
         query.insertText = 'query{}';
         let mutation = new vscode.CompletionItem(
             'mutation',
-            vscode.CompletionItemKind.Function
+            vscode.CompletionItemKind.Module
         );
         mutation.insertText = 'mutation{}';
         const selection = document.getText(
@@ -208,7 +208,8 @@ export class RequestCompletionProvider
                         }
                         curField.fields.forEach(field => {
                             let fieldItem = new vscode.CompletionItem(
-                                field.label
+                                field.label,
+                                vscode.CompletionItemKind.Field
                             );
                             fieldItem.insertText = `${field.toString()} ${
                                 field.fields.length > 0 ? `{}` : ''
@@ -229,7 +230,8 @@ export class RequestCompletionProvider
                         if (!this.checkBrackets(lastRequestSelection)) {
                             currentRequest?.fields.forEach(field => {
                                 let fieldItem = new vscode.CompletionItem(
-                                    field.label
+                                    field.label,
+                                    vscode.CompletionItemKind.Field
                                 );
                                 fieldItem.insertText = `${field.toString()} ${
                                     field.fields.length > 0 ? `{}` : ''
@@ -246,7 +248,10 @@ export class RequestCompletionProvider
         } else {
             this._state.currentTree.forEach(req => {
                 if (req.query === querySelected) {
-                    let reqItem = new vscode.CompletionItem(req.label);
+                    let reqItem = new vscode.CompletionItem(
+                        req.label,
+                        vscode.CompletionItemKind.Module
+                    );
                     reqItem.insertText = req.toString() + '{}';
                     items.push(reqItem);
                 }
