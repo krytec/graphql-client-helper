@@ -24,16 +24,6 @@ export class RequestCompletionProvider
         context: vscode.CompletionContext
     ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
         const items = new Array<vscode.CompletionItem>();
-        let query = new vscode.CompletionItem(
-            'query',
-            vscode.CompletionItemKind.Module
-        );
-        query.insertText = 'query{}';
-        let mutation = new vscode.CompletionItem(
-            'mutation',
-            vscode.CompletionItemKind.Module
-        );
-        mutation.insertText = 'mutation{}';
         const selection = document.getText(
             new vscode.Range(new vscode.Position(0, 0), position)
         );
@@ -41,10 +31,36 @@ export class RequestCompletionProvider
         const lastMutationIdx = selection.lastIndexOf('mutation');
         const lastRequestIdx = Math.max(lastQueryIdx, lastMutationIdx);
         let querySelected = true;
+
+        const requestItems: vscode.CompletionItem[] = [];
+        this._state.currentTree.forEach(req => {
+            let reqItem = new vscode.CompletionItem(
+                (req.query ? 'query ' : 'mutation ') + req.label,
+                vscode.CompletionItemKind.Module
+            );
+            const args = (req.args.length > 0
+                ? `(${req.args.map(arg => arg.toArgs()).join(' ')})`
+                : ''
+            )
+                .split('$')
+                .join('\\$');
+            reqItem.insertText = new vscode.SnippetString(
+                (req.query ? 'query' : 'mutation') +
+                    ' ${0:name}' +
+                    args +
+                    '{\n' +
+                    req
+                        .toString()
+                        .split('$')
+                        .join('\\$') +
+                    '{\n}\n}'
+            );
+            requestItems.push(reqItem);
+        });
+
         if (lastRequestIdx < 0) {
             //nothing found
-            items.push(query, mutation);
-            return items;
+            return requestItems;
         }
         if (lastQueryIdx < lastMutationIdx) {
             //mutation selected
@@ -55,8 +71,7 @@ export class RequestCompletionProvider
         );
         //check if query is already completed => curly brackets match each other
         if (this.checkBrackets(lastRequestSelection)) {
-            items.push(query, mutation);
-            return items;
+            return requestItems;
         }
 
         //get all the fields of the query => queryName as first item
@@ -239,7 +254,7 @@ export class RequestCompletionProvider
                                 items.push(fieldItem);
                             });
                         } else {
-                            items.push(query, mutation);
+                            return requestItems;
                         }
                     }
                 }
@@ -249,10 +264,26 @@ export class RequestCompletionProvider
             this._state.currentTree.forEach(req => {
                 if (req.query === querySelected) {
                     let reqItem = new vscode.CompletionItem(
-                        req.label,
+                        (req.query ? 'query ' : 'mutation ') + req.label,
                         vscode.CompletionItemKind.Module
                     );
-                    reqItem.insertText = req.toString() + '{}';
+                    const args = (req.args.length > 0
+                        ? `(${req.args.map(arg => arg.toArgs()).join(' ')})`
+                        : ''
+                    )
+                        .split('$')
+                        .join('\\$');
+                    reqItem.insertText = new vscode.SnippetString(
+                        (req.query ? 'query' : 'mutation') +
+                            ' ${0:name}' +
+                            args +
+                            '{\n' +
+                            req
+                                .toString()
+                                .split('$')
+                                .join('\\$') +
+                            '{\n}\n}'
+                    );
                     items.push(reqItem);
                 }
             });
