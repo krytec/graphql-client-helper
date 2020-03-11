@@ -10,6 +10,13 @@ export class RequestCompletionProvider
     implements vscode.CompletionItemProvider {
     constructor(private _state: StateService) {}
 
+    /**
+     * Method which provides requests and their fields as completionitems
+     * @param document
+     * @param position
+     * @param token
+     * @param context
+     */
     provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,

@@ -62,6 +62,11 @@ export function stringToGraphQLObject(request: string): DocumentNode {
     return parse(request);
 }
 
+/**
+ * Validates a given request as string to the given graphqlschema
+ * @param schema GraphQLSchema Object from graphql.js
+ * @param request Request as string
+ */
 export function validateRequest(schema: GraphQLSchema, request: string) {
     if (schema) {
         let validation = validate(schema, stringToGraphQLObject(request));

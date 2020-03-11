@@ -381,6 +381,10 @@ export class GraphQLService {
         });
     }
 
+    /**
+     * Async method to write a serive to the graphax.json file
+     * @param service Service that should be addet to the graphax.json
+     */
     public async writeServiceToGraphaxJSON(service: Service) {
         return new Promise<any>(async (resolve, reject) => {
             const jsonPath = join(this._folder, 'graphax.json');
@@ -404,6 +408,10 @@ export class GraphQLService {
         });
     }
 
+    /**
+     * Async method to remove a service from the graphax.json file
+     * @param service The service that should be removed from json
+     */
     public async removeServiceFromGraphaxJSON(service: Service) {
         return new Promise<any>(async (resolve, reject) => {
             const jsonPath = join(this._folder, 'graphax.json');
