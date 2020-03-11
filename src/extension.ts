@@ -11,7 +11,7 @@ import { ConfigurationService } from './services/ConfigurationService';
 import { RequestDocumentProvider } from './provider/RequestDocumentProvider';
 import { ServiceNodeProvider } from './provider/ServiceNodeProvider';
 import { GraphQLClientService } from './services/GraphQLClientService';
-import { RequestCompletionProvider } from './provider/CompletionProvider';
+import { RequestCompletionProvider } from './provider/RequestCompletionProvider';
 import { DecorationProvider } from './provider/DecorationProvider';
 // this method is called when your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
         customRequestNodeProvider
     );
     commandService.registerCommands();
-    const decorator = new DecorationProvider(stateService, graphQLService);
+    const decorator = new DecorationProvider(stateService);
     vscode.languages.registerCompletionItemProvider(
         { pattern: '**/**.gql' },
         new RequestCompletionProvider(stateService)

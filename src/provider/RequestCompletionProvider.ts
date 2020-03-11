@@ -162,6 +162,8 @@ export class RequestCompletionProvider
                         }
                     });
                     depth -= 1;
+                } else {
+                    return items;
                 }
                 //we reached the end
                 if (depth === 2) {

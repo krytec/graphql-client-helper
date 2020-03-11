@@ -21,7 +21,11 @@ import { StateService } from './StateService';
 import { Request } from '../provider/RequestNodeProvider';
 import { QueryWrapper } from '../graphqlwrapper/QueryWrapper';
 import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
-import { stringToGraphQLFormat, stringToGraphQLObject } from '../utils/Utils';
+import {
+    stringToGraphQLFormat,
+    stringToGraphQLObject,
+    validateRequest
+} from '../utils/Utils';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
 import { InputTypeWrapper } from '../graphqlwrapper/InputTypeWrapper';
@@ -47,7 +51,6 @@ const path = require('path');
  * A GraphQL service class to retriev information about a GraphQL endpoint
  */
 export class GraphQLService {
-    private _schema: GraphQLSchema | undefined;
     private _folder: string;
     private _logger: LoggingService;
     /**
@@ -124,11 +127,11 @@ export class GraphQLService {
 
         try {
             //Create schema from data
-            this._schema = buildClientSchema(body.data as IntrospectionQuery);
+            const schema = buildClientSchema(body.data as IntrospectionQuery);
             //Save schema as gql file
             await fs.writeFile(
                 path.join(this._folder, 'schema.gql'),
-                printSchema(this._schema),
+                printSchema(schema),
                 'utf-8'
             );
 
@@ -138,16 +141,17 @@ export class GraphQLService {
                 'utf-8'
             );
 
-            if (this._schema) {
-                this.createTypesFromSchema(this._schema);
-                this.getRequestsFromSchema(this._schema);
+            if (schema) {
+                this.createTypesFromSchema(schema);
+                this.getRequestsFromSchema(schema);
             }
 
             if (this._config.typescript) {
                 this.writeTypesToFile();
             }
             //Return schema object
-            return this._schema;
+            this._state.schema = schema;
+            return schema;
         } catch (e) {
             throw new Error("Couldn't create schema from response");
         }
@@ -167,8 +171,9 @@ export class GraphQLService {
                 .catch(err => {
                     throw new Error('Could not read file');
                 });
-            this._schema = buildSchema(schema);
-            return Promise.resolve(this._schema);
+            const schemaObject = buildSchema(schema);
+            this._state.schema = schemaObject;
+            return Promise.resolve(schemaObject);
         } catch (e) {
             throw new Error('Could not create schema object from given schema');
         }
@@ -398,6 +403,7 @@ export class GraphQLService {
             }
         });
     }
+
     public async removeServiceFromGraphaxJSON(service: Service) {
         return new Promise<any>(async (resolve, reject) => {
             const jsonPath = join(this._folder, 'graphax.json');
@@ -532,11 +538,10 @@ export class GraphQLService {
     ): Promise<CustomRequest> {
         return new Promise<CustomRequest>(async (resolve, reject) => {
             let request: Request | undefined = undefined;
-
-            if (this._schema) {
-                const validationArray = validate(
-                    this._schema,
-                    stringToGraphQLObject(requestAsString)
+            if (this._state.schema) {
+                const validationArray = validateRequest(
+                    this._state.schema,
+                    requestAsString
                 );
                 if (validationArray.length > 0) {
                     reject(validationArray);
@@ -587,20 +592,6 @@ export class GraphQLService {
     //#endregion
 
     //#region helperfunctions
-    async validateRequest(request: string): Promise<readonly GraphQLError[]> {
-        return new Promise((resolve, reject) => {
-            if (this._schema) {
-                let validation = validate(
-                    this._schema,
-                    stringToGraphQLObject(request)
-                );
-                resolve(validation);
-            } else {
-                reject(new Error('No schema loaded'));
-            }
-        });
-    }
-
     /**
      * Validates a request as string
      * @param selection Current selected text / request

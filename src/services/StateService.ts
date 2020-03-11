@@ -9,6 +9,7 @@ import { Request } from '../provider/RequestNodeProvider';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { Service } from '../provider/ServiceNodeProvider';
 import { InterfaceWrapper } from '../graphqlwrapper/InterfaceWrapper';
+import { GraphQLSchema } from 'graphql';
 /**
  * Service for a global extension state,
  * implements the vscode.Memento interface
@@ -113,6 +114,14 @@ export class StateService implements vscode.Memento {
 
     get services(): Array<Service> {
         return this.get('services') as Array<Service>;
+    }
+
+    set schema(value: GraphQLSchema | undefined) {
+        this.update('schema', value);
+    }
+
+    get schema(): GraphQLSchema | undefined {
+        return this.get('schema');
     }
 
     //#endregion

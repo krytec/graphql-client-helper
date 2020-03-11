@@ -1,7 +1,7 @@
 import { StateService } from '../services/StateService';
 import * as vscode from 'vscode';
 import { validate, GraphQLError } from 'graphql';
-import { stringToGraphQLObject } from '../utils/Utils';
+import { stringToGraphQLObject, validateRequest } from '../utils/Utils';
 import { GraphQLService } from '../services/GraphQLService';
 
 /**
@@ -22,10 +22,7 @@ const lineDecorator = vscode.window.createTextEditorDecorationType({
 export class DecorationProvider {
     private _timeout: NodeJS.Timer | undefined = undefined;
     private _activeEditor = vscode.window.activeTextEditor;
-    constructor(
-        private _state: StateService,
-        private _graphqlService: GraphQLService
-    ) {
+    constructor(private _state: StateService) {
         vscode.window.onDidChangeActiveTextEditor(editor => {
             return new Promise((resolve, rejects) => {
                 this._activeEditor = editor;
@@ -65,6 +62,7 @@ export class DecorationProvider {
      * @param text text of the current document
      */
     private async checkRequests(text: string) {
+        const schema = this._state.schema;
         const bracketDecorations: vscode.DecorationOptions[] = [];
         const invalidFieldDecorations: vscode.DecorationOptions[] = [];
         let queryIdx = text.indexOf('query');
@@ -77,7 +75,7 @@ export class DecorationProvider {
         } else {
             idx = queryIdx < mutationIdx ? queryIdx : mutationIdx;
         }
-        if (this._activeEditor) {
+        if (this._activeEditor && schema) {
             while (idx > -1) {
                 let content = this.getContentOfBrackets(text.slice(idx));
                 if (!this.checkBrackets(content)) {
@@ -94,11 +92,9 @@ export class DecorationProvider {
                     bracketDecorations.push(decoration);
                 }
                 try {
-                    let validate = await this._graphqlService.validateRequest(
-                        content
-                    );
-                    if (validate.length > 0) {
-                        validate.forEach(error => {
+                    let validationArray = validateRequest(schema, content);
+                    if (validationArray.length > 0) {
+                        validationArray.forEach(error => {
                             if (error.nodes) {
                                 error.nodes.forEach(node => {
                                     if (this._activeEditor && node.loc) {

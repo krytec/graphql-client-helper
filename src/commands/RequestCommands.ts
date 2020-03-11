@@ -122,6 +122,20 @@ export async function createRequestFromCode(graphqlService: GraphQLService) {
         const range = te.selection;
         const selection = te.document.getText(range);
         let request: CustomRequest | undefined = undefined;
-        graphqlService.getRequestFromString(selection);
+        await graphqlService.getRequestFromString(selection).then(
+            resolve => {
+                if (resolve) {
+                    vscode.window.showInformationMessage(
+                        'Addet request ' + resolve.label + ' to GraphaX.'
+                    );
+                }
+            },
+            rejects => {
+                const errors = rejects.map(err => err.message).join(' ');
+                vscode.window.showErrorMessage(
+                    `Could not add request to GraphaX: ${errors}`
+                );
+            }
+        );
     }
 }

@@ -1,5 +1,12 @@
 import { URL } from 'url';
-import { print, parse, DocumentNode, typeFromAST } from 'graphql';
+import {
+    print,
+    parse,
+    DocumentNode,
+    typeFromAST,
+    GraphQLSchema,
+    validate
+} from 'graphql';
 import { Framework } from '../services/ConfigurationService';
 import * as vscode from 'vscode';
 
@@ -53,6 +60,15 @@ export function stringToGraphQLFormat(request: string): string {
  */
 export function stringToGraphQLObject(request: string): DocumentNode {
     return parse(request);
+}
+
+export function validateRequest(schema: GraphQLSchema, request: string) {
+    if (schema) {
+        let validation = validate(schema, stringToGraphQLObject(request));
+        return validation;
+    } else {
+        throw new Error('No schema loaded');
+    }
 }
 
 /**
