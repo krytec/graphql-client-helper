@@ -46,15 +46,20 @@ export class RequestCompletionProvider
                 .join('\\$');
             reqItem.insertText = new vscode.SnippetString(
                 (req.query ? 'query' : 'mutation') +
-                    ' ${0:name}' +
+                    ' ${1:name}' +
                     args +
                     '{\n' +
+                    '\t' +
                     req
                         .toString()
                         .split('$')
                         .join('\\$') +
-                    '{\n}\n}'
+                    '{\n\t\t${0}\n\t}\n}'
             );
+            reqItem.detail = `${req.label}${
+                req.query ? ' Query' : ' Mutation'
+            } (GraphaX Extension)`;
+            reqItem.documentation = `Request that returns ${req.type}`;
             requestItems.push(reqItem);
         });
 
@@ -229,6 +234,8 @@ export class RequestCompletionProvider
                             fieldItem.insertText = `${field.toString()} ${
                                 field.fields.length > 0 ? `{}` : ''
                             }`;
+                            fieldItem.detail = `${field.label} Field`;
+                            fieldItem.documentation = `GraphQL Field that returns ${field.type}`;
                             items.push(fieldItem);
                         });
                     } else {
@@ -251,6 +258,8 @@ export class RequestCompletionProvider
                                 fieldItem.insertText = `${field.toString()} ${
                                     field.fields.length > 0 ? `{}` : ''
                                 }`;
+                                fieldItem.detail = `${field.label} Field`;
+                                fieldItem.documentation = `GraphQL Field that returns ${field.type}`;
                                 items.push(fieldItem);
                             });
                         } else {
@@ -261,33 +270,7 @@ export class RequestCompletionProvider
             }
             return items;
         } else {
-            this._state.currentTree.forEach(req => {
-                if (req.query === querySelected) {
-                    let reqItem = new vscode.CompletionItem(
-                        (req.query ? 'query ' : 'mutation ') + req.label,
-                        vscode.CompletionItemKind.Module
-                    );
-                    const args = (req.args.length > 0
-                        ? `(${req.args.map(arg => arg.toArgs()).join(' ')})`
-                        : ''
-                    )
-                        .split('$')
-                        .join('\\$');
-                    reqItem.insertText = new vscode.SnippetString(
-                        (req.query ? 'query' : 'mutation') +
-                            ' ${0:name}' +
-                            args +
-                            '{\n' +
-                            req
-                                .toString()
-                                .split('$')
-                                .join('\\$') +
-                            '{\n}\n}'
-                    );
-                    items.push(reqItem);
-                }
-            });
-            return items;
+            return requestItems;
         }
     }
 
