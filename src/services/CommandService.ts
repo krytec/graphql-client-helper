@@ -325,8 +325,8 @@ export class CommandService {
 
         const createSchemaCommand = vscode.commands.registerCommand(
             'graphax.createSchema',
-            () => {
-                createSchema(this._graphQLService, this._config);
+            async () => {
+                await createSchema(this._graphQLService, this._config);
                 this._requestNodeProvider.refresh();
             }
         );
