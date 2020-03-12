@@ -53,7 +53,6 @@ describe('Test functions of GraphQLService class', function() {
         });
 
         it('should create requests from GraphQL schema', () => {
-            expect(state.schema).to.not.be('undefined');
             if (state.schema) {
                 graphQLService.getRequestsFromSchema(state.schema);
                 expect(state.requests.length).to.equals(2);
@@ -70,9 +69,47 @@ describe('Test functions of GraphQLService class', function() {
 
     describe('GraphQLServiceTest to test the creation of a customrequest', () => {
         it('should create myQuery', () => {
-            graphQLService.saveRequest('my', state.currentTree[0]);
+            graphQLService.saveRequest('myQuery', state.currentTree[0]);
             expect(state.myRequests.length).is.equals(1);
             expect(state.myRequests[0].label).is.equals('myQuery');
         });
+
+        it("should create a customrequest from string", async () => {
+            let myStringQuery = 
+            `query myStringQuery($first:Int!){
+                pokemons(first:$first){
+                    id
+                    number
+                    name
+                }
+            }
+            `;
+            await graphQLService.getRequestFromString(myStringQuery);
+            expect(state.myRequests.length).is.equals(2);
+            expect(state.myRequests[1].label).is.equals("myStringQuery");
+        });
+
+        it("should fail to create a customrequest from string", async () => {
+            let myFailedQuery = 
+            `query myFailedQuery{
+                pokemons{
+                    id
+                    number
+                    name
+                }
+            }`;
+            graphQLService.getRequestFromString(myFailedQuery).then(resolve => {}, 
+                err => {
+                    expect(err).to.be("array");
+                    expect(err.)
+                
+            }).catch(
+                err => {
+                    expect(err).to.be("array");
+                }
+            );
+        });
+
     });
+
 });
