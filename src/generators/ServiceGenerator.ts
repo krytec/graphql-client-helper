@@ -26,28 +26,30 @@ export class ServiceGenerator extends AbstractServiceGenerator {
                 );
                 try {
                     fs.mkdir(folderPath);
-                    await this.createRequests(
-                        serviceName,
-                        requests,
-                        folderPath
-                    ).then(file => {
-                        files.push(file);
-                    });
-                    // Create service tree item from requests
-                    const service = new Service(
-                        serviceName,
-                        'Service',
-                        folderPath,
-                        2,
-                        'service'
-                    );
-                    requests.forEach(req => service.addRequest(req));
-                    this._state.saveService(service);
-                } catch (error) {
+                } catch (err) {
                     reject(
-                        new Error('Could not create service ' + serviceName)
+                        new Error(
+                            'Could not create ' + serviceName + ' service'
+                        )
                     );
                 }
+                await this.createRequests(
+                    serviceName,
+                    requests,
+                    folderPath
+                ).then(file => {
+                    files.push(file);
+                });
+                // Create service tree item from requests
+                const service = new Service(
+                    serviceName,
+                    'Service',
+                    folderPath,
+                    2,
+                    'service'
+                );
+                requests.forEach(req => service.addRequest(req));
+                this._state.saveService(service);
                 resolve(files);
             }
         });

@@ -216,4 +216,8 @@ import gql from 'graphql-tag';\n`;
     set folderPath(value: string) {
         this._folderPath = value;
     }
+
+    get folderPath(): string {
+        return this._folderPath;
+    }
 }
