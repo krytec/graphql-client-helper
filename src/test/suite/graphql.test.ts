@@ -101,7 +101,6 @@ describe('Test functions of GraphQLService class', function() {
             graphQLService.getRequestFromString(myFailedQuery).then(resolve => {}, 
                 err => {
                     expect(err).to.be("array");
-                    expect(err.)
                 
             }).catch(
                 err => {
