@@ -4,6 +4,7 @@ import { GraphQLObjectType } from 'graphql';
 import { LoggingService } from '../../services/LoggingService';
 import { StateService } from '../../services/StateService';
 import { ConfigurationService } from '../../services/ConfigurationService';
+import { RequestNodeProvider } from '../../provider/RequestNodeProvider';
 
 const fs = require('fs');
 const path = require('path');
@@ -12,6 +13,7 @@ describe('Test functions of GraphQLService class', function() {
     let state = new StateService(new LoggingService());
     let config = new ConfigurationService();
     let graphQLService = new GraphQLService(state, config);
+    let requestNodeProvider = new RequestNodeProvider(state);
     graphQLService.folder = __dirname;
     describe('GraphQLUtilTest to test if invalid endpoint throws error', () => {
         let url: string = 'http://google.com';
@@ -48,6 +50,29 @@ describe('Test functions of GraphQLService class', function() {
             graphQLService.createTypesFromSchema(schema);
             expect(state.enums.length).is.equals(1);
             expect(state.types.length).is.equals(6);
+        });
+
+        it('should create requests from GraphQL schema', () => {
+            expect(state.schema).to.not.be('undefined');
+            if (state.schema) {
+                graphQLService.getRequestsFromSchema(state.schema);
+                expect(state.requests.length).to.equals(2);
+            }
+        });
+    });
+
+    describe('NodeRequestProviderTest to test the creation of Requests and the current tree', () => {
+        it('should create tree items', () => {
+            requestNodeProvider.getChildren();
+            expect(state.currentTree.length).is.equals(2);
+        });
+    });
+
+    describe('GraphQLServiceTest to test the creation of a customrequest', () => {
+        it('should create myQuery', () => {
+            graphQLService.saveRequest('my', state.currentTree[0]);
+            expect(state.myRequests.length).is.equals(1);
+            expect(state.myRequests[0].label).is.equals('myQuery');
         });
     });
 });

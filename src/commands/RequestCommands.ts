@@ -32,7 +32,11 @@ export async function executeRequestCommand(
             })
             .catch(error => {
                 if (error !== undefined) {
-                    vscode.window.showErrorMessage(error);
+                    if (error.message) {
+                        vscode.window.showErrorMessage(error.message);
+                    } else {
+                        vscode.window.showErrorMessage(error);
+                    }
                 }
             });
     });
