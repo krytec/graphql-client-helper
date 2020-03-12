@@ -5,6 +5,7 @@ import { LoggingService } from '../../services/LoggingService';
 import { StateService } from '../../services/StateService';
 import { ConfigurationService } from '../../services/ConfigurationService';
 import { RequestNodeProvider } from '../../provider/RequestNodeProvider';
+import { EPERM } from 'constants';
 
 const fs = require('fs');
 const path = require('path');
@@ -68,25 +69,42 @@ describe('Test functions of GraphQLService class', function() {
     });
 
     describe('GraphQLServiceTest to test the creation of a customrequest', () => {
+        it("should select fields", () => {
+            state.currentTree[0].fields[0].selected = true;
+            expect(state.currentTree[0].selected).is.true;
+        });
+
         it('should create myQuery', () => {
             graphQLService.saveRequest('myQuery', state.currentTree[0]);
             expect(state.myRequests.length).is.equals(1);
             expect(state.myRequests[0].label).is.equals('myQuery');
         });
 
-        it("should create a customrequest from string", async () => {
-            let myStringQuery = 
-            `query myStringQuery($first:Int!){
-                pokemons(first:$first){
-                    id
-                    number
-                    name
-                }
+        it("should deselect fields", () => {
+            state.currentTree[0].deselect();
+            expect(state.currentTree[0].selected).is.false;
+        });
+        
+        let myStringQuery = 
+        `query myStringQuery($first:Int!){
+            pokemons(first:$first){
+                id
+                number
+                name
             }
-            `;
+        }
+        `;
+        it("should create a customrequest from string", async () => {
             await graphQLService.getRequestFromString(myStringQuery);
             expect(state.myRequests.length).is.equals(2);
             expect(state.myRequests[1].label).is.equals("myStringQuery");
+        });
+
+        it("should fail to create customrequest from string", async () => {
+            await graphQLService.getRequestFromString(myStringQuery).then(undefined, reject => {
+                expect(reject.label).is.equals("myStringQuery");
+                expect(state.myRequests.length).is.equals(2);
+            });
         });
 
         it("should fail to create a customrequest from string", async () => {
