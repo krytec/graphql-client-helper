@@ -7,8 +7,9 @@ import {
     serviceTemplate,
     serviceFunctionTemplate
 } from '../templates/ServiceTemplate';
-import { toTitleCase } from '../utils/Utils';
+import { toTitleCase, getTextRange } from '../utils/Utils';
 import request from 'graphql-request';
+import { join, dirname, basename } from 'path';
 const { promises: fs } = require('fs');
 const path = require('path');
 export class ServiceGenerator extends AbstractServiceGenerator {
@@ -63,6 +64,7 @@ export class ServiceGenerator extends AbstractServiceGenerator {
                 );
                 requests.forEach(req => service.addRequest(req));
                 this._state.saveService(service);
+                await this._graphqlService.writeServiceToGraphaxJSON(service);
                 resolve(files);
             }
         });
@@ -88,17 +90,17 @@ export class ServiceGenerator extends AbstractServiceGenerator {
             .map(request => {
                 return serviceFunctionTemplate
                     .split('%functionName%')
-                    .join(request.label)
+                    .join(toTitleCase(request.label))
                     .split('%inputType%')
                     .join(request.inputType)
                     .split('%functionType%')
-                    .join(request.kindOf === 'query' ? 'query' : 'mutate')
+                    .join(request.kindOf === 'Query' ? 'query' : 'mutate')
                     .split('%requestType%')
                     .join(request.kindOf)
                     .split('%request%')
                     .join(request.label)
                     .split('%returnType%')
-                    .join(request.type.toLowerCase());
+                    .join(request.requestName);
             })
             .join('\n');
 
@@ -125,11 +127,72 @@ export class ServiceGenerator extends AbstractServiceGenerator {
      * @param request The request that should be deleted from the service
      */
     public async deleteRequestFromService(request: Service) {
-        if (existsSync(request.path)) {
+        const serviceDir = dirname(request.path);
+        const serviceName = basename(serviceDir).split('-')[0];
+        const componentPath = join(serviceDir, `${serviceName}.service.ts`);
+        if (
+            existsSync(request.path) &&
+            this.checkGraphaXSignature(request.path)
+        ) {
             const doc = await vscode.workspace.openTextDocument(
                 vscode.Uri.file(request.path)
             );
-            this.removeRequestFromFile(doc, request);
+            await this.removeRequestFromFile(doc, request);
         }
+        if (
+            existsSync(componentPath) &&
+            this.checkGraphaXSignature(componentPath)
+        ) {
+            const serviceDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(componentPath)
+            );
+            await this.removeRequestFromService(serviceDoc, request);
+        }
+    }
+
+    private async removeRequestFromService(
+        serviceDoc: vscode.TextDocument,
+        request: Service
+    ) {
+        var regex = new RegExp(request.label);
+        var pos = serviceDoc.positionAt(
+            serviceDoc.getText().indexOf(request.label)
+        );
+        let importRange = serviceDoc.getWordRangeAtPosition(pos, regex);
+        if (importRange) {
+            importRange = new vscode.Range(
+                importRange.start,
+                importRange.end.with(undefined, importRange.end.character + 1)
+            );
+        }
+
+        let functionRange = getTextRange(
+            serviceDoc,
+            `public async get${toTitleCase(request.label)}(`,
+            'public async get'
+        );
+        if (functionRange.start.line === 0) {
+            functionRange = getTextRange(
+                serviceDoc,
+                `public async get${toTitleCase(request.label)}(`,
+                '}'
+            );
+            functionRange = functionRange.with(
+                undefined,
+                functionRange.end.with(functionRange.start.line + 15, 0)
+            );
+        }
+        functionRange = new vscode.Range(
+            functionRange.start,
+            functionRange.end.with(undefined, 0)
+        );
+        await vscode.window.showTextDocument(serviceDoc).then(te => {
+            te.edit(editBuilder => {
+                if (importRange) {
+                    editBuilder.delete(importRange);
+                }
+                editBuilder.delete(functionRange);
+            });
+        });
     }
 }
