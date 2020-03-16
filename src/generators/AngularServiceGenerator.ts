@@ -160,33 +160,23 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
             );
         });
         content = content
+            .split('%folderName%')
+            .join(this._config.generatedFolder)
             .split('%myImports%')
             .join(imports)
             .split('%serviceName%')
             .join(toTitleCase(serviceName) + 'Service')
             .split('%myFunctions%')
             .join(functions);
-
-        await fs.writeFile(
-            path.join(
-                this._folderPath,
-                '..',
-                'app',
-                `${serviceName}-component`,
-                `${serviceName}.service.ts`
-            ),
-            content,
-            'utf-8'
+        let filePath = path.join(
+            this._folderPath,
+            '..',
+            'app',
+            `${serviceName}-component`,
+            `${serviceName}.service.ts`
         );
-        return Promise.resolve(
-            path.join(
-                this._folderPath,
-                '..',
-                'app',
-                `${serviceName}-component`,
-                `${serviceName}.service.ts`
-            )
-        );
+        await fs.writeFile(filePath, content, 'utf-8');
+        return Promise.resolve(filePath);
     }
 
     /**
@@ -223,6 +213,8 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
             })
             .join('');
         let content = angularComponentTemplate
+            .split('%folderName%')
+            .join(this._config.generatedFolder)
             .split('%myNameTitel%')
             .join(toTitleCase(componentName))
             .split('%myServiceTitel%')
@@ -292,6 +284,8 @@ const test_${request.label} = {
             tests = tests.concat(requestTest);
         }
         let content = angularTestTemplate
+            .split('%folderName%')
+            .join(this._config.generatedFolder)
             .split('%imports%')
             .join(imports)
             .split('%service%')

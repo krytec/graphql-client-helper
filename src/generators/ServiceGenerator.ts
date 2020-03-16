@@ -2,6 +2,13 @@ import { AbstractServiceGenerator } from './AbstractServiceGenerator';
 import { Service } from '../provider/ServiceNodeProvider';
 import * as vscode from 'vscode';
 import { existsSync } from 'fs';
+import { CustomRequest } from '../provider/CustomRequestNodeProvider';
+import {
+    serviceTemplate,
+    serviceFunctionTemplate
+} from '../templates/ServiceTemplate';
+import { toTitleCase } from '../utils/Utils';
+import request from 'graphql-request';
 const { promises: fs } = require('fs');
 const path = require('path');
 export class ServiceGenerator extends AbstractServiceGenerator {
@@ -40,6 +47,12 @@ export class ServiceGenerator extends AbstractServiceGenerator {
                 ).then(file => {
                     files.push(file);
                 });
+
+                await this.createServiceComponent(
+                    serviceName,
+                    requests
+                ).then(file => files.push(file));
+
                 // Create service tree item from requests
                 const service = new Service(
                     serviceName,
@@ -53,6 +66,58 @@ export class ServiceGenerator extends AbstractServiceGenerator {
                 resolve(files);
             }
         });
+    }
+
+    /**
+     * Private method to create a service component for non specific framework
+     * @param serviceName Name of the service that should be created
+     * @param requests requests which should be provided as functions
+     */
+    private async createServiceComponent(
+        serviceName: string,
+        requests: CustomRequest[]
+    ) {
+        let imports = `import { ${requests
+            .map(request => request.label)
+            .join(', ')} } from './${serviceName}Requests'
+            import * as schemaTypes from '../${
+                this._config.generatedFolder
+            }/schemaTypes'`;
+
+        let functions = requests
+            .map(request => {
+                return serviceFunctionTemplate
+                    .split('%functionName%')
+                    .join(request.label)
+                    .split('%inputType%')
+                    .join(request.inputType)
+                    .split('%functionType%')
+                    .join(request.kindOf === 'query' ? 'query' : 'mutate')
+                    .split('%requestType%')
+                    .join(request.kindOf)
+                    .split('%request%')
+                    .join(request.label)
+                    .split('%returnType%')
+                    .join(request.type.toLowerCase());
+            })
+            .join('\n');
+
+        let content = serviceTemplate
+            .split('%imports%')
+            .join(imports)
+            .split('%serviceNameToTitleCase%')
+            .join(toTitleCase(serviceName))
+            .split('%functions%')
+            .join(functions);
+
+        let filePath = path.join(
+            this._folderPath,
+            '..',
+            `${serviceName}-service`,
+            `${serviceName}.service.ts`
+        );
+        await fs.writeFile(filePath, content, 'utf-8');
+        return Promise.resolve(filePath);
     }
 
     /**

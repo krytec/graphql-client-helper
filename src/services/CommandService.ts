@@ -242,15 +242,17 @@ export class CommandService {
             }
         });
         if (currentFramework === Framework.NONE) {
-            Object.keys(packageJson.devDependencies).forEach(dep => {
-                if (dep.includes('react')) {
-                    currentFramework = Framework.REACT;
-                    return;
-                } else if (dep.includes('angular')) {
-                    currentFramework = Framework.ANGULAR;
-                    return;
-                }
-            });
+            if (packageJson.devDependencies) {
+                Object.keys(packageJson.devDependencies).forEach(dep => {
+                    if (dep.includes('react')) {
+                        currentFramework = Framework.REACT;
+                        return;
+                    } else if (dep.includes('angular')) {
+                        currentFramework = Framework.ANGULAR;
+                        return;
+                    }
+                });
+            }
         }
         this._config.framework = currentFramework;
     }

@@ -947,10 +947,18 @@ export class GraphQLService {
                 );
                 break;
             case Framework.NONE:
-                this._folder = path.join(folder, this._config.generatedFolder);
+                this._folder = path.join(
+                    folder,
+                    'src',
+                    this._config.generatedFolder
+                );
                 break;
             default:
-                this._folder = path.join(folder, this._config.generatedFolder);
+                this._folder = path.join(
+                    folder,
+                    'src',
+                    this._config.generatedFolder
+                );
                 break;
         }
     }
