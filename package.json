@@ -373,7 +373,6 @@
         "@types/vscode": "^1.40.0",
         "chai": "^4.2.0",
         "glob": "^7.1.5",
-        "graphql-request": "^1.8.2",
         "mocha": "^6.2.2",
         "tslint": "^5.20.0",
         "typescript": "^3.6.4",
@@ -383,6 +382,7 @@
         "del": "^5.1.0",
         "graphql": "^14.5.8",
         "node-fetch": "^2.6.0",
-        "sinon": "^9.0.1"
+        "sinon": "^9.0.1",
+        "graphql-request": "^1.8.2"
     }
 }

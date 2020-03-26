@@ -98,7 +98,7 @@ export async function showSaveRequestCommand(
                                     },
                                     onrejected => {
                                         progress.report({
-                                            increment: 33,
+                                            increment: 66,
                                             message: `Request ${value} already exists! Please provide a unique name for your request!`
                                         });
                                     }

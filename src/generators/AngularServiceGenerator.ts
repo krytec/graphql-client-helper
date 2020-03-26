@@ -326,11 +326,16 @@ const test_${request.label} = {
         let fullrange = getTextRange(doc, `${request.label}(args`, '(args');
         if (fullrange.start.line === 0) {
             fullrange = getTextRange(doc, `${request.label}(args`, '}');
+            range = new vscode.Range(
+                fullrange.start,
+                fullrange.end.with(fullrange.end.line + 2, 0)
+            );
+        } else {
+            range = new vscode.Range(
+                fullrange.start,
+                fullrange.end.with(fullrange.end.line, 0)
+            );
         }
-        range = new vscode.Range(
-            fullrange.start,
-            fullrange.end.with(fullrange.end.line + 2, 0)
-        );
         await vscode.window.showTextDocument(doc).then(te => {
             te.edit(editBuilder => {
                 editBuilder.delete(range);

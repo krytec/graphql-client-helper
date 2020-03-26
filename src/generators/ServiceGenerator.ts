@@ -81,7 +81,7 @@ export class ServiceGenerator extends AbstractServiceGenerator {
     ) {
         let imports = `import { ${requests
             .map(request => request.label)
-            .join(', ')} } from './${serviceName}Requests'
+            .join(', ')} } from './${toTitleCase(serviceName)}Requests'
             import * as schemaTypes from '../${
                 this._config.generatedFolder
             }/schemaTypes'`;
@@ -168,13 +168,13 @@ export class ServiceGenerator extends AbstractServiceGenerator {
 
         let functionRange = getTextRange(
             serviceDoc,
-            `public async get${toTitleCase(request.label)}(`,
-            'public async get'
+            `public async get${request.label}(`,
+            'public async'
         );
         if (functionRange.start.line === 0) {
             functionRange = getTextRange(
                 serviceDoc,
-                `public async get${toTitleCase(request.label)}(`,
+                `public async get${request.label}(`,
                 '}'
             );
             functionRange = functionRange.with(

@@ -362,10 +362,25 @@ export class GraphQLService {
                 const graphaxJSON = JSON.parse(readFileSync(jsonPath, 'utf-8'));
                 graphaxJSON.service.forEach(service => {
                     if (existsSync(service.path)) {
-                        this.createServiceFromFolder(service.path);
+                        const loadedService = new Service(
+                            service.name,
+                            service.framework,
+                            service.path,
+                            2,
+                            'service'
+                        );
+                        service.requests.forEach(async request => {
+                            if (request.request) {
+                                const serviceReq = await this.getRequestFromString(
+                                    request.request
+                                );
+                                loadedService.addRequest(serviceReq);
+                            }
+                        });
+                        this._state.services.push(loadedService);
                         this._logger.logDebug(
                             'Loaded service ' +
-                                service.name +
+                                service.label +
                                 ' from graphax.json'
                         );
                     } else {
@@ -392,7 +407,9 @@ export class GraphQLService {
                 const graphaxJSON = JSON.parse(readFileSync(jsonPath, 'utf-8'));
                 graphaxJSON.service.push({
                     name: service.label,
-                    path: service.path
+                    path: service.path,
+                    requests: service.requests.map(req => req.request),
+                    framework: this._config.framework
                 });
                 await fs.writeFile(
                     jsonPath,

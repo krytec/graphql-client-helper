@@ -28,12 +28,12 @@ export async function showCreateServiceCommand(
         async (progress, token) => {
             token.onCancellationRequested(() => {
                 vscode.window.showInformationMessage(
-                    'Cancelled request creation!'
+                    'Cancelled service creation!'
                 );
             });
             progress.report({
                 increment: 33,
-                message: 'Please provide a unique name for your service!'
+                message: 'Creating service please wait...'
             });
             let done = false;
             while (!done) {
@@ -71,7 +71,7 @@ export async function showCreateServiceCommand(
                                     },
                                     () => {
                                         progress.report({
-                                            increment: 33,
+                                            increment: 66,
                                             message: `Service ${value} already exists! Please provide a unique name!`
                                         });
                                     }

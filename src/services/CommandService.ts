@@ -467,6 +467,7 @@ export class CommandService {
                 this._requestNodeProvider.getChildren();
                 addServiceCommand(this._graphQLService, folder.fsPath);
                 this._serviceNodeProvider.refresh();
+                this._customRequestNodeProvider.refresh();
             }
         );
 

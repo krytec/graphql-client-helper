@@ -77,7 +77,7 @@ export function validateRequest(schema: GraphQLSchema, request: string) {
 }
 
 /**
- * !Function to dedent multiline strings from https://gist.github.com/zenparsing/5dffde82d9acef19e43c
+ * Function to dedent multiline strings
  */
 export function dedent(callSite, ...args) {
     function format(str) {

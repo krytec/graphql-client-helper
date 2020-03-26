@@ -1,7 +1,11 @@
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { StateService } from '../services/StateService';
 import { ConfigurationService } from '../services/ConfigurationService';
-import { stringToGraphQLObject, getTextRange } from '../utils/Utils';
+import {
+    stringToGraphQLObject,
+    getTextRange,
+    toTitleCase
+} from '../utils/Utils';
 import { Request } from '../provider/RequestNodeProvider';
 import { GraphQLClientService } from '../services/GraphQLClientService';
 import { GraphQLService } from '../services/GraphQLService';
@@ -49,12 +53,12 @@ import gql from 'graphql-tag';\n`;
             .join('\n');
         content = content.concat(gqlrequests);
         await fs.writeFile(
-            path.join(folderPath, `${serviceName}Requests.ts`),
+            path.join(folderPath, `${toTitleCase(serviceName)}Requests.ts`),
             content,
             'utf-8'
         );
         return Promise.resolve(
-            path.join(folderPath, `${serviceName}Requests.ts`)
+            path.join(folderPath, `${toTitleCase(serviceName)}Requests.ts`)
         );
     }
 

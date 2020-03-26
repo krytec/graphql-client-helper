@@ -2,10 +2,12 @@ import { AbstractServiceGenerator } from './AbstractServiceGenerator';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { Service } from '../provider/ServiceNodeProvider';
 import {
-    reactQueryFunctionTemplate,
-    reactMutationFunctionTemplate,
     reactComponentTemplate,
-    reactTestTemplate
+    reactTestTemplate,
+    reactFunctionTemplate,
+    reactServiceTemplate,
+    reactMutationServiceTemplate,
+    reactQueryServiceTemplate
 } from '../templates/Reacttemplate';
 import { toTitleCase, getTextRange } from '../utils/Utils';
 import { dirname, basename, join } from 'path';
@@ -42,6 +44,13 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                         requests,
                         folderPath
                     ).then(
+                        file => {
+                            files.push(file);
+                        },
+                        error => reject(error)
+                    );
+
+                    await this.createReactService(serviceName, requests).then(
                         file => {
                             files.push(file);
                         },
@@ -90,6 +99,11 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
     public async deleteRequestFromService(request: Service) {
         const serviceDir = dirname(request.path);
         const serviceName = basename(serviceDir).split('-')[0];
+        const servicePath = join(
+            serviceDir,
+            `${toTitleCase(serviceName)}Service.tsx`
+        );
+
         const componentPath = join(
             serviceDir,
             `${toTitleCase(serviceName)}Component.tsx`
@@ -113,6 +127,15 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
             await this.removeRequestFromFile(requestDoc, request);
         }
         if (
+            existsSync(servicePath) &&
+            this.checkGraphaXSignature(servicePath)
+        ) {
+            const serviceDoc = await vscode.workspace.openTextDocument(
+                vscode.Uri.file(servicePath)
+            );
+            await this.removeRequestFromService(serviceDoc, request);
+        }
+        if (
             existsSync(componentPath) &&
             this.checkGraphaXSignature(componentPath)
         ) {
@@ -130,7 +153,63 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
     }
 
     /**
-     * Remove the given request from the document
+     * Remove the given request from the service document
+     * @param serviceDoc The service document
+     * @param request The request that should be deleted from the service
+     */
+    private async removeRequestFromService(
+        serviceDoc: vscode.TextDocument,
+        request: Service
+    ) {
+        let serviceName =
+            toTitleCase(request.label)
+                .split('query')
+                .join('')
+                .split('mutation')
+                .join('') + 'Service';
+        var regex = new RegExp(request.label);
+        var pos = serviceDoc.positionAt(
+            serviceDoc.getText().indexOf(request.label)
+        );
+        let importRange = serviceDoc.getWordRangeAtPosition(pos, regex);
+        if (importRange) {
+            importRange = new vscode.Range(
+                importRange.start,
+                importRange.end.with(undefined, importRange.end.character + 1)
+            );
+        }
+        let functionRange = getTextRange(
+            serviceDoc,
+            `export function ${serviceName}`,
+            'export function'
+        );
+        if (functionRange.start.line === 0) {
+            functionRange = getTextRange(
+                serviceDoc,
+                `export function ${serviceName}`,
+                '}'
+            );
+            functionRange = functionRange.with(
+                undefined,
+                functionRange.end.with(functionRange.start.line + 7, 0)
+            );
+        }
+        functionRange = new vscode.Range(
+            functionRange.start,
+            functionRange.end.with(undefined, 0)
+        );
+        await vscode.window.showTextDocument(serviceDoc).then(te => {
+            te.edit(editBuilder => {
+                if (importRange) {
+                    editBuilder.delete(importRange);
+                }
+                editBuilder.delete(functionRange);
+            });
+        });
+    }
+
+    /**
+     * Remove the given request from the component document
      * @param componentDoc The component document
      * @param request Request that should be deleted from the component
      */
@@ -138,9 +217,15 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         componentDoc: vscode.TextDocument,
         request: Service
     ) {
-        var regex = new RegExp(request.label);
+        let serviceName =
+            toTitleCase(request.label)
+                .split('query')
+                .join('')
+                .split('mutation')
+                .join('') + 'Service';
+        var regex = new RegExp(serviceName);
         var pos = componentDoc.positionAt(
-            componentDoc.getText().indexOf(request.label)
+            componentDoc.getText().indexOf(serviceName)
         );
         let importRange = componentDoc.getWordRangeAtPosition(pos, regex);
         if (importRange) {
@@ -188,13 +273,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         });
     }
 
-    /**
-     *  Async method to create a react component with given requests
-     * @param serviceName Name of the service that should be created
-     * @param requests requests of the service
-     * @param folderPath path to service folder
-     */
-    private async createReactComponent(
+    private async createReactService(
         serviceName: string,
         requests: CustomRequest[]
     ): Promise<string> {
@@ -202,15 +281,20 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
             let imports = `import { ${requests
                 .map(request => request.label)
                 .join(', ')} } from './${toTitleCase(serviceName)}Requests'`;
-            let requestsAsString = '';
             let functions = '';
             requests.forEach(request => {
                 if (request.kindOf === 'Query') {
                     functions = functions.concat(
                         this._config.typescript
-                            ? reactQueryFunctionTemplate
+                            ? reactQueryServiceTemplate
                                   .split('%serviceName%')
-                                  .join(toTitleCase(request.name) + 'Component')
+                                  .join(toTitleCase(request.name) + 'Service')
+                                  .split('%requestInputType%')
+                                  .join(
+                                      request.inputType
+                                          ? `args:schemaTypes.${request.inputType}`
+                                          : 'any'
+                                  )
                                   .split('%query%')
                                   .join('schemaTypes.Query')
                                   .split('%args%')
@@ -220,9 +304,9 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                                   .split('%request%')
                                   .join(request.requestName)
                                   .concat('\n')
-                            : reactQueryFunctionTemplate
+                            : reactQueryServiceTemplate
                                   .split('%serviceName%')
-                                  .join(toTitleCase(request.name) + 'Component')
+                                  .join(toTitleCase(request.name) + 'Service')
                                   .split('%query%')
                                   .join('')
                                   .split('%args%')
@@ -236,9 +320,9 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                 } else if (request.kindOf === 'Mutation') {
                     functions = functions.concat(
                         this._config.typescript
-                            ? reactMutationFunctionTemplate
+                            ? reactMutationServiceTemplate
                                   .split('%serviceName%')
-                                  .join(toTitleCase(request.name) + 'Component')
+                                  .join(toTitleCase(request.name) + 'Service')
                                   .split('%mutation%')
                                   .join('schemaTypes.Mutation')
                                   .split('%args%')
@@ -248,9 +332,9 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                                   .split('%request%')
                                   .join(request.requestName)
                                   .concat('\n')
-                            : reactMutationFunctionTemplate
+                            : reactMutationServiceTemplate
                                   .split('%serviceName%')
-                                  .join(toTitleCase(request.name) + 'Component')
+                                  .join(toTitleCase(request.name) + 'Service')
                                   .split('%mutation%')
                                   .join('')
                                   .split('%args%')
@@ -264,20 +348,88 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                 }
             });
             let content = this._config.typescript
+                ? reactServiceTemplate
+                      .split('%imports%')
+                      .join(
+                          `import * as schemaTypes from '../${this._config.generatedFolder}/schemaTypes'\n${imports}`
+                      )
+                      .split('%functions%')
+                      .join(functions)
+                : reactServiceTemplate
+                      .split('%imports%')
+                      .join(imports)
+                      .split('%functions%')
+                      .join(functions);
+
+            let filePath = path.join(
+                this._folderPath,
+                '..',
+                `${serviceName}-component`,
+                `${toTitleCase(serviceName)}Service.tsx`
+            );
+            await fs.writeFile(filePath, content, 'utf-8');
+            resolve(filePath);
+        });
+    }
+    /**
+     *  Async method to create a react component with given requests
+     * @param serviceName Name of the service that should be created
+     * @param requests requests of the service
+     * @param folderPath path to service folder
+     */
+    private async createReactComponent(
+        serviceName: string,
+        requests: CustomRequest[]
+    ): Promise<string> {
+        return new Promise<string>(async (resolve, reject) => {
+            let imports = `import { ${requests
+                .map(request => toTitleCase(request.name) + 'Service')
+                .join(', ')} } from './${toTitleCase(serviceName)}Service'`;
+            let functions = '';
+            requests.forEach(request => {
+                functions = functions.concat(
+                    this._config.typescript
+                        ? reactFunctionTemplate
+                              .split('%serviceName%')
+                              .join(toTitleCase(request.name) + 'Component')
+                              .split('%reactService%')
+                              .join(toTitleCase(request.name) + 'Service')
+                              .split('%requestInputType%')
+                              .join(
+                                  request.inputType
+                                      ? `args:schemaTypes.${request.inputType}`
+                                      : 'any'
+                              )
+                              .split('%request%')
+                              .join(request.requestName)
+                              .concat('\n')
+                        : reactFunctionTemplate
+                              .split('%serviceName%')
+                              .join(toTitleCase(request.name) + 'Component')
+                              .split('%reactService%')
+                              .join(toTitleCase(request.name) + 'Service')
+                              .split('%query%')
+                              .join('')
+                              .split('%args%')
+                              .join('')
+                              .split('%requestName%')
+                              .join(request.label)
+                              .split('%request%')
+                              .join(request.requestName)
+                              .concat('\n')
+                );
+            });
+            let content = this._config.typescript
                 ? reactComponentTemplate
                       .split('%imports%')
                       .join(
                           `import * as schemaTypes from '../${this._config.generatedFolder}/schemaTypes'\n${imports}`
                       )
-                      .split('%requests%')
-                      .join(requestsAsString)
                       .split('%functions%')
                       .join(functions)
                 : reactComponentTemplate
                       .split('%imports%')
                       .join(imports)
-                      .split('%requests%')
-                      .join(requestsAsString)
                       .split('%functions%')
                       .join(functions);
 

@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { StateService } from '../services/StateService';
 import { Request } from './RequestNodeProvider';
 import { lastEntryOfArray } from '../utils/Utils';
-import { reactQueryFunctionTemplate } from '../templates/Reacttemplate';
 /**
  * Request completion provider class to provide autocompletion for requests
  */
