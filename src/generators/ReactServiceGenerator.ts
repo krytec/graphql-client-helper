@@ -310,7 +310,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                 .map(request => request.label)
                 .join(', ')} } from './${toTitleCase(
                 serviceName
-            )}Requests.graphax.'`;
+            )}Requests.graphax'`;
             let functions = '';
             requests.forEach(request => {
                 if (request.kindOf === 'Query') {
