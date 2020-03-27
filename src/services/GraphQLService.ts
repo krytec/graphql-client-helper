@@ -364,25 +364,37 @@ export class GraphQLService {
                     if (existsSync(service.path)) {
                         const loadedService = new Service(
                             service.name,
-                            service.framework,
+                            service.framework + ' Service',
                             service.path,
                             2,
                             'service'
                         );
                         service.requests.forEach(async request => {
-                            if (request.request) {
+                            if (request) {
                                 const serviceReq = await this.getRequestFromString(
-                                    request.request
+                                    request
                                 );
                                 loadedService.addRequest(serviceReq);
                             }
                         });
-                        this._state.services.push(loadedService);
-                        this._logger.logDebug(
-                            'Loaded service ' +
-                                service.label +
-                                ' from graphax.json'
-                        );
+                        var exists = false;
+                        this._state.services.forEach(service => {
+                            if (service.label === loadedService.label) {
+                                exists = true;
+                            }
+                        });
+                        if (!exists) {
+                            this._state.saveService(loadedService);
+                            this._logger.logDebug(
+                                'Loaded service ' +
+                                    service.label +
+                                    ' from graphax.json'
+                            );
+                        } else {
+                            reject(
+                                `Could not create service, a service with the name ${loadedService.label} already exists`
+                            );
+                        }
                     } else {
                         reject('Invalid path. Service was not found.');
                     }
@@ -409,7 +421,7 @@ export class GraphQLService {
                     name: service.label,
                     path: service.path,
                     requests: service.requests.map(req => req.request),
-                    framework: this._config.framework
+                    framework: Framework[this._config.framework]
                 });
                 await fs.writeFile(
                     jsonPath,
@@ -475,40 +487,53 @@ export class GraphQLService {
                 2,
                 'service'
             );
-
-            const promised = new Array<Service | String>();
-            for (const file of dir) {
-                if (file.endsWith('.ts') || file.endsWith('.js')) {
-                    const filePath = join(fsPath, file);
-                    await this.getCustomRequestsFromFile(
-                        filePath,
-                        service
-                    ).then(
-                        resolved => {},
-                        rejected => {
-                            if (rejected) {
-                                promised.push(rejected);
-                            }
-                        }
-                    );
+            var exists = false;
+            this._state.services.forEach(existService => {
+                if (existService.label === serviceName) {
+                    exists = true;
                 }
-            }
+            });
+            if (!exists) {
+                const promised = new Array<Service | String>();
+                for (const file of dir) {
+                    if (file.endsWith('.ts') || file.endsWith('.js')) {
+                        const filePath = join(fsPath, file);
+                        await this.getCustomRequestsFromFile(
+                            filePath,
+                            service
+                        ).then(
+                            resolved => {},
+                            rejected => {
+                                if (rejected) {
+                                    promised.push(rejected);
+                                }
+                            }
+                        );
+                    }
+                }
 
-            if (promised.length === 0) {
-                if (service.requests.length > 0) {
-                    this._state.saveService(service);
-                    resolve(service);
+                if (promised.length === 0) {
+                    if (service.requests.length > 0) {
+                        this._state.saveService(service);
+                        resolve(service);
+                    } else {
+                        reject(
+                            new Error(
+                                'Could not create Service, because there were no requests found in directory.'
+                            )
+                        );
+                    }
                 } else {
                     reject(
                         new Error(
-                            'Could not create Service, because there were no requests found in directory.'
+                            'Could not create Service, because there were invalid requests provided in service.'
                         )
                     );
                 }
             } else {
                 reject(
                     new Error(
-                        'Could not create Service, because there were invalid requests provided in service.'
+                        'Could not create Service, because a service with the same name already exists'
                     )
                 );
             }

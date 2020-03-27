@@ -30,6 +30,10 @@ export abstract class AbstractServiceGenerator {
 
     public abstract async deleteRequestFromService(service: Service);
 
+    public abstract async regenerateService(
+        service: Service
+    ): Promise<string[]>;
+
     /**
      * Method to write requests to file
      * @param serviceName Name of the service
@@ -53,12 +57,18 @@ import gql from 'graphql-tag';\n`;
             .join('\n');
         content = content.concat(gqlrequests);
         await fs.writeFile(
-            path.join(folderPath, `${toTitleCase(serviceName)}Requests.ts`),
+            path.join(
+                folderPath,
+                `graphax.${toTitleCase(serviceName)}Requests.ts`
+            ),
             content,
             'utf-8'
         );
         return Promise.resolve(
-            path.join(folderPath, `${toTitleCase(serviceName)}Requests.ts`)
+            path.join(
+                folderPath,
+                `graphax.${toTitleCase(serviceName)}Requests.ts`
+            )
         );
     }
 

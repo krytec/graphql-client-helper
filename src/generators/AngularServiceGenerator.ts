@@ -88,6 +88,35 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
         });
     }
 
+    public regenerateService(service: Service): Promise<string[]> {
+        return new Promise<string[]>(async (resolve, reject) => {
+            let files: string[] = new Array<string>();
+            const folderPath = service.path;
+
+            let requests: CustomRequest[] = [];
+            service.requests.forEach(req => {
+                this._state.myRequests.forEach(custReq => {
+                    if (custReq.label === req.label) {
+                        requests.push(custReq);
+                    }
+                });
+            });
+
+            await this.createRequests(service.label, requests, folderPath).then(
+                file => {
+                    files.push(file);
+                }
+            );
+
+            await this.createAngularService(
+                service.label,
+                requests
+            ).then(file => files.push(file));
+
+            resolve(files);
+        });
+    }
+
     /**
      * Method to delete a request from the service
      * @param request The request that should be deleted from the service
@@ -145,7 +174,9 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
         let content: string = angularServiceTemplate;
         let imports = `import { ${requests
             .map(request => request.label)
-            .join(', ')} } from './${toTitleCase(serviceName)}Requests'`;
+            .join(', ')} } from './graphax.${toTitleCase(
+            serviceName
+        )}Requests'`;
         let functions = '';
         requests.forEach(request => {
             functions = functions.concat(
@@ -173,7 +204,7 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
             '..',
             'app',
             `${serviceName}-component`,
-            `${serviceName}.service.ts`
+            `graphax.${serviceName}.service.ts`
         );
         await fs.writeFile(filePath, content, 'utf-8');
         return Promise.resolve(filePath);
@@ -249,7 +280,9 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
     ) {
         let imports = `import { ${requests
             .map(request => request.label)
-            .join(', ')} } from './${toTitleCase(serviceName)}Requests'`;
+            .join(', ')} } from './graphax.${toTitleCase(
+            serviceName
+        )}Requests'`;
         let test_data = '';
         let test_requests = '';
         let tests: string = '';

@@ -70,6 +70,35 @@ export class ServiceGenerator extends AbstractServiceGenerator {
         });
     }
 
+    public regenerateService(service: Service): Promise<string[]> {
+        return new Promise<string[]>(async (resolve, reject) => {
+            let files: string[] = new Array<string>();
+            const folderPath = service.path;
+
+            let requests: CustomRequest[] = [];
+            service.requests.forEach(req => {
+                this._state.myRequests.forEach(custReq => {
+                    if (custReq.label === req.label) {
+                        requests.push(custReq);
+                    }
+                });
+            });
+
+            await this.createRequests(service.label, requests, folderPath).then(
+                file => {
+                    files.push(file);
+                }
+            );
+
+            await this.createServiceComponent(
+                service.label,
+                requests
+            ).then(file => files.push(file));
+
+            resolve(files);
+        });
+    }
+
     /**
      * Private method to create a service component for non specific framework
      * @param serviceName Name of the service that should be created
@@ -81,7 +110,7 @@ export class ServiceGenerator extends AbstractServiceGenerator {
     ) {
         let imports = `import { ${requests
             .map(request => request.label)
-            .join(', ')} } from './${toTitleCase(serviceName)}Requests'
+            .join(', ')} } from './graphax.${toTitleCase(serviceName)}Requests'
             import * as schemaTypes from '../${
                 this._config.generatedFolder
             }/schemaTypes'`;
@@ -116,7 +145,7 @@ export class ServiceGenerator extends AbstractServiceGenerator {
             this._folderPath,
             '..',
             `${serviceName}-service`,
-            `${serviceName}.service.ts`
+            `graphax.${serviceName}.service.ts`
         );
         await fs.writeFile(filePath, content, 'utf-8');
         return Promise.resolve(filePath);

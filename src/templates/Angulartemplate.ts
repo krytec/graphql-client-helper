@@ -24,7 +24,7 @@ export const angularComponentTemplate: string = `
  */
 import { Component, OnInit } from '@angular/core';
 import * as schemaTypes from '../../%folderName%/schemaTypes';
-import { %myServiceTitel% } from './%myNameTitel%.service';
+import { %myServiceTitel% } from './graphax.%myNameTitel%.service';
 
 
 @Component({
@@ -49,7 +49,7 @@ export const angularTestTemplate = `
  */
 import { ApolloTestingController, ApolloTestingModule } from 'apollo-angular/testing';
 import { async, ComponentFixture, TestBed,inject } from '@angular/core/testing';
-import { %serviceName% } from './%service%.service';
+import { %serviceName% } from './graphax.%service%.service';
 import * as schemaTypes from '../../%folderName%/schemaTypes';
 %imports%
 

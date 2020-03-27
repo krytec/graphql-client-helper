@@ -36,6 +36,11 @@ const path = require('path');
  */
 export class CommandService {
     private _generator: AbstractServiceGenerator;
+
+    private _angularGenerator: AngularServiceGenerator;
+    private _reactGenerator: ReactServiceGenerator;
+    private _serviceGenerator: ServiceGenerator;
+
     private _logger: LoggingService;
     private _ctx: vscode.ExtensionContext;
     private _fsWatcher: fs.FSWatcher;
@@ -55,12 +60,29 @@ export class CommandService {
     ) {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
-        this._generator = new ServiceGenerator(
-            _stateService,
-            _config,
-            _clientService,
-            _graphQLService
+        this._angularGenerator = new AngularServiceGenerator(
+            this._stateService,
+            this._config,
+            this._clientService,
+            this._graphQLService
         );
+
+        this._reactGenerator = new ReactServiceGenerator(
+            this._stateService,
+            this._config,
+            this._clientService,
+            this._graphQLService
+        );
+
+        this._serviceGenerator = new ServiceGenerator(
+            this._stateService,
+            this._config,
+            this._clientService,
+            this._graphQLService
+        );
+
+        this._generator = this._serviceGenerator;
+
         this.workspaceFolderChanged();
         this.onDidFrameworkChangeCallback(_config.framework);
         try {
@@ -266,36 +288,16 @@ export class CommandService {
         );
         switch (+framework) {
             case Framework.ANGULAR:
-                this._generator = new AngularServiceGenerator(
-                    this._stateService,
-                    this._config,
-                    this._clientService,
-                    this._graphQLService
-                );
+                this._generator = this._angularGenerator;
                 break;
             case Framework.REACT:
-                this._generator = new ReactServiceGenerator(
-                    this._stateService,
-                    this._config,
-                    this._clientService,
-                    this._graphQLService
-                );
+                this._generator = this._reactGenerator;
                 break;
             case Framework.NONE:
-                this._generator = new ServiceGenerator(
-                    this._stateService,
-                    this._config,
-                    this._clientService,
-                    this._graphQLService
-                );
+                this._generator = this._serviceGenerator;
                 break;
             default:
-                this._generator = new ServiceGenerator(
-                    this._stateService,
-                    this._config,
-                    this._clientService,
-                    this._graphQLService
-                );
+                this._generator = this._serviceGenerator;
         }
         this._generator.folderPath = this._graphQLService.folder;
     }
@@ -456,6 +458,21 @@ export class CommandService {
         //#endregion
 
         //#region ServiceCommands
+        const regenerateServiceCommand = vscode.commands.registerCommand(
+            'service.regenerate',
+            () => {
+                this._stateService.services.forEach(service => {
+                    if (service.tooltip.includes('React')) {
+                        this._reactGenerator.regenerateService(service);
+                    } else if (service.tooltip.includes('Angular')) {
+                        this._angularGenerator.regenerateService(service);
+                    } else {
+                        this._serviceGenerator.regenerateService(service);
+                    }
+                });
+            }
+        );
+
         const refreshServicesCommand = vscode.commands.registerCommand(
             'service.refresh',
             () => this._serviceNodeProvider.refresh()
@@ -558,6 +575,7 @@ export class CommandService {
         this._ctx.subscriptions.push(addServiceFromFolderCommand);
         this._ctx.subscriptions.push(showRequestInCodeCommand);
         this._ctx.subscriptions.push(deleteRequestCommand);
+        this._ctx.subscriptions.push(regenerateServiceCommand);
         this._ctx.subscriptions.push(createServiceCommand);
         this._ctx.subscriptions.push(serviceCodeCommand);
         this._ctx.subscriptions.push(deleteRequestFromServiceCommand);
