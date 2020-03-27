@@ -36,11 +36,6 @@ const path = require('path');
  */
 export class CommandService {
     private _generator: AbstractServiceGenerator;
-
-    private _angularGenerator: AngularServiceGenerator;
-    private _reactGenerator: ReactServiceGenerator;
-    private _serviceGenerator: ServiceGenerator;
-
     private _logger: LoggingService;
     private _ctx: vscode.ExtensionContext;
     private _fsWatcher: fs.FSWatcher;
@@ -60,28 +55,13 @@ export class CommandService {
     ) {
         this._logger = _stateService.logger;
         this._ctx = this._stateService.context as vscode.ExtensionContext;
-        this._angularGenerator = new AngularServiceGenerator(
+
+        this._generator = new ServiceGenerator(
             this._stateService,
             this._config,
             this._clientService,
             this._graphQLService
         );
-
-        this._reactGenerator = new ReactServiceGenerator(
-            this._stateService,
-            this._config,
-            this._clientService,
-            this._graphQLService
-        );
-
-        this._serviceGenerator = new ServiceGenerator(
-            this._stateService,
-            this._config,
-            this._clientService,
-            this._graphQLService
-        );
-
-        this._generator = this._serviceGenerator;
 
         this.workspaceFolderChanged();
         this.onDidFrameworkChangeCallback(_config.framework);
@@ -137,6 +117,9 @@ export class CommandService {
 
         _config.onDidChangeFramework(e => {
             this.onDidFrameworkChangeCallback(e);
+            vscode.window.showInformationMessage(
+                'GraphaX: Framework set to ' + toTitleCase(Framework[e])
+            );
         });
 
         /**
@@ -283,24 +266,42 @@ export class CommandService {
      * @param framework New selected framework
      */
     private onDidFrameworkChangeCallback(framework) {
-        vscode.window.showInformationMessage(
-            'GraphaX: Framework set to ' + toTitleCase(Framework[framework])
-        );
         switch (+framework) {
             case Framework.ANGULAR:
-                this._generator = this._angularGenerator;
+                this._generator = new AngularServiceGenerator(
+                    this._stateService,
+                    this._config,
+                    this._clientService,
+                    this._graphQLService
+                );
                 break;
             case Framework.REACT:
-                this._generator = this._reactGenerator;
+                this._generator = new ReactServiceGenerator(
+                    this._stateService,
+                    this._config,
+                    this._clientService,
+                    this._graphQLService
+                );
                 break;
             case Framework.NONE:
-                this._generator = this._serviceGenerator;
+                this._generator = new ServiceGenerator(
+                    this._stateService,
+                    this._config,
+                    this._clientService,
+                    this._graphQLService
+                );
                 break;
             default:
-                this._generator = this._serviceGenerator;
+                this._generator = new ServiceGenerator(
+                    this._stateService,
+                    this._config,
+                    this._clientService,
+                    this._graphQLService
+                );
         }
         this._generator.folderPath = this._graphQLService.folder;
     }
+
     private fileSystemCallback(event, trigger) {
         if (trigger === 'schema.gql') {
             if (
@@ -463,13 +464,15 @@ export class CommandService {
             () => {
                 this._stateService.services.forEach(service => {
                     if (service.tooltip.includes('React')) {
-                        this._reactGenerator.regenerateService(service);
+                        this.onDidFrameworkChangeCallback(Framework.REACT);
                     } else if (service.tooltip.includes('Angular')) {
-                        this._angularGenerator.regenerateService(service);
+                        this.onDidFrameworkChangeCallback(Framework.ANGULAR);
                     } else {
-                        this._serviceGenerator.regenerateService(service);
+                        this.onDidFrameworkChangeCallback(Framework.NONE);
                     }
+                    this._generator.regenerateService(service);
                 });
+                this.onDidFrameworkChangeCallback(this._config.framework);
             }
         );
 

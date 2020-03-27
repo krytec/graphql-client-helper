@@ -110,7 +110,7 @@ export class Service extends vscode.TreeItem {
                 new Service(
                     request.label,
                     request.tooltip,
-                    join(this._path, `${this.label}Requests.ts`),
+                    join(this._path, `${this.label}Requests.graphax.ts`),
                     0,
                     'serviceRequest',
                     request.request

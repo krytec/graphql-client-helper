@@ -59,7 +59,7 @@ import gql from 'graphql-tag';\n`;
         await fs.writeFile(
             path.join(
                 folderPath,
-                `graphax.${toTitleCase(serviceName)}Requests.ts`
+                `${toTitleCase(serviceName)}Requests.graphax.ts`
             ),
             content,
             'utf-8'
@@ -67,7 +67,7 @@ import gql from 'graphql-tag';\n`;
         return Promise.resolve(
             path.join(
                 folderPath,
-                `graphax.${toTitleCase(serviceName)}Requests.ts`
+                `${toTitleCase(serviceName)}Requests.graphax.ts`
             )
         );
     }

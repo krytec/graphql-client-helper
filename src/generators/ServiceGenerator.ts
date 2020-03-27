@@ -110,7 +110,7 @@ export class ServiceGenerator extends AbstractServiceGenerator {
     ) {
         let imports = `import { ${requests
             .map(request => request.label)
-            .join(', ')} } from './graphax.${toTitleCase(serviceName)}Requests'
+            .join(', ')} } from './${toTitleCase(serviceName)}Requests.graphax'
             import * as schemaTypes from '../${
                 this._config.generatedFolder
             }/schemaTypes'`;
@@ -145,7 +145,7 @@ export class ServiceGenerator extends AbstractServiceGenerator {
             this._folderPath,
             '..',
             `${serviceName}-service`,
-            `graphax.${serviceName}.service.ts`
+            `${serviceName}.service.graphax.ts`
         );
         await fs.writeFile(filePath, content, 'utf-8');
         return Promise.resolve(filePath);
@@ -158,7 +158,10 @@ export class ServiceGenerator extends AbstractServiceGenerator {
     public async deleteRequestFromService(request: Service) {
         const serviceDir = dirname(request.path);
         const serviceName = basename(serviceDir).split('-')[0];
-        const componentPath = join(serviceDir, `${serviceName}.service.ts`);
+        const componentPath = join(
+            serviceDir,
+            `${serviceName}.service.graphax.ts`
+        );
         if (
             existsSync(request.path) &&
             this.checkGraphaXSignature(request.path)
@@ -197,13 +200,13 @@ export class ServiceGenerator extends AbstractServiceGenerator {
 
         let functionRange = getTextRange(
             serviceDoc,
-            `public async get${request.label}(`,
+            `public async get${toTitleCase(request.label)}(`,
             'public async'
         );
         if (functionRange.start.line === 0) {
             functionRange = getTextRange(
                 serviceDoc,
-                `public async get${request.label}(`,
+                `public async get${toTitleCase(request.label)}(`,
                 '}'
             );
             functionRange = functionRange.with(

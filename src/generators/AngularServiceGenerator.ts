@@ -124,7 +124,10 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
     public async deleteRequestFromService(request: Service) {
         const serviceDir = dirname(request.path);
         const serviceName = basename(serviceDir).split('-')[0];
-        const servicePath = join(serviceDir, `${serviceName}.service.ts`);
+        const servicePath = join(
+            serviceDir,
+            `${serviceName}.service.graphax.ts`
+        );
         const componentPath = join(serviceDir, `${serviceName}.component.ts`);
         const testPath = join(serviceDir, `${serviceName}.spec.ts`);
         if (
@@ -174,9 +177,9 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
         let content: string = angularServiceTemplate;
         let imports = `import { ${requests
             .map(request => request.label)
-            .join(', ')} } from './graphax.${toTitleCase(
+            .join(', ')} } from './${toTitleCase(
             serviceName
-        )}Requests'`;
+        )}Requests.graphax'`;
         let functions = '';
         requests.forEach(request => {
             functions = functions.concat(
@@ -204,7 +207,7 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
             '..',
             'app',
             `${serviceName}-component`,
-            `graphax.${serviceName}.service.ts`
+            `${serviceName}.service.graphax.ts`
         );
         await fs.writeFile(filePath, content, 'utf-8');
         return Promise.resolve(filePath);
@@ -280,9 +283,9 @@ export class AngularServiceGenerator extends AbstractServiceGenerator {
     ) {
         let imports = `import { ${requests
             .map(request => request.label)
-            .join(', ')} } from './graphax.${toTitleCase(
+            .join(', ')} } from './${toTitleCase(
             serviceName
-        )}Requests'`;
+        )}Requests.graphax'`;
         let test_data = '';
         let test_requests = '';
         let tests: string = '';

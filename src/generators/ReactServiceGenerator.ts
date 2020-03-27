@@ -129,7 +129,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         const serviceName = basename(serviceDir).split('-')[0];
         const servicePath = join(
             serviceDir,
-            `graphax.${toTitleCase(serviceName)}Service.tsx`
+            `${toTitleCase(serviceName)}Service.graphax.tsx`
         );
 
         const componentPath = join(
@@ -308,9 +308,9 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         return new Promise<string>(async (resolve, reject) => {
             let imports = `import { ${requests
                 .map(request => request.label)
-                .join(', ')} } from './graphax.${toTitleCase(
+                .join(', ')} } from './${toTitleCase(
                 serviceName
-            )}Requests'`;
+            )}Requests.graphax.'`;
             let functions = '';
             requests.forEach(request => {
                 if (request.kindOf === 'Query') {
@@ -395,7 +395,7 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
                 this._folderPath,
                 '..',
                 `${serviceName}-component`,
-                `graphax.${toTitleCase(serviceName)}Service.tsx`
+                `${toTitleCase(serviceName)}Service.graphax.tsx`
             );
             await fs.writeFile(filePath, content, 'utf-8');
             resolve(filePath);
@@ -414,9 +414,9 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
         return new Promise<string>(async (resolve, reject) => {
             let imports = `import { ${requests
                 .map(request => toTitleCase(request.name) + 'Service')
-                .join(', ')} } from './graphax.${toTitleCase(
+                .join(', ')} } from './${toTitleCase(
                 serviceName
-            )}Service'`;
+            )}Service.graphax'`;
             let functions = '';
             requests.forEach(request => {
                 functions = functions.concat(
@@ -478,9 +478,9 @@ export class ReactServiceGenerator extends AbstractServiceGenerator {
 
     private async createReactTest(serviceName: string, request: CustomRequest) {
         return new Promise<string>(async (resolve, reject) => {
-            let imports = `import { ${
-                request.label
-            } } from './graphax.${toTitleCase(serviceName)}Requests'`;
+            let imports = `import { ${request.label} } from './${toTitleCase(
+                serviceName
+            )}Requests.graphax'`;
             let mockData = await this.getMockingData(request);
             let content = '';
             content = reactTestTemplate

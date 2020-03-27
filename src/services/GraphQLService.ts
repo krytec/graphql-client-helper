@@ -24,7 +24,8 @@ import { MutationWrapper } from '../graphqlwrapper/MutationWrapper';
 import {
     stringToGraphQLFormat,
     stringToGraphQLObject,
-    validateRequest
+    validateRequest,
+    toTitleCase
 } from '../utils/Utils';
 import { CustomRequest } from '../provider/CustomRequestNodeProvider';
 import { ConfigurationService, Framework } from './ConfigurationService';
@@ -364,17 +365,21 @@ export class GraphQLService {
                     if (existsSync(service.path)) {
                         const loadedService = new Service(
                             service.name,
-                            service.framework + ' Service',
+                            toTitleCase(service.framework) + ' Service',
                             service.path,
                             2,
                             'service'
                         );
                         service.requests.forEach(async request => {
                             if (request) {
-                                const serviceReq = await this.getRequestFromString(
-                                    request
+                                await this.getRequestFromString(request).then(
+                                    resolved => {
+                                        loadedService.addRequest(resolved);
+                                    },
+                                    reject => {
+                                        loadedService.addRequest(reject);
+                                    }
                                 );
-                                loadedService.addRequest(serviceReq);
                             }
                         });
                         var exists = false;
@@ -418,7 +423,7 @@ export class GraphQLService {
             if (existsSync(jsonPath)) {
                 const graphaxJSON = JSON.parse(readFileSync(jsonPath, 'utf-8'));
                 graphaxJSON.service.push({
-                    name: service.label,
+                    name: service.label.split('-')[0],
                     path: service.path,
                     requests: service.requests.map(req => req.request),
                     framework: Framework[this._config.framework]
