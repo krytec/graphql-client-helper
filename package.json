@@ -387,6 +387,6 @@
         "graphql": "^14.5.8",
         "node-fetch": "^2.6.0",
         "sinon": "^9.0.1",
-        "graphql-request": "^1.8.2"
+        "graphql-request": "^5.0.0"
     }
 }
